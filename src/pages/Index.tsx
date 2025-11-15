@@ -208,17 +208,18 @@ const Index = () => {
       <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
 
       {/* Center Stage - 3D Wheel */}
-      <div className="flex-1 flex flex-col items-center justify-center pt-20 pb-48">
+      <div className="flex-1 flex flex-col items-center justify-center pt-8 pb-48 min-h-0">
         {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-7xl font-bold text-primary mb-2 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)_/_0.5)]">
+        <div className="text-center mb-4">
+          <h1 className="text-5xl font-bold text-primary mb-1 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)_/_0.5)]">
             KOLOTOČ
           </h1>
-          <p className="text-2xl text-muted-foreground font-semibold">Kolo {gameState.round}</p>
+          <p className="text-xl text-muted-foreground font-semibold">Kolo {gameState.round}</p>
         </div>
 
-        {/* Wheel */}
-        <Wheel3D
+        {/* Wheel Container with fixed dimensions */}
+        <div className="relative w-full max-w-3xl h-[500px] flex items-center justify-center">
+          <Wheel3D
           rotation={wheelRotation}
           onSpinComplete={handleSpinComplete}
           isSpinning={gameState.isSpinning}
@@ -227,7 +228,8 @@ const Index = () => {
           placingTokensMode={isPlacingTokens}
           players={gameState.players}
           currentPlayer={gameState.currentPlayer}
-        />
+          />
+        </div>
         
         {/* Token placement instruction */}
         {isPlacingTokens && (
