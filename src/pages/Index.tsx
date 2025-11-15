@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Wheel } from '@/components/game/Wheel';
-import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { PlayerScores } from '@/components/game/PlayerScores';
-import { LetterSelector } from '@/components/game/LetterSelector';
+import { BottomDock } from '@/components/game/BottomDock';
 import { GameState, WheelSegment } from '@/types/game';
 import { puzzles, wheelSegments } from '@/data/puzzles';
 import { toast } from 'sonner';
@@ -173,59 +172,55 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <header className="text-center">
-          <h1 className="text-6xl font-bold text-primary mb-2 tracking-wider">
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-background text-foreground">
+      {/* Top Dock - Player Scores */}
+      <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
+
+      {/* Center Stage - 3D Wheel */}
+      <div className="flex-1 flex flex-col items-center justify-center pt-20 pb-48">
+        {/* Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-7xl font-bold text-primary mb-2 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)_/_0.5)]">
             KOLOTOČ
           </h1>
-          <p className="text-xl text-muted-foreground">Kolo {gameState.round}</p>
-        </header>
-
-        {/* Player Scores */}
-        <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
-
-        {/* Puzzle Board */}
-        <PuzzleBoard puzzle={gameState.puzzle} />
+          <p className="text-2xl text-muted-foreground font-semibold">Kolo {gameState.round}</p>
+        </div>
 
         {/* Wheel */}
-        <div className="flex justify-center">
-          <Wheel
-            onSpinComplete={handleSpinComplete}
-            isSpinning={gameState.isSpinning}
-            disabled={showLetterSelector}
-            tokenPositions={tokenPositions}
-            onSegmentClick={handleTokenPlace}
-            placingTokensMode={isPlacingTokens}
-            players={gameState.players}
-            currentPlayer={gameState.currentPlayer}
-          />
-        </div>
+        <Wheel
+          onSpinComplete={handleSpinComplete}
+          isSpinning={gameState.isSpinning}
+          disabled={showLetterSelector}
+          tokenPositions={tokenPositions}
+          onSegmentClick={handleTokenPlace}
+          placingTokensMode={isPlacingTokens}
+          players={gameState.players}
+          currentPlayer={gameState.currentPlayer}
+        />
 
-        {/* Letter Selector */}
-        {showLetterSelector && (
-          <LetterSelector
-            usedLetters={gameState.usedLetters}
-            onLetterSelect={handleLetterSelect}
-            disabled={gameState.isSpinning}
-          />
+        {/* Floating Controls */}
+        {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && (
+          <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-40">
+            <Button
+              onClick={newRound}
+              variant="secondary"
+              size="lg"
+              className="text-lg px-8 shadow-lg backdrop-blur-md bg-card/80"
+            >
+              NOVÉ KOLO
+            </Button>
+          </div>
         )}
-
-        {/* Game Controls */}
-        <div className="flex justify-center gap-4">
-          {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && (
-            <>
-              <Button onClick={handleSpin} size="lg" className="text-lg px-8">
-                ROZTOČIT KOLO
-              </Button>
-              <Button onClick={newRound} variant="secondary" size="lg" className="text-lg px-8">
-                NOVÉ KOLO
-              </Button>
-            </>
-          )}
-        </div>
       </div>
+
+      {/* Bottom Dock - Puzzle & Letters */}
+      <BottomDock
+        puzzle={gameState.puzzle}
+        usedLetters={gameState.usedLetters}
+        showLetterSelector={showLetterSelector}
+        onLetterSelect={handleLetterSelect}
+        disabled={gameState.isSpinning}
+      />
     </div>
   );
 };
