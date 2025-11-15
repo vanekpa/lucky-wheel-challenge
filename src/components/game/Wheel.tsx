@@ -140,16 +140,20 @@ export const Wheel = ({
                     x={textPos.x}
                     y={textPos.y}
                     fill="white"
-                    fontSize={segment.type === 'bankrot' || segment.type === 'nic' ? '24' : '32'}
-                    fontWeight="bold"
+                    fontSize={segment.type === 'bankrot' || segment.type === 'nic' ? '16' : '28'}
+                    fontWeight="900"
                     textAnchor="middle"
                     dominantBaseline="middle"
                     transform={`rotate(${textPos.rotation} ${textPos.x} ${textPos.y})`}
                     style={{
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                      textShadow: '3px 3px 6px rgba(0,0,0,0.9)',
                       pointerEvents: 'none',
-                      fontFamily: 'system-ui, -apple-system, sans-serif'
+                      fontFamily: 'Arial Black, sans-serif',
+                      letterSpacing: '1px',
+                      paintOrder: 'stroke fill'
                     }}
+                    stroke="rgba(0,0,0,0.5)"
+                    strokeWidth="1"
                   >
                     {segment.value}
                   </text>
