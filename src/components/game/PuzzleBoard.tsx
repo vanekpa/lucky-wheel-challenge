@@ -20,7 +20,7 @@ export const PuzzleBoard = ({ puzzle }: PuzzleBoardProps) => {
     return (
       <div
         key={index}
-        className={`w-14 h-16 mx-0.5 border-4 border-primary flex items-center justify-center text-3xl font-bold transition-all duration-300 ${
+        className={`w-12 h-14 mx-0.5 border-3 border-primary flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
           isRevealed
             ? 'bg-card text-foreground animate-flip-tile'
             : 'bg-muted/30 text-transparent'
@@ -32,15 +32,15 @@ export const PuzzleBoard = ({ puzzle }: PuzzleBoardProps) => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
-      <div className="bg-secondary/20 rounded-lg p-8 border-4 border-primary">
-        <div className="text-center mb-4">
-          <h3 className="text-xl font-bold text-primary uppercase tracking-wider">
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="bg-secondary/20 rounded-lg p-4 border-2 border-primary/50">
+        <div className="text-center mb-3">
+          <h3 className="text-lg font-bold text-primary uppercase tracking-wider">
             {puzzle.category}
           </h3>
         </div>
         
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-2">
           {words.map((word, wordIndex) => (
             <div key={wordIndex} className="flex justify-center">
               {word.split('').map((char, charIndex) =>

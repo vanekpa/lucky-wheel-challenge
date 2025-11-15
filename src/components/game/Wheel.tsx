@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { wheelSegments } from '@/data/puzzles';
 import { WheelSegment, Player } from '@/types/game';
 
@@ -26,6 +25,7 @@ export const Wheel = ({
 }: WheelProps) => {
   const [rotation, setRotation] = useState(0);
   const [hoveredSegment, setHoveredSegment] = useState<number | null>(null);
+  const SIZE = 600;
   const segmentAngle = 360 / wheelSegments.length;
 
   const spinWheel = () => {
@@ -47,9 +47,9 @@ export const Wheel = ({
 
   // Calculate SVG path for a segment
   const getSegmentPath = (index: number) => {
-    const centerX = 300;
-    const centerY = 300;
-    const radius = 240;
+    const centerX = SIZE / 2;
+    const centerY = SIZE / 2;
+    const radius = SIZE / 2 - 60;
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
     const endAngle = ((index + 1) * segmentAngle - 90) * (Math.PI / 180);
 
@@ -64,9 +64,9 @@ export const Wheel = ({
   // Calculate text position for a segment
   const getTextPosition = (index: number) => {
     const angle = (index * segmentAngle + segmentAngle / 2 - 90) * (Math.PI / 180);
-    const radius = 160;
-    const x = 300 + radius * Math.cos(angle);
-    const y = 300 + radius * Math.sin(angle);
+    const radius = SIZE / 2 - 140;
+    const x = SIZE / 2 + radius * Math.cos(angle);
+    const y = SIZE / 2 + radius * Math.sin(angle);
     const rotation = index * segmentAngle + segmentAngle / 2;
     return { x, y, rotation };
   };
@@ -74,9 +74,9 @@ export const Wheel = ({
   // Get token position on segment
   const getTokenPosition = (index: number) => {
     const angle = (index * segmentAngle + segmentAngle / 2 - 90) * (Math.PI / 180);
-    const radius = 200;
-    const x = 300 + radius * Math.cos(angle);
-    const y = 300 + radius * Math.sin(angle);
+    const radius = SIZE / 2 - 100;
+    const x = SIZE / 2 + radius * Math.cos(angle);
+    const y = SIZE / 2 + radius * Math.sin(angle);
     return { x, y };
   };
 
@@ -90,171 +90,207 @@ export const Wheel = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="relative w-[600px] h-[600px]">
-        {/* Wheel pointer - fixed at top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 w-0 h-0 border-l-[25px] border-r-[25px] border-t-[50px] border-l-transparent border-r-transparent border-t-primary drop-shadow-2xl" 
-          style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}
-        />
-        
-        {/* Wheel container - rotates */}
-        <div
-          className="relative w-full h-full"
+    <div className="relative flex flex-col items-center gap-8">
+      {placingTokensMode && (
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 text-center z-10">
+          <div className="bg-card/90 backdrop-blur-md px-6 py-3 rounded-lg border-2 border-primary/50">
+            <h2 className="text-xl font-bold text-primary mb-1">
+              {players[currentPlayer!].name} - Umístěte svůj žeton
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Klikněte na políčko na kole (kromě BANKROT)
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 3D Perspective Container */}
+      <div 
+        className="relative"
+        style={{
+          perspective: '1200px',
+          perspectiveOrigin: 'center center',
+        }}
+      >
+        <svg
+          width={SIZE}
+          height={SIZE}
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          className="drop-shadow-2xl transition-transform duration-300"
           style={{
-            transform: `rotate(${rotation}deg)`,
+            transform: `rotateX(-35deg) rotateZ(${rotation}deg)`,
+            transformStyle: 'preserve-3d',
             transition: isSpinning ? 'none' : 'transform 4s cubic-bezier(0.17, 0.67, 0.3, 0.96)',
           }}
         >
-          <svg viewBox="0 0 600 600" className="w-full h-full drop-shadow-2xl">
-            {/* Outer ring */}
-            <circle cx="300" cy="300" r="245" fill="none" stroke="hsl(var(--border))" strokeWidth="10" />
-            
+          <defs>
+            {/* Gradients for 3D depth effect */}
+            {wheelSegments.map((segment) => (
+              <linearGradient
+                key={`grad-${segment.id}`}
+                id={`gradient-${segment.id}`}
+                x1="0%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
+                <stop offset="0%" stopColor={`hsl(var(--${segment.color}))`} stopOpacity="0.8" />
+                <stop offset="100%" stopColor={`hsl(var(--${segment.color}))`} stopOpacity="1" />
+              </linearGradient>
+            ))}
+          </defs>
+
+          {/* Outer ring */}
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={SIZE / 2 - 55}
+            fill="none"
+            stroke="white"
+            strokeWidth="10"
+          />
+
+          <g>
             {/* Segments */}
             {wheelSegments.map((segment, index) => {
-              const textPos = getTextPosition(index);
-              const isHovered = hoveredSegment === segment.id;
-              const hasToken = tokenPositions.has(segment.id);
-              const tokenPos = getTokenPosition(index);
-              
+              const tokenOwner = tokenPositions.get(segment.id);
+              const hasToken = tokenOwner !== undefined;
+
               return (
                 <g key={segment.id}>
-                  {/* Segment path */}
                   <path
                     d={getSegmentPath(index)}
-                    fill={`hsl(var(--${segment.color}))`}
+                    fill={`url(#gradient-${segment.id})`}
                     stroke="white"
                     strokeWidth="3"
-                    className={`transition-opacity ${
-                      placingTokensMode && segment.type !== 'bankrot' ? 'cursor-pointer hover:opacity-80' : ''
-                    } ${isHovered && placingTokensMode ? 'opacity-80' : ''}`}
+                    className={`transition-all ${
+                      placingTokensMode && segment.type !== 'bankrot'
+                        ? 'cursor-pointer hover:brightness-125'
+                        : ''
+                    } ${hoveredSegment === segment.id ? 'brightness-125' : ''}`}
                     onClick={() => handleSegmentClick(segment.id)}
-                    onMouseEnter={() => placingTokensMode && setHoveredSegment(segment.id)}
+                    onMouseEnter={() => setHoveredSegment(segment.id)}
                     onMouseLeave={() => setHoveredSegment(null)}
-                    style={{
-                      filter: hasToken ? 'brightness(1.1)' : 'none'
-                    }}
                   />
-                  
-                  {/* Segment value text */}
-                  <text
-                    x={textPos.x}
-                    y={textPos.y}
-                    fill="white"
-                    fontSize={segment.type === 'bankrot' || segment.type === 'nic' ? '16' : '28'}
-                    fontWeight="900"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    transform={`rotate(${textPos.rotation} ${textPos.x} ${textPos.y})`}
-                    style={{
-                      textShadow: '3px 3px 6px rgba(0,0,0,0.9)',
-                      pointerEvents: 'none',
-                      fontFamily: 'Arial Black, sans-serif',
-                      letterSpacing: '1px',
-                      paintOrder: 'stroke fill'
-                    }}
-                    stroke="rgba(0,0,0,0.5)"
-                    strokeWidth="1"
-                  >
-                    {segment.value}
-                  </text>
 
-                  {/* Token on segment */}
-                  {hasToken && tokenPositions.get(segment.id) !== undefined && (
-                    <g>
-                      <circle
-                        cx={tokenPos.x}
-                        cy={tokenPos.y}
-                        r="20"
-                        fill={players[tokenPositions.get(segment.id)!]?.color || 'white'}
-                        stroke="white"
-                        strokeWidth="3"
-                        style={{
-                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-                          pointerEvents: 'none'
-                        }}
-                      />
+                  {/* Segment text */}
+                  {(() => {
+                    const textPos = getTextPosition(index);
+                    return (
                       <text
-                        x={tokenPos.x}
-                        y={tokenPos.y}
+                        x={textPos.x}
+                        y={textPos.y}
                         fill="white"
-                        fontSize="16"
-                        fontWeight="bold"
+                        fontSize={segment.type === 'bankrot' || segment.type === 'nic' ? '16' : '28'}
+                        fontWeight="900"
                         textAnchor="middle"
                         dominantBaseline="middle"
+                        transform={`rotate(${textPos.rotation} ${textPos.x} ${textPos.y})`}
                         style={{
+                          textShadow: '3px 3px 6px rgba(0,0,0,0.9)',
                           pointerEvents: 'none',
-                          textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                          fontFamily: 'Arial Black, sans-serif',
+                          letterSpacing: '1px',
+                          paintOrder: 'stroke fill'
                         }}
+                        stroke="rgba(0,0,0,0.5)"
+                        strokeWidth="1"
                       >
-                        {tokenPositions.get(segment.id)! + 1}
+                        {segment.value}
                       </text>
-                    </g>
-                  )}
+                    );
+                  })()}
+
+                  {/* Token on segment */}
+                  {hasToken && (() => {
+                    const tokenPos = getTokenPosition(index);
+                    const player = players[tokenOwner];
+                    return (
+                      <g>
+                        <circle
+                          cx={tokenPos.x}
+                          cy={tokenPos.y}
+                          r="22"
+                          fill={player.color}
+                          stroke="white"
+                          strokeWidth="3"
+                          filter="drop-shadow(0 4px 8px rgba(0,0,0,0.5))"
+                        />
+                        <text
+                          x={tokenPos.x}
+                          y={tokenPos.y}
+                          fill="white"
+                          fontSize="14"
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          {tokenOwner + 1}
+                        </text>
+                      </g>
+                    );
+                  })()}
                 </g>
               );
             })}
 
+            {/* Center hub */}
+            <circle
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r="50"
+              fill="hsl(var(--primary))"
+              stroke="white"
+              strokeWidth="5"
+              filter="drop-shadow(0 4px 12px rgba(0,0,0,0.4))"
+            />
+
             {/* Pegs around the wheel */}
-            {Array.from({ length: wheelSegments.length }).map((_, index) => {
-              const angle = (index * segmentAngle - 90) * (Math.PI / 180);
-              const radius = 245;
-              const x = 300 + radius * Math.cos(angle);
-              const y = 300 + radius * Math.sin(angle);
-              
+            {Array.from({ length: wheelSegments.length }).map((_, i) => {
+              const angle = (i * segmentAngle - 90) * (Math.PI / 180);
+              const radius = SIZE / 2 - 60;
+              const x = SIZE / 2 + radius * Math.cos(angle);
+              const y = SIZE / 2 + radius * Math.sin(angle);
+
               return (
                 <circle
-                  key={`peg-${index}`}
+                  key={`peg-${i}`}
                   cx={x}
                   cy={y}
                   r="8"
-                  fill="hsl(var(--muted))"
+                  fill="white"
                   stroke="hsl(var(--border))"
                   strokeWidth="2"
-                  style={{
-                    filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.3))'
-                  }}
+                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
                 />
               );
             })}
+          </g>
+        </svg>
 
-            {/* Center circle */}
-            <circle cx="300" cy="300" r="70" fill="hsl(var(--card))" stroke="hsl(var(--primary))" strokeWidth="6" />
-            <circle cx="300" cy="300" r="55" fill="hsl(var(--primary))" />
-            <text
-              x="300"
-              y="300"
-              fill="hsl(var(--primary-foreground))"
-              fontSize="40"
-              fontWeight="bold"
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
-              ★
-            </text>
-          </svg>
+        {/* 3D Pointer Arrow */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 z-20"
+          style={{
+            transform: 'translateX(-50%) translateY(-20px)',
+          }}
+        >
+          <div className="relative">
+            <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-primary drop-shadow-[0_0_20px_hsl(var(--primary))]" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full animate-pulse" />
+          </div>
         </div>
       </div>
 
       {!placingTokensMode && (
-        <Button
+        <button
           onClick={spinWheel}
           disabled={disabled || isSpinning}
-          size="lg"
-          className="text-xl px-12 py-6 font-bold"
+          className="mt-6 px-12 py-4 bg-primary text-primary-foreground font-bold text-2xl rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 hover:scale-105 transition-all shadow-[0_0_30px_hsl(var(--primary)_/_0.5)]"
         >
-          {isSpinning ? 'TOČÍM...' : 'ROZTOČIT KOLO'}
-        </Button>
-      )}
-
-      {placingTokensMode && currentPlayer !== undefined && (
-        <div className="text-center">
-          <p className="text-2xl font-bold mb-2" style={{ color: players[currentPlayer].color }}>
-            {players[currentPlayer].name}
-          </p>
-          <p className="text-lg text-muted-foreground">
-            Klikněte na segment pro umístění žetonu
-          </p>
-        </div>
+          {isSpinning ? 'TOČÍ SE...' : 'ROZTOČIT KOLO'}
+        </button>
       )}
     </div>
   );
