@@ -377,7 +377,7 @@ export const Wheel3D = ({
   placingTokensMode,
 }: Wheel3DProps) => {
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full min-h-[500px] max-h-[70vh]">
       <Canvas
         camera={{ 
           position: [0, -3.5, 4],
@@ -390,7 +390,11 @@ export const Wheel3D = ({
           antialias: true,
           alpha: true 
         }}
-        style={{ background: 'transparent' }}
+        style={{ 
+          width: '100%',
+          height: '100%',
+          background: 'transparent' 
+        }}
       >
         <Scene 
           rotation={rotation}
