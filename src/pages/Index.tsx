@@ -4,7 +4,7 @@ import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { PlayerScores } from '@/components/game/PlayerScores';
 import { LetterSelector } from '@/components/game/LetterSelector';
 import { GameState, WheelSegment } from '@/types/game';
-import { puzzles } from '@/data/puzzles';
+import { puzzles, wheelSegments } from '@/data/puzzles';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
@@ -27,9 +27,56 @@ const Index = () => {
 
   const [showLetterSelector, setShowLetterSelector] = useState(false);
   const [currentWheelValue, setCurrentWheelValue] = useState<number>(0);
+  const [isPlacingTokens, setIsPlacingTokens] = useState(true);
+  const [tokenPositions, setTokenPositions] = useState<Map<number, number>>(new Map());
+  const [tokensPlaced, setTokensPlaced] = useState<Set<number>>(new Set());
+
+  const handleTokenPlace = (segmentId: number) => {
+    if (tokensPlaced.has(gameState.currentPlayer)) return;
+
+    setTokenPositions((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(segmentId, gameState.currentPlayer);
+      return newMap;
+    });
+
+    setTokensPlaced((prev) => new Set(prev).add(gameState.currentPlayer));
+
+    // Move to next player for token placement
+    const nextPlayer = (gameState.currentPlayer + 1) % 3;
+    if (tokensPlaced.size === 2) {
+      // All tokens placed, enable spinning
+      setIsPlacingTokens(false);
+      setGameState((prev) => ({ ...prev, currentPlayer: 0 }));
+    } else {
+      setGameState((prev) => ({ ...prev, currentPlayer: nextPlayer }));
+    }
+  };
 
   const handleSpinComplete = (segment: WheelSegment) => {
     setGameState((prev) => ({ ...prev, isSpinning: false, wheelResult: segment }));
+
+    // Check if landed on a token
+    let tokenBonus = 0;
+    let tokenOwner: number | undefined;
+    tokenPositions.forEach((playerId, segmentId) => {
+      if (wheelSegments[segmentId].id === segment.id) {
+        tokenBonus = 2000;
+        tokenOwner = playerId;
+      }
+    });
+
+    if (tokenBonus > 0 && tokenOwner !== undefined) {
+      toast.success(`Žeton hráče ${tokenOwner + 1}! Bonus +${tokenBonus} bodů!`, {
+        duration: 3000,
+      });
+      setGameState((prev) => ({
+        ...prev,
+        players: prev.players.map((p) =>
+          p.id === tokenOwner ? { ...p, score: p.score + tokenBonus } : p
+        ),
+      }));
+    }
 
     if (segment.type === 'bankrot') {
       toast.error('BANKROT! Ztrácíte všechny body!', {
@@ -116,8 +163,13 @@ const Index = () => {
       },
       usedLetters: new Set(),
       round: prev.round + 1,
+      currentPlayer: 0,
     }));
-    toast.success('Nové kolo začíná!');
+    setTokenPositions(new Map());
+    setTokensPlaced(new Set());
+    setIsPlacingTokens(true);
+    setShowLetterSelector(false);
+    toast.success('Nové kolo začíná! Umístěte žetony.');
   };
 
   return (
@@ -143,6 +195,11 @@ const Index = () => {
             onSpinComplete={handleSpinComplete}
             isSpinning={gameState.isSpinning}
             disabled={showLetterSelector}
+            tokenPositions={tokenPositions}
+            onSegmentClick={handleTokenPlace}
+            placingTokensMode={isPlacingTokens}
+            players={gameState.players}
+            currentPlayer={gameState.currentPlayer}
           />
         </div>
 
@@ -157,7 +214,7 @@ const Index = () => {
 
         {/* Game Controls */}
         <div className="flex justify-center gap-4">
-          {!gameState.isSpinning && !showLetterSelector && (
+          {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && (
             <>
               <Button onClick={handleSpin} size="lg" className="text-lg px-8">
                 ROZTOČIT KOLO
