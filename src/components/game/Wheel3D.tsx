@@ -1,5 +1,5 @@
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
+import { useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame, ThreeEvent, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { wheelSegments } from '@/data/puzzles';
@@ -29,14 +29,25 @@ const getColorFromSegment = (colorName: string): string => {
   return colorMap[colorName] || '#ffffff';
 };
 
+// Camera controller to look at the wheel
+const CameraController = () => {
+  const { camera } = useThree();
+  
+  useEffect(() => {
+    camera.lookAt(0, 2.5, 0);
+  }, [camera]);
+  
+  return null;
+};
+
 const Pedestal = () => {
   const R = 3;
   
   return (
-    <group position={[0, 0, 0]}>
+    <group position={[0, 0.4, 0]}>
       {/* Hlavní kuželový tvar */}
-      <mesh position={[0, 0, 0.4]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.9 * R, 0.9 * R, 0.75 * R, 32]} />
+      <mesh position={[0, 0, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[1.0 * R, 0.9 * R, 0.75 * R, 32]} />
         <meshStandardMaterial 
           color="#2a2a2a" 
           metalness={0.6}
@@ -45,7 +56,7 @@ const Pedestal = () => {
       </mesh>
       
       {/* Kovový límec */}
-      <mesh position={[0, 0, 0.3]} receiveShadow>
+      <mesh position={[0, 0.35, 0]} receiveShadow rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.85 * R, 0.03 * R, 16, 32]} />
         <meshStandardMaterial 
           color="#c0c0c0" 
@@ -60,10 +71,10 @@ const Pedestal = () => {
 const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; height: number }) => {
   const rad = (angle * Math.PI) / 180;
   const x = radius * Math.cos(rad);
-  const y = radius * Math.sin(rad);
+  const z = radius * Math.sin(rad);
   
   return (
-    <mesh position={[x, y, height / 2]} castShadow>
+    <mesh position={[x, height / 2, z]} castShadow>
       <cylinderGeometry args={[0.02, 0.02, height, 16]} />
       <meshStandardMaterial 
         color="#c0c0c0"
@@ -76,7 +87,7 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
 
 const WheelRim = ({ radius }: { radius: number }) => {
   return (
-    <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+    <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
       <torusGeometry args={[radius - 0.03, 0.04, 16, 64]} />
       <meshStandardMaterial 
         color="#8B4513"
@@ -91,13 +102,13 @@ const CenterHub = ({ radius }: { radius: number }) => {
   return (
     <group>
       {/* Spodní platforma */}
-      <mesh position={[0, 0, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.02, 0]} rotation={[0, 0, 0]}>
         <cylinderGeometry args={[radius, radius, 0.04, 32]} />
         <meshStandardMaterial color="#d4af37" metalness={0.8} roughness={0.2} />
       </mesh>
       
       {/* Horní kolečko */}
-      <mesh position={[0, 0, 0.06]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.06, 0]} rotation={[0, 0, 0]}>
         <cylinderGeometry args={[radius * 0.6, radius * 0.6, 0.03, 32]} />
         <meshStandardMaterial color="#ffd700" metalness={0.9} roughness={0.1} />
       </mesh>
@@ -150,7 +161,7 @@ const WheelSegment3D = ({
   // Text position
   const textRadius = 0.7 * radius;
   const textX = textRadius * Math.cos(midAngle);
-  const textY = textRadius * Math.sin(midAngle);
+  const textZ = textRadius * Math.sin(midAngle);
   
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     if (isClickable && onClick && segment.type !== 'bankrot') {
@@ -164,7 +175,7 @@ const WheelSegment3D = ({
       {/* Segment */}
       <mesh 
         position={[0, 0, 0]}
-        rotation={[Math.PI / 2, 0, 0]}
+        rotation={[0, 0, 0]}
         receiveShadow
         onClick={handleClick}
         onPointerOver={(e) => {
@@ -187,8 +198,8 @@ const WheelSegment3D = ({
       
       {/* Text label */}
       <Text
-        position={[textX, textY, 0.08]}
-        rotation={[0, 0, midAngle + Math.PI / 2]}
+        position={[textX, 0.08, textZ]}
+        rotation={[0, midAngle + Math.PI / 2, 0]}
         fontSize={0.2}
         color="white"
         anchorX="center"
@@ -217,13 +228,13 @@ const PlayerToken3D = ({
   const radius = 2.5;
   
   const x = radius * Math.cos(angle);
-  const y = radius * Math.sin(angle);
-  const z = 0.15;
+  const z = radius * Math.sin(angle);
+  const y = 0.15;
   
   return (
     <group position={[x, y, z]}>
       {/* Žeton jako válec */}
-      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+      <mesh castShadow rotation={[0, 0, 0]}>
         <cylinderGeometry args={[0.15, 0.15, 0.05, 32]} />
         <meshStandardMaterial 
           color={player.color}
@@ -267,17 +278,17 @@ const WheelDisk = ({
   
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.z = rotation;
+      groupRef.current.rotation.y = rotation;
     }
   });
   
   return (
     <group 
       ref={groupRef}
-      position={[0, 0, wheelY]}
+      position={[0, wheelY, 0]}
     >
       {/* Hlavní disk */}
-      <mesh castShadow receiveShadow rotation={[Math.PI / 2, 0, 0]}>
+      <mesh castShadow receiveShadow rotation={[0, 0, 0]}>
         <cylinderGeometry args={[R, R, diskHeight, 64]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
@@ -340,22 +351,28 @@ const Scene = ({
 }) => {
   return (
     <>
-      <ambientLight intensity={0.6} />
+      <CameraController />
+      
+      {/* Debug helpers */}
+      <axesHelper args={[5]} />
+      <gridHelper args={[10, 10]} position={[0, 0, 0]} />
+      
+      <ambientLight intensity={0.7} />
       <directionalLight 
-        position={[5, 5, 8]} 
-        intensity={1.2} 
+        position={[5, 8, 5]} 
+        intensity={1.5} 
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
       />
       <spotLight 
-        position={[0, 0, 10]} 
+        position={[0, 8, 0]} 
         intensity={0.8} 
         angle={0.6}
         penumbra={0.5}
         castShadow
       />
-      <pointLight position={[-5, -5, 5]} intensity={0.4} color="#4488ff" />
+      <pointLight position={[-5, 5, -5]} intensity={0.4} color="#4488ff" />
       
       <Pedestal />
       <WheelDisk 
@@ -380,8 +397,8 @@ export const Wheel3D = ({
     <div className="relative w-full h-full min-h-[500px] max-h-[70vh]">
       <Canvas
         camera={{ 
-          position: [0, -3.5, 4],
-          fov: 45,
+          position: [0, 2.5, 6],
+          fov: 50,
           near: 0.1,
           far: 100
         }}
