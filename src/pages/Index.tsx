@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Wheel } from '@/components/game/Wheel';
+import { useState, useEffect } from 'react';
+import { Wheel3D } from '@/components/game/Wheel3D';
 import { PlayerScores } from '@/components/game/PlayerScores';
 import { BottomDock } from '@/components/game/BottomDock';
 import { GameState, WheelSegment } from '@/types/game';
@@ -29,6 +29,7 @@ const Index = () => {
   const [isPlacingTokens, setIsPlacingTokens] = useState(true);
   const [tokenPositions, setTokenPositions] = useState<Map<number, number>>(new Map());
   const [tokensPlaced, setTokensPlaced] = useState<Set<number>>(new Set());
+  const [wheelRotation, setWheelRotation] = useState(0);
 
   const handleTokenPlace = (segmentId: number) => {
     if (tokensPlaced.has(gameState.currentPlayer)) return;
@@ -150,6 +151,36 @@ const Index = () => {
   const handleSpin = () => {
     setGameState((prev) => ({ ...prev, isSpinning: true }));
     setShowLetterSelector(false);
+    
+    // Calculate final rotation
+    const spins = 5 + Math.random() * 3;
+    const finalSegmentIndex = Math.floor(Math.random() * 32);
+    const segmentAngle = (Math.PI * 2) / 32;
+    const finalRotation = wheelRotation + spins * Math.PI * 2 + finalSegmentIndex * segmentAngle;
+    
+    // Animate rotation
+    const duration = 4000;
+    const startTime = Date.now();
+    const startRotation = wheelRotation;
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const currentRotation = startRotation + (finalRotation - startRotation) * eased;
+      
+      setWheelRotation(currentRotation);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        handleSpinComplete(wheelSegments[finalSegmentIndex]);
+      }
+    };
+    
+    animate();
   };
 
   const newRound = () => {
@@ -187,20 +218,42 @@ const Index = () => {
         </div>
 
         {/* Wheel */}
-        <Wheel
+        <Wheel3D
+          rotation={wheelRotation}
           onSpinComplete={handleSpinComplete}
           isSpinning={gameState.isSpinning}
-          disabled={showLetterSelector}
           tokenPositions={tokenPositions}
           onSegmentClick={handleTokenPlace}
           placingTokensMode={isPlacingTokens}
           players={gameState.players}
           currentPlayer={gameState.currentPlayer}
         />
+        
+        {/* Token placement instruction */}
+        {isPlacingTokens && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="bg-background/90 backdrop-blur-md px-8 py-4 rounded-lg border-2 border-primary shadow-2xl">
+              <p className="text-2xl font-bold text-primary text-center">
+                HRÁČ {gameState.currentPlayer + 1}: Umístěte žeton
+              </p>
+              <p className="text-sm text-muted-foreground text-center mt-2">
+                Klikněte na segment kola
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Floating Controls */}
         {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && (
           <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-40">
+            <Button
+              onClick={handleSpin}
+              variant="default"
+              size="lg"
+              className="text-2xl px-12 py-8 shadow-lg backdrop-blur-md bg-primary text-primary-foreground hover:scale-110 transition-transform"
+            >
+              ROZTOČIT
+            </Button>
             <Button
               onClick={newRound}
               variant="secondary"
