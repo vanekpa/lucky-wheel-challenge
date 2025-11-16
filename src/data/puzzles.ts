@@ -43,7 +43,7 @@ export const puzzles = [
 
 export const wheelSegments = [
   // První polovina (0-15)
-  { id: 0, value: 'NIČ', color: 'nic', type: 'nic' as const },
+  { id: 0, value: 'NIC', color: 'nic', type: 'nic' as const },
   { id: 1, value: 500, color: 'wheel-green', type: 'points' as const },
   { id: 2, value: 100, color: 'wheel-purple', type: 'points' as const },
   { id: 3, value: 500, color: 'wheel-green', type: 'points' as const },

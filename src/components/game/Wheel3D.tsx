@@ -154,16 +154,6 @@ const Pedestal = () => {
           roughness={0.3}
         />
       </mesh>
-      
-      {/* Kovový límec */}
-      <mesh position={[0, 0.35, 0]} receiveShadow rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.85 * R, 0.03 * R, 16, 32]} />
-        <meshStandardMaterial 
-          color="#c0c0c0" 
-          metalness={0.9}
-          roughness={0.1}
-        />
-      </mesh>
     </group>
   );
 };
@@ -185,18 +175,6 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
   );
 };
 
-const WheelRim = ({ radius }: { radius: number }) => {
-  return (
-    <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
-      <torusGeometry args={[radius - 0.03, 0.04, 16, 64]} />
-      <meshStandardMaterial 
-        color="#5a3a1a"
-        metalness={0.3}
-        roughness={0.7}
-      />
-    </mesh>
-  );
-};
 
 const CenterHub = ({ radius }: { radius: number }) => {
   return (
@@ -351,29 +329,32 @@ const PlayerToken3D = ({
   );
 };
 
-// 3D Pointer that shows which segment is selected
+// 3D Pointer that shows which segment is selected (static wooden pointer)
 const Pointer3D = () => {
+  const R = 3;
+  const pointerHeight = 3.0;
+  
   return (
-    <group position={[0, 4.2, 0]}>
-      {/* Yellow triangle pointer */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.3, 0.6, 3]} />
+    <group position={[0, pointerHeight, R * 0.95]} rotation={[Math.PI / 6, 0, 0]}>
+      {/* Wooden pointer body */}
+      <mesh castShadow>
+        <boxGeometry args={[0.15, 0.8, 0.05]} />
+        <meshStandardMaterial 
+          color="#8B4513"
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </mesh>
+      
+      {/* Yellow tip */}
+      <mesh position={[0, -0.5, 0]} rotation={[0, 0, Math.PI]} castShadow>
+        <coneGeometry args={[0.2, 0.4, 4]} />
         <meshStandardMaterial 
           color="#ffd700"
           emissive="#ffd700"
           emissiveIntensity={0.5}
-          metalness={0.3}
-          roughness={0.4}
         />
       </mesh>
-      
-      {/* Light on the pointer tip */}
-      <pointLight 
-        position={[0, -0.35, 0]} 
-        intensity={1.5} 
-        distance={2}
-        color="#ffd700"
-      />
     </group>
   );
 };
@@ -427,9 +408,6 @@ const WheelDisk = ({
         />
       ))}
       
-      {/* Vnější ráfek */}
-      <WheelRim radius={R} />
-      
       {/* Kolíky mezi segmenty */}
       {wheelSegments.map((_, i) => (
         <WheelPeg 
@@ -481,28 +459,29 @@ const Scene = ({
       />
       <CameraController />
       
-      <ambientLight intensity={1.5} />
+      <ambientLight intensity={2.0} />
       <pointLight 
         position={[0, 5, 0]} 
-        intensity={1.2} 
+        intensity={1.5} 
         distance={10}
         decay={2}
       />
       <directionalLight 
         position={[5, 8, 5]} 
-        intensity={1.5}
+        intensity={2.0}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
       />
       <spotLight 
         position={[0, 8, 0]} 
-        intensity={0.8} 
+        intensity={1.2} 
         angle={0.6}
         penumbra={0.5}
         castShadow
       />
-      <pointLight position={[-5, 5, -5]} intensity={0.4} color="#4488ff" />
+      <pointLight position={[5, 3, 5]} intensity={0.8} color="#ffffff" />
+      <pointLight position={[-5, 3, -5]} intensity={0.8} color="#ffffff" />
       
       <Pointer3D />
       <Pedestal />
