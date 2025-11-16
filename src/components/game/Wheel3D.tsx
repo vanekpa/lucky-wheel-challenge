@@ -259,9 +259,23 @@ const WheelSegment3D = ({
         <meshStandardMaterial 
           color={color}
           emissive={color}
-          emissiveIntensity={segment.color === 'wheel-yellow' ? 0.35 : 0.2}
-          metalness={0.2}
-          roughness={0.6}
+          emissiveIntensity={
+            segment.color === 'bankrot' || segment.color === 'nic' 
+              ? 0.0  // Černé segmenty bez emissive
+              : segment.color === 'wheel-yellow' 
+                ? 0.35 
+                : 0.2
+          }
+          metalness={
+            segment.color === 'bankrot' || segment.color === 'nic'
+              ? 0.0  // Žádná kovová odlesk pro černé segmenty
+              : 0.2
+          }
+          roughness={
+            segment.color === 'bankrot' || segment.color === 'nic'
+              ? 1.0  // Maximální drsnost = žádné odrazy světla
+              : 0.6
+          }
           side={THREE.DoubleSide}
         />
       </mesh>
