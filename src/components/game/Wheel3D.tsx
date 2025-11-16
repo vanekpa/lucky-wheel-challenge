@@ -221,8 +221,8 @@ const WheelSegment3D = ({
   const segmentThickness = 0.05;
   
   const wedgeGeometry = useMemo(() => {
-    // Pro clockwise rotaci prohodit úhly
-    return createWedgeGeometry(innerRadius, outerRadius, nextAngle, angle, segmentThickness);
+    // Správné pořadí úhlů: angle → nextAngle (proti směru hodinových ručiček)
+    return createWedgeGeometry(innerRadius, outerRadius, angle, nextAngle, segmentThickness);
   }, [angle, nextAngle, innerRadius, outerRadius]);
   
   const color = getColorFromSegment(segment.color);
