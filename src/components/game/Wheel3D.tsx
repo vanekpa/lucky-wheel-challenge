@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, ThreeEvent, useThree } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { wheelSegments } from '@/data/puzzles';
 import { WheelSegment, Player } from '@/types/game';
@@ -415,6 +415,14 @@ const Scene = ({
 }) => {
   return (
     <>
+      <OrbitControls 
+        target={[0, 2.7, 0]}
+        enableDamping
+        dampingFactor={0.05}
+        minDistance={3}
+        maxDistance={15}
+        maxPolarAngle={Math.PI / 2}
+      />
       <CameraController />
       
       <ambientLight intensity={1.5} />
