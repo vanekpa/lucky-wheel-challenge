@@ -434,7 +434,7 @@ const WheelDisk = ({
         <WheelSegment3D 
           key={segment.id}
           segment={segment}
-          index={i}
+          index={31 - i}
           totalSegments={wheelSegments.length}
           radius={R}
           diskHeight={diskHeight}
@@ -447,7 +447,7 @@ const WheelDisk = ({
       {[...wheelSegments].reverse().map((_, i) => (
         <WheelPeg 
           key={`peg-${i}`}
-          angle={(i * 360) / wheelSegments.length}
+          angle={((31 - i) * 360) / wheelSegments.length}
           radius={0.9 * R}
           height={0.08 * R}
         />
