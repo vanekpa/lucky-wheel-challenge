@@ -41,47 +41,50 @@ const createWedgeGeometry = (
   const segments = 32;
   const vertices: number[] = [];
   const indices: number[] = [];
-  const normals: number[] = [];
-  const uvs: number[] = [];
+  
+  let vertexIndex = 0;
   
   // Create vertices for the wedge shape (top and bottom faces)
+  const topInnerVertices: number[] = [];
+  const topOuterVertices: number[] = [];
+  const bottomInnerVertices: number[] = [];
+  const bottomOuterVertices: number[] = [];
+  
   for (let i = 0; i <= segments; i++) {
     const angle = startAngle + (endAngle - startAngle) * (i / segments);
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     
     // Top face vertices
+    topInnerVertices.push(vertexIndex);
     vertices.push(innerRadius * cos, thickness / 2, innerRadius * sin);
+    vertexIndex++;
+    
+    topOuterVertices.push(vertexIndex);
     vertices.push(outerRadius * cos, thickness / 2, outerRadius * sin);
+    vertexIndex++;
     
     // Bottom face vertices
+    bottomInnerVertices.push(vertexIndex);
     vertices.push(innerRadius * cos, -thickness / 2, innerRadius * sin);
+    vertexIndex++;
+    
+    bottomOuterVertices.push(vertexIndex);
     vertices.push(outerRadius * cos, -thickness / 2, outerRadius * sin);
-    
-    // Normals for top face
-    normals.push(0, 1, 0);
-    normals.push(0, 1, 0);
-    
-    // Normals for bottom face
-    normals.push(0, -1, 0);
-    normals.push(0, -1, 0);
-    
-    // UVs
-    const u = i / segments;
-    uvs.push(0, u, 1, u, 0, u, 1, u);
+    vertexIndex++;
   }
   
   // Create faces for top and bottom
   for (let i = 0; i < segments; i++) {
-    const topInner = i * 4;
-    const topOuter = i * 4 + 1;
-    const nextTopInner = (i + 1) * 4;
-    const nextTopOuter = (i + 1) * 4 + 1;
+    const topInner = topInnerVertices[i];
+    const topOuter = topOuterVertices[i];
+    const nextTopInner = topInnerVertices[i + 1];
+    const nextTopOuter = topOuterVertices[i + 1];
     
-    const bottomInner = i * 4 + 2;
-    const bottomOuter = i * 4 + 3;
-    const nextBottomInner = (i + 1) * 4 + 2;
-    const nextBottomOuter = (i + 1) * 4 + 3;
+    const bottomInner = bottomInnerVertices[i];
+    const bottomOuter = bottomOuterVertices[i];
+    const nextBottomInner = bottomInnerVertices[i + 1];
+    const nextBottomOuter = bottomOuterVertices[i + 1];
     
     // Top face
     indices.push(topInner, topOuter, nextTopInner);
@@ -90,11 +93,35 @@ const createWedgeGeometry = (
     // Bottom face (reversed winding)
     indices.push(bottomInner, nextBottomInner, bottomOuter);
     indices.push(bottomOuter, nextBottomInner, nextBottomOuter);
+    
+    // Inner arc side faces
+    indices.push(topInner, bottomInner, nextTopInner);
+    indices.push(bottomInner, nextBottomInner, nextTopInner);
+    
+    // Outer arc side faces
+    indices.push(topOuter, nextTopOuter, bottomOuter);
+    indices.push(nextTopOuter, nextBottomOuter, bottomOuter);
   }
   
+  // Start edge side face (from inner to outer radius at startAngle)
+  const startTopInner = topInnerVertices[0];
+  const startTopOuter = topOuterVertices[0];
+  const startBottomInner = bottomInnerVertices[0];
+  const startBottomOuter = bottomOuterVertices[0];
+  
+  indices.push(startTopInner, startBottomInner, startTopOuter);
+  indices.push(startBottomInner, startBottomOuter, startTopOuter);
+  
+  // End edge side face (from inner to outer radius at endAngle)
+  const endTopInner = topInnerVertices[segments];
+  const endTopOuter = topOuterVertices[segments];
+  const endBottomInner = bottomInnerVertices[segments];
+  const endBottomOuter = bottomOuterVertices[segments];
+  
+  indices.push(endTopInner, endTopOuter, endBottomInner);
+  indices.push(endTopOuter, endBottomOuter, endBottomInner);
+  
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   
@@ -262,9 +289,10 @@ const WheelSegment3D = ({
       </mesh>
       
       {/* Text label */}
+      <group rotation={[0, midAngle, 0]} position={[0, diskHeight/2 + segmentThickness + 0.02, 0]}>
         <Text
-          position={[textX, diskHeight/2 + segmentThickness + 0.02, textZ]}
-          rotation={[-Math.PI / 2, 0, midAngle]}
+          position={[textRadius, 0, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
           fontSize={0.3}
           color="white"
           anchorX="center"
@@ -275,6 +303,7 @@ const WheelSegment3D = ({
         >
           {String(segment.value)}
         </Text>
+      </group>
     </group>
   );
 };
