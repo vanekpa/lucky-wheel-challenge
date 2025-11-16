@@ -24,7 +24,7 @@ const getColorFromSegment = (colorName: string): string => {
     'wheel-green': '#4ade80',    // Světlejší zelená
     'wheel-purple': '#c084fc',   // Světlejší fialová/magenta
     'bankrot': '#000000',        // Čistá černá
-    'nic': '#000000',            // Čistá černá (stejně jako BANKROT)
+    'nic': '#6b7280',            // Střední šedá
   };
   return colorMap[colorName] || '#ffffff';
 };
@@ -329,83 +329,41 @@ const PlayerToken3D = ({
   );
 };
 
-// 3D Pointer that shows which segment is selected (wooden pointer attached to frame)
+// 3D Pointer that shows which segment is selected (simple arrow pointing down)
 const Pointer3D = () => {
   const R = 3;
   const diskHeight = 0.1 * R;
   const wheelY = 1.525 + diskHeight/2;  // 1.675
   
   return (
-    <group>
-      {/* Horizontální rám/držák pointeru */}
-      <mesh position={[0, wheelY + 0.9, R * 0.85]} castShadow>
-        <boxGeometry args={[0.8, 0.1, 0.15]} />
+    <group position={[0, wheelY + 0.5, R * 0.95]} rotation={[Math.PI / 3.5, 0, 0]}>
+      {/* Hlavní tělo ukazatele - úzký trojúhelník/šipka z tmavého dřeva */}
+      <mesh castShadow>
+        <boxGeometry args={[0.18, 1.0, 0.08]} />
         <meshStandardMaterial 
-          color="#8B7355"  // Světlejší dřevo pro rám
-          roughness={0.8}
+          color="#5d4037"  // Tmavé dřevo
+          roughness={0.85}
           metalness={0.0}
         />
       </mesh>
       
-      {/* Vertikální podpora rámu */}
-      <mesh position={[-0.35, wheelY + 0.65, R * 0.85]} castShadow>
-        <boxGeometry args={[0.08, 0.6, 0.12]} />
+      {/* Žlutá špička - jednoduchý kužel */}
+      <mesh position={[0, -0.55, 0]} rotation={[0, 0, Math.PI]} castShadow>
+        <coneGeometry args={[0.25, 0.45, 4]} />
         <meshStandardMaterial 
-          color="#654321"  // Tmavší dřevo
-          roughness={0.9}
-          metalness={0.0}
+          color="#ffd700"
+          emissive="#ffd700"
+          emissiveIntensity={0.3}
+          roughness={0.4}
         />
       </mesh>
       
-      {/* Pointer - hlavní tělo (větší, zřetelnější) */}
-      <mesh 
-        position={[0, wheelY + 0.65, R * 0.9]} 
-        rotation={[Math.PI / 3, 0, 0]}  // 60° dolů
-        castShadow
-      >
-        <boxGeometry args={[0.25, 1.2, 0.1]} />
-        <meshStandardMaterial 
-          color="#654321"  // Tmavší hnědá (dřevo)
-          roughness={0.9}
-          metalness={0.0}
-        />
-      </mesh>
-      
-      {/* Žlutá špička - větší a ostřejší */}
-      <mesh 
-        position={[0, wheelY + 0.15, R * 1.05]} 
-        rotation={[Math.PI / 3, 0, Math.PI]}  // Stejný úhel jako tělo
-        castShadow
-      >
-        <coneGeometry args={[0.35, 0.7, 4]} />
-        <meshStandardMaterial 
-          color="#ffed4e"  // Jasnější žlutá
-          emissive="#ffed4e"
-          emissiveIntensity={0.4}
-          metalness={0.2}
-          roughness={0.3}
-        />
-      </mesh>
-      
-      {/* Dekorativní detail na pointeru */}
-      <mesh 
-        position={[0, wheelY + 0.8, R * 0.88]} 
-        rotation={[Math.PI / 3, 0, 0]}
-        castShadow
-      >
-        <boxGeometry args={[0.28, 0.15, 0.12]} />
-        <meshStandardMaterial 
-          color="#4a2f1a"  // Ještě tmavší dřevo pro kontrast
-          roughness={0.95}
-        />
-      </mesh>
-      
-      {/* Světlo na špičce pro lepší viditelnost */}
+      {/* Světlo na špičce */}
       <pointLight 
-        position={[0, wheelY + 0.15, R * 1.05]} 
-        intensity={0.8} 
-        distance={1.5}
-        color="#ffed4e"
+        position={[0, -0.8, 0]} 
+        intensity={0.5} 
+        distance={1.2}
+        color="#ffd700"
       />
     </group>
   );
