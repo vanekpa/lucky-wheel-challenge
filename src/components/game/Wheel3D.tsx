@@ -398,7 +398,7 @@ const WheelDisk = ({
   
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = rotation;
+      groupRef.current.rotation.y = -rotation; // Záporná rotace = clockwise (po směru hodinových ručiček)
     }
   });
   
