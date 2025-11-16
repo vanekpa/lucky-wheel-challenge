@@ -198,7 +198,7 @@ const Index = () => {
       const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
       const pointerAngle = Math.PI * 3 / 2;
       const segmentAngle = (Math.PI * 2) / 32;
-      const targetAngle = (pointerAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
+      const targetAngle = (pointerAngle + normalizedRotation) % (Math.PI * 2);
       const detectedSegmentIndex = Math.floor(targetAngle / segmentAngle) % 32;
       const currentSegment = wheelSegments[detectedSegmentIndex];
       
