@@ -30,6 +30,15 @@ const Index = () => {
   const [tokenPositions, setTokenPositions] = useState<Map<number, number>>(new Map());
   const [tokensPlaced, setTokensPlaced] = useState<Set<number>>(new Set());
   const [wheelRotation, setWheelRotation] = useState(0);
+  
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState({
+    segmentIndex: -1,
+    value: '',
+    color: '',
+    rotation: 0,
+    pointerAngle: 0,
+  });
 
   const handleTokenPlace = (segmentId: number) => {
     if (tokensPlaced.has(gameState.currentPlayer)) return;
@@ -184,20 +193,26 @@ const Index = () => {
       
       setWheelRotation(currentRotation);
       
+      // Update debug info during animation
+      const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      const pointerAngle = Math.PI * 3 / 2;
+      const segmentAngle = (Math.PI * 2) / 32;
+      const targetAngle = (pointerAngle + normalizedRotation) % (Math.PI * 2);
+      const detectedSegmentIndex = Math.floor(targetAngle / segmentAngle) % 32;
+      const currentSegment = wheelSegments[detectedSegmentIndex];
+      
+      setDebugInfo({
+        segmentIndex: detectedSegmentIndex,
+        value: String(currentSegment.value),
+        color: currentSegment.color,
+        rotation: normalizedRotation * 180 / Math.PI,
+        pointerAngle: pointerAngle * 180 / Math.PI,
+      });
+      
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Detekovat segment pod pointerem (clockwise rotace)
-        const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        const pointerAngle = Math.PI * 3 / 2; // 270° = -Z (kde je pointer)
-        const segmentAngle = (Math.PI * 2) / 32;
-        
-        // Pro clockwise rotaci: segment_angle - rotation = pointer_angle
-        // Tedy: segment_angle = pointer_angle + rotation
-        const targetAngle = (pointerAngle + normalizedRotation) % (Math.PI * 2);
-        const detectedSegmentIndex = Math.floor(targetAngle / segmentAngle) % 32;
-        
-        handleSpinComplete(wheelSegments[detectedSegmentIndex]);
+        handleSpinComplete(currentSegment);
       }
     };
     
@@ -225,6 +240,21 @@ const Index = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-400/30 via-purple-400/30 to-pink-400/30 text-foreground">
+      {/* Debug Panel */}
+      <div className="absolute top-2 left-2 bg-black/80 text-white p-4 rounded-lg z-50 font-mono text-sm space-y-1 border border-yellow-500/50">
+        <div className="text-yellow-400 font-bold mb-2">🔧 DEBUG INFO</div>
+        <div>Segment Index: <span className="text-green-400">{debugInfo.segmentIndex}</span></div>
+        <div>Value: <span className="text-cyan-400 font-bold">{debugInfo.value}</span></div>
+        <div>Color: <span className="text-pink-400">{debugInfo.color}</span></div>
+        <div className="flex items-center gap-2">
+          Preview: <div className="w-6 h-6 rounded border border-white" style={{ backgroundColor: debugInfo.color }}></div>
+        </div>
+        <div className="pt-2 border-t border-gray-600">
+          <div>Rotation: <span className="text-purple-400">{debugInfo.rotation.toFixed(1)}°</span></div>
+          <div>Pointer: <span className="text-purple-400">{debugInfo.pointerAngle.toFixed(1)}°</span></div>
+        </div>
+      </div>
+      
       {/* Top Dock - Player Scores */}
       <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
 
