@@ -211,9 +211,9 @@ const WheelSegment3D = ({
   onClick?: () => void;
   isClickable?: boolean;
 }) => {
-  // Negative angles for clockwise rotation
-  const angle = -(index * Math.PI * 2) / totalSegments;
-  const nextAngle = -((index + 1) * Math.PI * 2) / totalSegments;
+  // Use positive angles, wheel rotation handles clockwise direction
+  const angle = (index * Math.PI * 2) / totalSegments;
+  const nextAngle = ((index + 1) * Math.PI * 2) / totalSegments;
   const midAngle = (angle + nextAngle) / 2;
   
   const innerRadius = 0.25 * radius;
