@@ -281,7 +281,7 @@ const WheelSegment3D = ({
         <meshStandardMaterial 
           color={color}
           emissive={color}
-          emissiveIntensity={0.3}
+          emissiveIntensity={0.4}
           metalness={0.2}
           roughness={0.6}
           side={THREE.DoubleSide}
@@ -351,7 +351,34 @@ const PlayerToken3D = ({
   );
 };
 
-const WheelDisk = ({ 
+// 3D Pointer that shows which segment is selected
+const Pointer3D = () => {
+  return (
+    <group position={[0, 4.2, 0]}>
+      {/* Yellow triangle pointer */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.3, 0.6, 3]} />
+        <meshStandardMaterial 
+          color="#ffd700"
+          emissive="#ffd700"
+          emissiveIntensity={0.5}
+          metalness={0.3}
+          roughness={0.4}
+        />
+      </mesh>
+      
+      {/* Light on the pointer tip */}
+      <pointLight 
+        position={[0, -0.35, 0]} 
+        intensity={1.5} 
+        distance={2}
+        color="#ffd700"
+      />
+    </group>
+  );
+};
+
+const WheelDisk = ({
   rotation, 
   tokenPositions,
   players,
@@ -367,7 +394,7 @@ const WheelDisk = ({
   const groupRef = useRef<THREE.Group>(null);
   const R = 3;
   const diskHeight = 0.1 * R;
-  const wheelY = 0.9 * R;
+  const wheelY = 1.525 + diskHeight / 2;
   
   useFrame(() => {
     if (groupRef.current) {
@@ -477,6 +504,7 @@ const Scene = ({
       />
       <pointLight position={[-5, 5, -5]} intensity={0.4} color="#4488ff" />
       
+      <Pointer3D />
       <Pedestal />
       <WheelDisk 
         rotation={rotation}
@@ -524,18 +552,6 @@ export const Wheel3D = ({
           isClickable={placingTokensMode}
         />
       </Canvas>
-      
-      {/* Pointer overlay */}
-      <div className="absolute top-[15%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <div className="relative">
-          <div 
-            className="w-0 h-0 border-l-[30px] border-l-transparent border-r-[30px] border-r-transparent border-t-[60px] border-t-primary"
-            style={{
-              filter: 'drop-shadow(0 0 20px hsl(var(--primary) / 0.8))',
-            }}
-          />
-        </div>
-      </div>
     </div>
   );
 };
