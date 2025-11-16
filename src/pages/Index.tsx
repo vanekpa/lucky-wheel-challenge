@@ -191,11 +191,10 @@ const Index = () => {
         const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         const pointerAngle = Math.PI * 3 / 2; // 270° = -Z (kde je 3D pointer)
         
-        // S clockwise rotací: segment na angle A je po rotaci R na pozici (A + R)
-        // Chceme najít A kde: A + R = pointerAngle
-        // Tedy: A = pointerAngle - R
+        // Segmenty jsou obrácené (31, 30, 29...), detekce musí toto zohlednit
         const targetAngle = (pointerAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
-        const detectedSegmentIndex = Math.round(targetAngle / segmentAngle) % 32;
+        const rawIndex = Math.round(targetAngle / segmentAngle) % 32;
+        const detectedSegmentIndex = 31 - rawIndex; // Obrátit index
         
         handleSpinComplete(wheelSegments[detectedSegmentIndex]);
       }

@@ -429,12 +429,12 @@ const WheelDisk = ({
         <meshStandardMaterial color="#2a2a2a" />
       </mesh>
       
-      {/* Segmenty */}
+      {/* Segmenty - obrácené pořadí pro clockwise rotaci */}
       {wheelSegments.map((segment, i) => (
         <WheelSegment3D 
           key={segment.id}
           segment={segment}
-          index={i}
+          index={wheelSegments.length - 1 - i}
           totalSegments={wheelSegments.length}
           radius={R}
           diskHeight={diskHeight}
