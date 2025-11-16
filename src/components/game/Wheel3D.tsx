@@ -34,7 +34,7 @@ const CameraController = () => {
   const { camera } = useThree();
   
   useEffect(() => {
-    camera.lookAt(0, 2.5, 0);
+    camera.lookAt(0, 2.7, 0);
     camera.updateProjectionMatrix();
   }, [camera]);
   
@@ -153,7 +153,7 @@ const WheelSegment3D = ({
   }, [angle, nextAngle, radius]);
   
   const extrudeSettings = useMemo(() => ({
-    depth: diskHeight,
+    depth: diskHeight * 0.8,
     bevelEnabled: false
   }), [diskHeight]);
   
@@ -175,8 +175,8 @@ const WheelSegment3D = ({
     <group>
       {/* Segment */}
       <mesh 
-        position={[0, 0, 0]}
-        rotation={[0, 0, 0]}
+        position={[0, diskHeight/2, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
         onClick={handleClick}
         onPointerOver={(e) => {
@@ -199,8 +199,8 @@ const WheelSegment3D = ({
       
       {/* Text label */}
         <Text
-          position={[textX, 0.08, textZ]}
-          rotation={[0, midAngle + Math.PI / 2, 0]}
+          position={[textX, diskHeight/2 + 0.03, textZ]}
+          rotation={[-Math.PI / 2, 0, midAngle]}
           fontSize={0.2}
           color="white"
           anchorX="center"
@@ -402,7 +402,7 @@ export const Wheel3D = ({
     <div className="relative w-full h-full min-h-[500px] max-h-[70vh]">
       <Canvas
         camera={{ 
-          position: [0, 2.5, 6],
+          position: [6, 3, 6],
           fov: 50,
           near: 0.1,
           far: 100
