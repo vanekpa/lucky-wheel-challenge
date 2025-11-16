@@ -329,17 +329,22 @@ const PlayerToken3D = ({
   );
 };
 
-// 3D Pointer that shows which segment is selected (simple arrow pointing down)
+// 3D Pointer that shows which segment is selected (small triangular wedge on wheel rim)
 const Pointer3D = () => {
   const R = 3;
-  const diskHeight = 0.1 * R;
+  const diskHeight = 0.1 * R;  // 0.3
   const wheelY = 1.525 + diskHeight/2;  // 1.675
+  const segmentThickness = 0.05;
+  
+  // Pointer bude těsně nad povrchem segmentů na okraji kola
+  const pointerY = wheelY + diskHeight/2 + segmentThickness;  // 1.675 + 0.15 + 0.05 = 1.875
+  const pointerZ = R * 0.92;  // 2.76 - na okraji mezi kolíčky
   
   return (
-    <group position={[0, wheelY + 1.2, R * 1.0]} rotation={[Math.PI / 10, 0, 0]}>
-      {/* Hlavní tělo ukazatele - úzký trojúhelník/šipka z tmavého dřeva */}
-      <mesh castShadow>
-        <boxGeometry args={[0.18, 0.8, 0.08]} />
+    <group position={[0, pointerY, pointerZ]}>
+      {/* Malý plochý trojúhelník z tmavého dřeva */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <coneGeometry args={[0.15, 0.25, 3]} />
         <meshStandardMaterial 
           color="#5d4037"  // Tmavé dřevo
           roughness={0.85}
@@ -347,22 +352,21 @@ const Pointer3D = () => {
         />
       </mesh>
       
-      {/* Žlutá špička - jednoduchý kužel */}
-      <mesh position={[0, -0.5, 0]} rotation={[0, 0, Math.PI]} castShadow>
-        <coneGeometry args={[0.25, 0.45, 4]} />
+      {/* Malá žlutá špička */}
+      <mesh position={[0, 0, 0.15]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <coneGeometry args={[0.12, 0.15, 3]} />
         <meshStandardMaterial 
           color="#ffd700"
           emissive="#ffd700"
           emissiveIntensity={0.3}
-          roughness={0.4}
         />
       </mesh>
       
-      {/* Světlo na špičce */}
+      {/* Jemné světlo */}
       <pointLight 
-        position={[0, -0.75, 0]} 
-        intensity={0.5} 
-        distance={1.2}
+        position={[0, 0, 0.2]} 
+        intensity={0.3} 
+        distance={0.8}
         color="#ffd700"
       />
     </group>
