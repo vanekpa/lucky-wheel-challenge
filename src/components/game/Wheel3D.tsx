@@ -221,8 +221,8 @@ const WheelSegment3D = ({
   const segmentThickness = 0.05;
   
   const wedgeGeometry = useMemo(() => {
-    // Swap angles because nextAngle < angle for clockwise rotation
-    return createWedgeGeometry(innerRadius, outerRadius, nextAngle, angle, segmentThickness);
+    // Keep original order: angle to nextAngle (clockwise)
+    return createWedgeGeometry(innerRadius, outerRadius, angle, nextAngle, segmentThickness);
   }, [angle, nextAngle, innerRadius, outerRadius]);
   
   const color = getColorFromSegment(segment.color);
