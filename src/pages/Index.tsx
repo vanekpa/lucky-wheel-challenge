@@ -34,6 +34,7 @@ const Index = () => {
   // Debug state
   const [debugInfo, setDebugInfo] = useState({
     segmentIndex: -1,
+    segmentId: -1,
     value: '',
     color: '',
     rotation: 0,
@@ -203,6 +204,7 @@ const Index = () => {
       
       setDebugInfo({
         segmentIndex: detectedSegmentIndex,
+        segmentId: currentSegment.id,
         value: String(currentSegment.value),
         color: currentSegment.color,
         rotation: normalizedRotation * 180 / Math.PI,
@@ -244,6 +246,7 @@ const Index = () => {
       <div className="absolute top-2 left-2 bg-black/80 text-white p-4 rounded-lg z-50 font-mono text-sm space-y-1 border border-yellow-500/50">
         <div className="text-yellow-400 font-bold mb-2">🔧 DEBUG INFO</div>
         <div>Segment Index: <span className="text-green-400">{debugInfo.segmentIndex}</span></div>
+        <div>Segment ID: <span className="text-green-400">{debugInfo.segmentId}</span></div>
         <div>Value: <span className="text-cyan-400 font-bold">{debugInfo.value}</span></div>
         <div>Color: <span className="text-pink-400">{debugInfo.color}</span></div>
         <div className="flex items-center gap-2">
