@@ -203,7 +203,7 @@ const Index = () => {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-background text-foreground">
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-400/30 via-purple-400/30 to-pink-400/30 text-foreground">
       {/* Top Dock - Player Scores */}
       <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
 
