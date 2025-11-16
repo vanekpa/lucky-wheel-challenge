@@ -336,10 +336,10 @@ const Pointer3D = () => {
   const wheelY = 1.525 + diskHeight/2;  // 1.675
   
   return (
-    <group position={[0, wheelY + 0.5, R * 0.95]} rotation={[Math.PI / 3.5, 0, 0]}>
+    <group position={[0, wheelY + 1.2, R * 1.0]} rotation={[Math.PI / 10, 0, 0]}>
       {/* Hlavní tělo ukazatele - úzký trojúhelník/šipka z tmavého dřeva */}
       <mesh castShadow>
-        <boxGeometry args={[0.18, 0.65, 0.08]} />
+        <boxGeometry args={[0.18, 0.8, 0.08]} />
         <meshStandardMaterial 
           color="#5d4037"  // Tmavé dřevo
           roughness={0.85}
@@ -348,7 +348,7 @@ const Pointer3D = () => {
       </mesh>
       
       {/* Žlutá špička - jednoduchý kužel */}
-      <mesh position={[0, -0.42, 0]} rotation={[0, 0, Math.PI]} castShadow>
+      <mesh position={[0, -0.5, 0]} rotation={[0, 0, Math.PI]} castShadow>
         <coneGeometry args={[0.25, 0.45, 4]} />
         <meshStandardMaterial 
           color="#ffd700"
@@ -360,7 +360,7 @@ const Pointer3D = () => {
       
       {/* Světlo na špičce */}
       <pointLight 
-        position={[0, -0.65, 0]} 
+        position={[0, -0.75, 0]} 
         intensity={0.5} 
         distance={1.2}
         color="#ffd700"
