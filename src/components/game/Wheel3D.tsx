@@ -343,7 +343,7 @@ const Pointer3D = () => {
   return (
     <group position={[0, pointerY, pointerZ]} rotation={[0, Math.PI, 0]}>
       {/* Malý plochý trojúhelník z tmavého dřeva */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} castShadow>
         <coneGeometry args={[0.15, 0.25, 3]} />
         <meshStandardMaterial 
           color="#5d4037"  // Tmavé dřevo
@@ -353,7 +353,7 @@ const Pointer3D = () => {
       </mesh>
       
       {/* Malá žlutá špička */}
-      <mesh position={[0, 0, 0.15]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+      <mesh position={[0, 0, -0.15]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
         <coneGeometry args={[0.12, 0.15, 3]} />
         <meshStandardMaterial 
           color="#ffd700"
