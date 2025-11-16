@@ -211,9 +211,10 @@ const WheelSegment3D = ({
   onClick?: () => void;
   isClickable?: boolean;
 }) => {
-  // Use positive angles, wheel rotation handles clockwise direction
-  const angle = (index * Math.PI * 2) / totalSegments;
-  const nextAngle = ((index + 1) * Math.PI * 2) / totalSegments;
+  // Add -90° offset so segment 0 starts at pointer position (-Z axis)
+  const angleOffset = -Math.PI / 2;
+  const angle = (index * Math.PI * 2) / totalSegments + angleOffset;
+  const nextAngle = ((index + 1) * Math.PI * 2) / totalSegments + angleOffset;
   const midAngle = (angle + nextAngle) / 2;
   
   const innerRadius = 0.25 * radius;
@@ -447,7 +448,7 @@ const WheelDisk = ({
       {wheelSegments.map((segment) => (
         <WheelPeg 
           key={`peg-${segment.id}`}
-          angle={(segment.id * 360) / wheelSegments.length}
+          angle={(segment.id * 360) / wheelSegments.length - 90}
           radius={0.9 * R}
           height={0.08 * R}
         />
