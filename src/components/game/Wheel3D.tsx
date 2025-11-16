@@ -211,8 +211,9 @@ const WheelSegment3D = ({
   onClick?: () => void;
   isClickable?: boolean;
 }) => {
-  const angle = (index * Math.PI * 2) / totalSegments;
-  const nextAngle = ((index + 1) * Math.PI * 2) / totalSegments;
+  // Negative angles for clockwise rotation
+  const angle = -(index * Math.PI * 2) / totalSegments;
+  const nextAngle = -((index + 1) * Math.PI * 2) / totalSegments;
   const midAngle = (angle + nextAngle) / 2;
   
   const innerRadius = 0.25 * radius;
@@ -220,7 +221,8 @@ const WheelSegment3D = ({
   const segmentThickness = 0.05;
   
   const wedgeGeometry = useMemo(() => {
-    return createWedgeGeometry(innerRadius, outerRadius, angle, nextAngle, segmentThickness);
+    // Swap angles because nextAngle < angle for clockwise rotation
+    return createWedgeGeometry(innerRadius, outerRadius, nextAngle, angle, segmentThickness);
   }, [angle, nextAngle, innerRadius, outerRadius]);
   
   const color = getColorFromSegment(segment.color);
