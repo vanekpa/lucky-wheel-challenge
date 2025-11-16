@@ -189,7 +189,7 @@ const Index = () => {
       } else {
         // Detekovat segment pod pointerem (clockwise rotace)
         const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        const pointerAngle = Math.PI;
+        const pointerAngle = Math.PI * 3 / 2; // 270° = -Z (kde je 3D pointer)
         
         // S clockwise rotací: segment na angle A je po rotaci R na pozici (A + R)
         // Chceme najít A kde: A + R = pointerAngle
