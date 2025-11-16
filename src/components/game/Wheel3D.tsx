@@ -430,11 +430,11 @@ const WheelDisk = ({
       </mesh>
       
       {/* Segmenty */}
-      {[...wheelSegments].reverse().map((segment, i) => (
+      {wheelSegments.map((segment) => (
         <WheelSegment3D 
           key={segment.id}
           segment={segment}
-          index={31 - i}
+          index={segment.id}
           totalSegments={wheelSegments.length}
           radius={R}
           diskHeight={diskHeight}
@@ -444,10 +444,10 @@ const WheelDisk = ({
       ))}
       
       {/* Kolíky mezi segmenty */}
-      {[...wheelSegments].reverse().map((_, i) => (
+      {wheelSegments.map((segment) => (
         <WheelPeg 
-          key={`peg-${i}`}
-          angle={((31 - i) * 360) / wheelSegments.length}
+          key={`peg-${segment.id}`}
+          angle={(segment.id * 360) / wheelSegments.length}
           radius={0.9 * R}
           height={0.08 * R}
         />
