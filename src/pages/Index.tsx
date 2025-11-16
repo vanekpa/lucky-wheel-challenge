@@ -156,7 +156,13 @@ const Index = () => {
     const spins = 5 + Math.random() * 3;
     const finalSegmentIndex = Math.floor(Math.random() * 32);
     const segmentAngle = (Math.PI * 2) / 32;
-    const finalRotation = wheelRotation + spins * Math.PI * 2 + finalSegmentIndex * segmentAngle;
+    
+    // Pointer je na úhlu π (180°), vypočítat rotaci aby segment byl pod pointerem
+    // Segment má střed na: segmentIndex * segmentAngle + segmentAngle/2
+    // Chceme aby tento střed byl na pozici π (kde je pointer)
+    // rotation segmentu = jeho_střed - π
+    const targetRotationForSegment = finalSegmentIndex * segmentAngle + segmentAngle / 2 - Math.PI;
+    const finalRotation = wheelRotation + spins * Math.PI * 2 + targetRotationForSegment;
     
     // Animate rotation
     const duration = 4000;
@@ -176,7 +182,13 @@ const Index = () => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        handleSpinComplete(wheelSegments[finalSegmentIndex]);
+        // Detekovat segment pod pointerem
+        const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const pointerAngle = Math.PI;
+        const relativeAngle = (pointerAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
+        const detectedSegmentIndex = Math.floor(relativeAngle / segmentAngle) % 32;
+        
+        handleSpinComplete(wheelSegments[detectedSegmentIndex]);
       }
     };
     
