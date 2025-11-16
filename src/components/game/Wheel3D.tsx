@@ -24,7 +24,7 @@ const getColorFromSegment = (colorName: string): string => {
     'wheel-green': '#4ade80',    // Světlejší zelená
     'wheel-purple': '#c084fc',   // Světlejší fialová/magenta
     'bankrot': '#000000',        // Čistá černá
-    'nic': '#6b7280',            // Střední šedá
+    'nic': '#000000',            // Černá
   };
   return colorMap[colorName] || '#ffffff';
 };
@@ -297,31 +297,36 @@ const PlayerToken3D = ({
 }) => {
   const player = players[playerId];
   const angle = (segmentId * Math.PI * 2) / 32 + Math.PI / 32;
-  const radius = 2.5;
+  const radius = 2.7; // Zvětšeno pro lepší viditelnost
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);
-  const y = 0.15;
+  const y = 0.25; // Zvednuto výše
   
   return (
     <group position={[x, y, z]}>
-      {/* Žeton jako válec */}
+      {/* Žeton jako válec - větší a výraznější */}
       <mesh castShadow rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 0.05, 32]} />
+        <cylinderGeometry args={[0.2, 0.2, 0.08, 32]} />
         <meshStandardMaterial 
           color={player.color}
-          metalness={0.4}
-          roughness={0.5}
+          metalness={0.6}
+          roughness={0.3}
+          emissive={player.color}
+          emissiveIntensity={0.3}
         />
       </mesh>
       
-      {/* Číslo na žetonu */}
+      {/* Číslo na žetonu - větší */}
       <Text
-        position={[0, 0, 0.04]}
-        fontSize={0.1}
+        position={[0, 0.05, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.12}
         color="white"
         anchorX="center"
         anchorY="middle"
+        outlineWidth={0.01}
+        outlineColor="#000000"
       >
         {String(playerId + 1)}
       </Text>
