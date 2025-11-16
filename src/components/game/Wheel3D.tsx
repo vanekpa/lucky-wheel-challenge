@@ -338,10 +338,10 @@ const Pointer3D = () => {
   
   // Pointer bude těsně nad povrchem segmentů na okraji kola
   const pointerY = wheelY + diskHeight/2 + segmentThickness;  // 1.675 + 0.15 + 0.05 = 1.875
-  const pointerZ = R * 0.92;  // 2.76 - na okraji mezi kolíčky
+  const pointerZ = -R * 0.92;  // -2.76 - na okraji z druhé strany, ukazuje dovnitř
   
   return (
-    <group position={[0, pointerY, pointerZ]}>
+    <group position={[0, pointerY, pointerZ]} rotation={[0, Math.PI, 0]}>
       {/* Malý plochý trojúhelník z tmavého dřeva */}
       <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
         <coneGeometry args={[0.15, 0.25, 3]} />
