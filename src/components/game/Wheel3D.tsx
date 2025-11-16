@@ -35,6 +35,7 @@ const CameraController = () => {
   
   useEffect(() => {
     camera.lookAt(0, 2.5, 0);
+    camera.updateProjectionMatrix();
   }, [camera]);
   
   return null;
@@ -197,19 +198,18 @@ const WheelSegment3D = ({
       </mesh>
       
       {/* Text label */}
-      <Text
-        position={[textX, 0.08, textZ]}
-        rotation={[0, midAngle + Math.PI / 2, 0]}
-        fontSize={0.2}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/Inter-Bold.woff"
-        outlineWidth={0.01}
-        outlineColor="#000000"
-      >
-        {String(segment.value)}
-      </Text>
+        <Text
+          position={[textX, 0.08, textZ]}
+          rotation={[0, midAngle + Math.PI / 2, 0]}
+          fontSize={0.2}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.01}
+          outlineColor="#000000"
+        >
+          {String(segment.value)}
+        </Text>
     </group>
   );
 };
@@ -250,7 +250,6 @@ const PlayerToken3D = ({
         color="white"
         anchorX="center"
         anchorY="middle"
-        font="/fonts/Inter-Bold.woff"
       >
         {String(playerId + 1)}
       </Text>
@@ -353,11 +352,17 @@ const Scene = ({
     <>
       <CameraController />
       
+      {/* TEST BOX - Must be visible */}
+      <mesh position={[0, 2.5, 0]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="red" />
+      </mesh>
+      
       {/* Debug helpers */}
       <axesHelper args={[5]} />
       <gridHelper args={[10, 10]} position={[0, 0, 0]} />
       
-      <ambientLight intensity={0.7} />
+      <ambientLight intensity={1.2} />
       <directionalLight 
         position={[5, 8, 5]} 
         intensity={1.5} 
