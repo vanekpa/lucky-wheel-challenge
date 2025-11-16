@@ -11,9 +11,9 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>({
     currentPlayer: 0,
     players: [
-      { id: 0, name: 'HRÁČ 1', score: 0, color: 'hsl(var(--wheel-red))' },
-      { id: 1, name: 'HRÁČ 2', score: 0, color: 'hsl(var(--wheel-blue))' },
-      { id: 2, name: 'HRÁČ 3', score: 0, color: 'hsl(var(--wheel-yellow))' },
+      { id: 0, name: 'HRÁČ 1', score: 0, color: '#ff6b6b' }, // Červená
+      { id: 1, name: 'HRÁČ 2', score: 0, color: '#5b8def' }, // Modrá
+      { id: 2, name: 'HRÁČ 3', score: 0, color: '#ffd700' }, // Žlutá
     ],
     puzzle: {
       ...puzzles[0],
@@ -157,12 +157,17 @@ const Index = () => {
     const finalSegmentIndex = Math.floor(Math.random() * 32);
     const segmentAngle = (Math.PI * 2) / 32;
     
-    // Pointer je na úhlu π (180°), vypočítat rotaci aby segment byl pod pointerem
-    // Segment má střed na: segmentIndex * segmentAngle + segmentAngle/2
-    // Chceme aby tento střed byl na pozici π (kde je pointer)
-    // rotation segmentu = jeho_střed - π
-    const targetRotationForSegment = finalSegmentIndex * segmentAngle + segmentAngle / 2 - Math.PI;
-    const finalRotation = wheelRotation + spins * Math.PI * 2 + targetRotationForSegment;
+    // Clockwise rotace: segment s angle A bude po rotaci R na pozici (A + R)
+    // Chceme: A + R = π (pointer angle)
+    // Tedy: R = π - A
+    const segmentCenterAngle = finalSegmentIndex * segmentAngle + segmentAngle / 2;
+    const targetRotation = Math.PI - segmentCenterAngle;
+    
+    // Normalize to 0-2π and ensure positive
+    const normalizedTarget = ((targetRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    
+    // Add full spins
+    const finalRotation = wheelRotation + spins * Math.PI * 2 + normalizedTarget;
     
     // Animate rotation
     const duration = 4000;
@@ -182,11 +187,15 @@ const Index = () => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Detekovat segment pod pointerem
+        // Detekovat segment pod pointerem (clockwise rotace)
         const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         const pointerAngle = Math.PI;
-        const relativeAngle = (pointerAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
-        const detectedSegmentIndex = Math.floor(relativeAngle / segmentAngle) % 32;
+        
+        // S clockwise rotací: segment na angle A je po rotaci R na pozici (A + R)
+        // Chceme najít A kde: A + R = pointerAngle
+        // Tedy: A = pointerAngle - R
+        const targetAngle = (pointerAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
+        const detectedSegmentIndex = Math.round(targetAngle / segmentAngle) % 32;
         
         handleSpinComplete(wheelSegments[detectedSegmentIndex]);
       }
