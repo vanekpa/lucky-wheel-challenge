@@ -29,6 +29,78 @@ const getColorFromSegment = (colorName: string): string => {
   return colorMap[colorName] || '#ffffff';
 };
 
+// Helper function to create a wedge-shaped geometry for wheel segments
+const createWedgeGeometry = (
+  innerRadius: number, 
+  outerRadius: number, 
+  startAngle: number, 
+  endAngle: number, 
+  thickness: number
+): THREE.BufferGeometry => {
+  const geometry = new THREE.BufferGeometry();
+  const segments = 32;
+  const vertices: number[] = [];
+  const indices: number[] = [];
+  const normals: number[] = [];
+  const uvs: number[] = [];
+  
+  // Create vertices for the wedge shape (top and bottom faces)
+  for (let i = 0; i <= segments; i++) {
+    const angle = startAngle + (endAngle - startAngle) * (i / segments);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    
+    // Top face vertices
+    vertices.push(innerRadius * cos, thickness / 2, innerRadius * sin);
+    vertices.push(outerRadius * cos, thickness / 2, outerRadius * sin);
+    
+    // Bottom face vertices
+    vertices.push(innerRadius * cos, -thickness / 2, innerRadius * sin);
+    vertices.push(outerRadius * cos, -thickness / 2, outerRadius * sin);
+    
+    // Normals for top face
+    normals.push(0, 1, 0);
+    normals.push(0, 1, 0);
+    
+    // Normals for bottom face
+    normals.push(0, -1, 0);
+    normals.push(0, -1, 0);
+    
+    // UVs
+    const u = i / segments;
+    uvs.push(0, u, 1, u, 0, u, 1, u);
+  }
+  
+  // Create faces for top and bottom
+  for (let i = 0; i < segments; i++) {
+    const topInner = i * 4;
+    const topOuter = i * 4 + 1;
+    const nextTopInner = (i + 1) * 4;
+    const nextTopOuter = (i + 1) * 4 + 1;
+    
+    const bottomInner = i * 4 + 2;
+    const bottomOuter = i * 4 + 3;
+    const nextBottomInner = (i + 1) * 4 + 2;
+    const nextBottomOuter = (i + 1) * 4 + 3;
+    
+    // Top face
+    indices.push(topInner, topOuter, nextTopInner);
+    indices.push(topOuter, nextTopOuter, nextTopInner);
+    
+    // Bottom face (reversed winding)
+    indices.push(bottomInner, nextBottomInner, bottomOuter);
+    indices.push(bottomOuter, nextBottomInner, nextBottomOuter);
+  }
+  
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  
+  return geometry;
+};
+
 // Camera controller to look at the wheel
 const CameraController = () => {
   const { camera } = useThree();
@@ -138,24 +210,13 @@ const WheelSegment3D = ({
   const nextAngle = ((index + 1) * Math.PI * 2) / totalSegments;
   const midAngle = (angle + nextAngle) / 2;
   
-  const segmentShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const innerRadius = 0.25 * radius;
-    const outerRadius = 0.95 * radius;
-    
-    shape.moveTo(innerRadius * Math.cos(angle), innerRadius * Math.sin(angle));
-    shape.lineTo(outerRadius * Math.cos(angle), outerRadius * Math.sin(angle));
-    shape.arc(0, 0, outerRadius, angle, nextAngle, false);
-    shape.lineTo(innerRadius * Math.cos(nextAngle), innerRadius * Math.sin(nextAngle));
-    shape.arc(0, 0, innerRadius, nextAngle, angle, true);
-    
-    return shape;
-  }, [angle, nextAngle, radius]);
+  const innerRadius = 0.25 * radius;
+  const outerRadius = 0.95 * radius;
+  const segmentThickness = 0.02;
   
-  const extrudeSettings = useMemo(() => ({
-    depth: diskHeight * 0.8,
-    bevelEnabled: false
-  }), [diskHeight]);
+  const wedgeGeometry = useMemo(() => {
+    return createWedgeGeometry(innerRadius, outerRadius, angle, nextAngle, segmentThickness);
+  }, [angle, nextAngle, innerRadius, outerRadius]);
   
   const color = getColorFromSegment(segment.color);
   
@@ -175,9 +236,9 @@ const WheelSegment3D = ({
     <group>
       {/* Segment */}
       <mesh 
-        position={[0, diskHeight/2, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, diskHeight/2 + segmentThickness/2, 0]}
         receiveShadow
+        castShadow
         onClick={handleClick}
         onPointerOver={(e) => {
           if (isClickable && segment.type !== 'bankrot') {
@@ -189,23 +250,24 @@ const WheelSegment3D = ({
           document.body.style.cursor = 'auto';
         }}
       >
-        <extrudeGeometry args={[segmentShape, extrudeSettings]} />
+        <primitive object={wedgeGeometry} />
         <meshStandardMaterial 
           color={color}
           metalness={0.2}
           roughness={0.6}
+          side={THREE.DoubleSide}
         />
       </mesh>
       
       {/* Text label */}
         <Text
-          position={[textX, diskHeight/2 + 0.03, textZ]}
+          position={[textX, diskHeight/2 + segmentThickness + 0.01, textZ]}
           rotation={[-Math.PI / 2, 0, midAngle]}
-          fontSize={0.2}
+          fontSize={0.25}
           color="white"
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.01}
+          outlineWidth={0.015}
           outlineColor="#000000"
         >
           {String(segment.value)}
@@ -351,16 +413,6 @@ const Scene = ({
   return (
     <>
       <CameraController />
-      
-      {/* TEST BOX - Must be visible */}
-      <mesh position={[0, 2.5, 0]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="red" />
-      </mesh>
-      
-      {/* Debug helpers */}
-      <axesHelper args={[5]} />
-      <gridHelper args={[10, 10]} position={[0, 0, 0]} />
       
       <ambientLight intensity={1.2} />
       <directionalLight 
