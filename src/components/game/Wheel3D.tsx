@@ -150,7 +150,7 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
     <mesh position={[x, height / 2, z]} castShadow>
       <cylinderGeometry args={[0.02, 0.02, height, 16]} />
       <meshStandardMaterial 
-        color="#c0c0c0"
+        color="#d4af37"
         metalness={0.9}
         roughness={0.1}
       />
@@ -163,7 +163,7 @@ const WheelRim = ({ radius }: { radius: number }) => {
     <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
       <torusGeometry args={[radius - 0.03, 0.04, 16, 64]} />
       <meshStandardMaterial 
-        color="#8B4513"
+        color="#5a3a1a"
         metalness={0.3}
         roughness={0.7}
       />
@@ -212,7 +212,7 @@ const WheelSegment3D = ({
   
   const innerRadius = 0.25 * radius;
   const outerRadius = 0.95 * radius;
-  const segmentThickness = 0.02;
+  const segmentThickness = 0.05;
   
   const wedgeGeometry = useMemo(() => {
     return createWedgeGeometry(innerRadius, outerRadius, angle, nextAngle, segmentThickness);
@@ -253,6 +253,8 @@ const WheelSegment3D = ({
         <primitive object={wedgeGeometry} />
         <meshStandardMaterial 
           color={color}
+          emissive={color}
+          emissiveIntensity={0.3}
           metalness={0.2}
           roughness={0.6}
           side={THREE.DoubleSide}
@@ -261,13 +263,14 @@ const WheelSegment3D = ({
       
       {/* Text label */}
         <Text
-          position={[textX, diskHeight/2 + segmentThickness + 0.01, textZ]}
+          position={[textX, diskHeight/2 + segmentThickness + 0.02, textZ]}
           rotation={[-Math.PI / 2, 0, midAngle]}
-          fontSize={0.25}
+          fontSize={0.3}
           color="white"
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.015}
+          outlineWidth={0.02}
+          fillOpacity={1}
           outlineColor="#000000"
         >
           {String(segment.value)}
@@ -351,7 +354,7 @@ const WheelDisk = ({
       {/* Hlavní disk */}
       <mesh castShadow receiveShadow rotation={[0, 0, 0]}>
         <cylinderGeometry args={[R, R, diskHeight, 64]} />
-        <meshStandardMaterial color="#1a1a1a" />
+        <meshStandardMaterial color="#2a2a2a" />
       </mesh>
       
       {/* Segmenty */}
@@ -414,10 +417,16 @@ const Scene = ({
     <>
       <CameraController />
       
-      <ambientLight intensity={1.2} />
+      <ambientLight intensity={1.5} />
+      <pointLight 
+        position={[0, 5, 0]} 
+        intensity={1.2} 
+        distance={10}
+        decay={2}
+      />
       <directionalLight 
         position={[5, 8, 5]} 
-        intensity={1.5} 
+        intensity={1.5}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
