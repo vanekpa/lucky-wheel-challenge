@@ -199,9 +199,7 @@ const Index = () => {
       const pointerAngle = Math.PI * 3 / 2;
       const segmentAngle = (Math.PI * 2) / 32;
       const targetAngle = (pointerAngle + normalizedRotation) % (Math.PI * 2);
-      // Kompenzovat vizuální offset -π/2 přidáním +π/2 do detekce
-      const adjustedAngle = (targetAngle + Math.PI / 2) % (Math.PI * 2);
-      const detectedSegmentIndex = Math.floor(adjustedAngle / segmentAngle) % 32;
+      const detectedSegmentIndex = Math.floor(targetAngle / segmentAngle) % 32;
       const currentSegment = wheelSegments[detectedSegmentIndex];
       
       setDebugInfo({
