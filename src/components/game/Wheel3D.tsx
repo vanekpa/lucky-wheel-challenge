@@ -327,8 +327,8 @@ const PlayerToken3D = ({
   
   return (
     <group position={[x, y, z]}>
-      {/* Žeton jako válec položený naplocho */}
-      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+      {/* Žeton jako válec */}
+      <mesh castShadow rotation={[0, 0, 0]}>
         <cylinderGeometry args={[0.2, 0.2, 0.08, 32]} />
         <meshStandardMaterial 
           color="#ffffff"
