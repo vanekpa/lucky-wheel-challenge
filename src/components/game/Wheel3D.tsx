@@ -327,8 +327,8 @@ const PlayerToken3D = ({
   
   return (
     <group position={[x, y, z]}>
-      {/* Žeton jako válec */}
-      <mesh castShadow rotation={[0, 0, 0]}>
+      {/* Žeton jako válec položený naplocho */}
+      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.2, 0.2, 0.08, 32]} />
         <meshStandardMaterial 
           color="#ffffff"
@@ -341,19 +341,19 @@ const PlayerToken3D = ({
       
       {/* Geometrický tvar podle hráče */}
       {playerId === 0 && ( // Modrý = Trojúhelník
-        <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[0, 0, 0.05]} rotation={[0, 0, 0]}>
           <coneGeometry args={[0.1, 0.15, 3]} />
           <meshStandardMaterial color={player.color} />
         </mesh>
       )}
       {playerId === 1 && ( // Červený = Čtverec
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[0.15, 0.15, 0.02]} />
+        <mesh position={[0, 0, 0.05]}>
+          <boxGeometry args={[0.15, 0.02, 0.15]} />
           <meshStandardMaterial color={player.color} />
         </mesh>
       )}
       {playerId === 2 && ( // Žlutý = Kolečko
-        <mesh position={[0, 0.05, 0]}>
+        <mesh position={[0, 0, 0.05]}>
           <sphereGeometry args={[0.08, 16, 16]} />
           <meshStandardMaterial color={player.color} />
         </mesh>
