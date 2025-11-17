@@ -284,10 +284,14 @@ const WheelSegment3D = ({
       </mesh>
       
       {/* Text label */}
-      <group rotation={[0, midAngle, 0]} position={[0, diskHeight/2 + segmentThickness + 0.02, 0]}>
+      <group position={[0, diskHeight/2 + segmentThickness + 0.02, 0]}>
         <Text
-          position={[textRadius, 0, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
+          position={[
+            textRadius * Math.cos(midAngle),
+            0,
+            textRadius * Math.sin(midAngle)
+          ]}
+          rotation={[-Math.PI / 2, 0, -midAngle]}
           fontSize={0.3}
           color="white"
           anchorX="center"
