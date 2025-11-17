@@ -323,7 +323,7 @@ const PlayerToken3D = ({
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);
-  const y = 0.15; // Nižší, položený na segmentu
+  const y = 0.25; // Zvednuto nad povrch, aby žeton lépe vynikal
   
   return (
     <group position={[x, y, z]}>
