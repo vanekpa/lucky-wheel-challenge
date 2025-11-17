@@ -18,11 +18,11 @@ interface Wheel3DProps {
 
 const getColorFromSegment = (colorName: string): string => {
   const colorMap: Record<string, string> = {
-    'wheel-red': '#ff6b6b',      // Světlejší lososová/červená
-    'wheel-blue': '#5b8def',     // Jasná královská modrá
-    'wheel-yellow': '#ffd700',   // Zlatá žlutá
-    'wheel-green': '#4ade80',    // Světlejší zelená
-    'wheel-purple': '#c084fc',   // Světlejší fialová/magenta
+    'wheel-red': '#fe3d2f',      // Sytá červená
+    'wheel-blue': '#3b69ee',     // Živá královská modrá
+    'wheel-yellow': '#fed815',   // Jasná žlutá (1000 bodů)
+    'wheel-green': '#409b7b',    // Tyrkysová zelená (500 bodů)
+    'wheel-purple': '#e741e8',   // Zářivá fialová (100 bodů)
     'bankrot': '#000000',        // Čistá černá
     'nic': '#000000',            // Černá
   };
