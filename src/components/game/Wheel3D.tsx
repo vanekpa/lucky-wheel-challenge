@@ -318,17 +318,17 @@ const PlayerToken3D = ({
 }) => {
   const player = players[playerId];
   const angleOffset = -Math.PI / 2; // Stejný offset jako u segmentů
-  const angle = (segmentId * Math.PI * 2) / 32 + angleOffset;
-  const radius = 2.7; // Zvětšeno pro lepší viditelnost
+  const angle = (segmentId * Math.PI * 2) / 32 + angleOffset + (Math.PI / 32); // Vystředění do segmentu
+  const radius = 2.7;
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);
-  const y = 0.25; // Zvednuto výše
+  const y = 0.15; // Nižší, položený na segmentu
   
   return (
     <group position={[x, y, z]}>
-      {/* Žeton jako válec - větší a výraznější */}
-      <mesh castShadow rotation={[0, 0, 0]}>
+      {/* Žeton jako válec položený ploše */}
+      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.2, 0.2, 0.08, 32]} />
         <meshStandardMaterial 
           color="#ffffff"
@@ -341,19 +341,19 @@ const PlayerToken3D = ({
       
       {/* Geometrický tvar podle hráče */}
       {playerId === 0 && ( // Modrý = Trojúhelník
-        <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[0, 0, 0.05]} rotation={[0, 0, 0]}>
           <coneGeometry args={[0.1, 0.15, 3]} />
           <meshStandardMaterial color={player.color} />
         </mesh>
       )}
       {playerId === 1 && ( // Červený = Čtverec
-        <mesh position={[0, 0.08, 0]}>
-          <boxGeometry args={[0.15, 0.15, 0.02]} />
+        <mesh position={[0, 0, 0.05]}>
+          <boxGeometry args={[0.15, 0.02, 0.15]} />
           <meshStandardMaterial color={player.color} />
         </mesh>
       )}
       {playerId === 2 && ( // Žlutý = Kolečko
-        <mesh position={[0, 0.08, 0]}>
+        <mesh position={[0, 0, 0.05]}>
           <sphereGeometry args={[0.08, 16, 16]} />
           <meshStandardMaterial color={player.color} />
         </mesh>
