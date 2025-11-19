@@ -51,17 +51,26 @@ const Index = () => {
       return newMap;
     });
 
-    setTokensPlaced((prev) => new Set(prev).add(gameState.currentPlayer));
-
-    // Move to next player for token placement
-    const nextPlayer = (gameState.currentPlayer + 1) % 3;
-    if (tokensPlaced.size === 2) {
-      // All tokens placed, enable spinning
-      setIsPlacingTokens(false);
-      setGameState((prev) => ({ ...prev, currentPlayer: 0 }));
-    } else {
-      setGameState((prev) => ({ ...prev, currentPlayer: nextPlayer }));
-    }
+    setTokensPlaced((prev) => {
+      const newSet = new Set(prev).add(gameState.currentPlayer);
+      
+      console.log(`🎯 Token placed by Player ${gameState.currentPlayer + 1}, Total tokens: ${newSet.size}`);
+      
+      // Check with UPDATED state
+      if (newSet.size === 3) {
+        // All 3 tokens placed, enable spinning
+        console.log('✅ All tokens placed! Enabling spin button');
+        setIsPlacingTokens(false);
+        setGameState((prevState) => ({ ...prevState, currentPlayer: 0 }));
+      } else {
+        // Next player's turn
+        const nextPlayer = (gameState.currentPlayer + 1) % 3;
+        console.log(`➡️ Next player: ${nextPlayer + 1}`);
+        setGameState((prevState) => ({ ...prevState, currentPlayer: nextPlayer }));
+      }
+      
+      return newSet;
+    });
   };
 
   const handleSpinComplete = (segment: WheelSegment) => {
