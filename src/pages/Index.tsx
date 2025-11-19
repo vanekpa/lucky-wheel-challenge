@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Wheel3D } from '@/components/game/Wheel3D';
+import { WheelDetailView } from '@/components/game/WheelDetailView';
 import { PlayerScores } from '@/components/game/PlayerScores';
 import { BottomDock } from '@/components/game/BottomDock';
 import { GameState, WheelSegment } from '@/types/game';
@@ -243,8 +244,16 @@ const Index = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-400/30 via-purple-400/30 to-pink-400/30 text-foreground">
+      {/* Camera Detail View - Levý horní roh */}
+      <div className="absolute top-4 left-4 z-40 w-80 h-60 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/20 animate-fade-in">
+        <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wide">
+          🎥 LIVE
+        </div>
+        <WheelDetailView rotation={wheelRotation} />
+      </div>
+
       {/* Debug Panel */}
-      <div className="absolute top-2 left-2 bg-black/80 text-white p-4 rounded-lg z-50 font-mono text-sm space-y-1 border border-yellow-500/50">
+      <div className="absolute top-2 left-[22rem] bg-black/80 text-white p-4 rounded-lg z-50 font-mono text-sm space-y-1 border border-yellow-500/50">
         <div className="text-yellow-400 font-bold mb-2">🔧 DEBUG INFO</div>
         <div>Segment Index: <span className="text-green-400">{debugInfo.segmentIndex}</span></div>
         <div>Segment ID: <span className="text-green-400">{debugInfo.segmentId}</span></div>
