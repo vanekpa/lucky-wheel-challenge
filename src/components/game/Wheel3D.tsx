@@ -7,6 +7,7 @@ import { WheelSegment, Player } from '@/types/game';
 
 interface Wheel3DProps {
   rotation: number;
+  rotationRef?: React.MutableRefObject<number>;
   isSpinning: boolean;
   onSpinComplete: (segment: WheelSegment) => void;
   tokenPositions: Map<number, number>;
@@ -408,32 +409,29 @@ const Pointer3D = () => {
 
 const WheelDisk = ({
   rotation, 
+  rotationRef: externalRotationRef,
   tokenPositions,
   players,
   onSegmentClick,
   isClickable
 }: { 
   rotation: number;
+  rotationRef?: React.MutableRefObject<number>;
   tokenPositions: Map<number, number>;
   players: Player[];
   onSegmentClick?: (segmentId: number) => void;
   isClickable?: boolean;
 }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const rotationRef = useRef(rotation);
   const R = 3;
   const diskHeight = 0.1 * R;
   const wheelY = 1.525 + diskHeight / 2;
   
-  // Update ref when rotation prop changes
-  useEffect(() => {
-    console.log('🔄 Wheel3D rotation updated:', rotation);
-    rotationRef.current = rotation;
-  }, [rotation]);
-  
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = -rotationRef.current; // Záporná rotace = clockwise (po směru hodinových ručiček)
+      // Use external ref if available, otherwise use prop
+      const currentRotation = externalRotationRef?.current ?? rotation;
+      groupRef.current.rotation.y = -currentRotation;
     }
   });
   
@@ -489,13 +487,15 @@ const WheelDisk = ({
 };
 
 const Scene = ({ 
-  rotation, 
+  rotation,
+  rotationRef,
   tokenPositions,
   players,
   onSegmentClick,
   isClickable
 }: { 
   rotation: number;
+  rotationRef?: React.MutableRefObject<number>;
   tokenPositions: Map<number, number>;
   players: Player[];
   onSegmentClick?: (segmentId: number) => void;
@@ -541,6 +541,7 @@ const Scene = ({
       <Pedestal />
       <WheelDisk 
         rotation={rotation}
+        rotationRef={rotationRef}
         tokenPositions={tokenPositions}
         players={players}
         onSegmentClick={onSegmentClick}
@@ -552,11 +553,14 @@ const Scene = ({
 
 export const Wheel3D = ({
   rotation,
+  rotationRef,
   tokenPositions,
   players,
   onSegmentClick,
   placingTokensMode,
 }: Wheel3DProps) => {
+  console.log('🎡 Wheel3D render, rotation:', rotation);
+  
   return (
     <div className="relative w-full h-full min-h-[500px] max-h-[70vh]">
       <Canvas
@@ -580,6 +584,7 @@ export const Wheel3D = ({
       >
         <Scene 
           rotation={rotation}
+          rotationRef={rotationRef}
           tokenPositions={tokenPositions}
           players={players}
           onSegmentClick={onSegmentClick}
