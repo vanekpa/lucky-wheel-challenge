@@ -75,6 +75,7 @@ const Index = () => {
   };
 
   const handleSpinComplete = (segment: WheelSegment) => {
+    setShowLetterSelector(false);
     setGameState((prev) => ({ ...prev, isSpinning: false, wheelResult: segment }));
 
     // Check if landed on a token
@@ -125,6 +126,13 @@ const Index = () => {
         duration: 2000,
       });
     }
+    
+    console.log('🎮 After spin complete:', {
+      isSpinning: false,
+      showLetterSelector: segment.type === 'points',
+      isPlacingTokens,
+      segmentType: segment.type,
+    });
   };
 
   const handleLetterSelect = (letter: string) => {
@@ -167,6 +175,12 @@ const Index = () => {
 
     setShowLetterSelector(false);
     setCurrentWheelValue(0);
+    
+    console.log('🎮 After letter select:', {
+      isSpinning: false,
+      showLetterSelector: false,
+      isPlacingTokens,
+    });
   };
 
   const handleSpin = () => {
