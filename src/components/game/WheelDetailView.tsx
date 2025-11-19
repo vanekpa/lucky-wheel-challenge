@@ -181,8 +181,10 @@ const WheelSegment3D = ({ segment, index, segmentAngle, innerRadius, outerRadius
 
 const WheelDisk = ({ rotation }: { rotation: number }) => {
   const meshRef = React.useRef<THREE.Group>(null);
+  const rotationRef = React.useRef(rotation);
   
   useEffect(() => {
+    rotationRef.current = rotation;
     if (meshRef.current) {
       meshRef.current.rotation.y = -rotation;
     }
