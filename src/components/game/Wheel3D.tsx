@@ -420,13 +420,19 @@ const WheelDisk = ({
   isClickable?: boolean;
 }) => {
   const groupRef = useRef<THREE.Group>(null);
+  const rotationRef = useRef(rotation);
   const R = 3;
   const diskHeight = 0.1 * R;
   const wheelY = 1.525 + diskHeight / 2;
   
+  // Update ref when rotation prop changes
+  useEffect(() => {
+    rotationRef.current = rotation;
+  }, [rotation]);
+  
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = -rotation; // Záporná rotace = clockwise (po směru hodinových ručiček)
+      groupRef.current.rotation.y = -rotationRef.current; // Záporná rotace = clockwise (po směru hodinových ručiček)
     }
   });
   
