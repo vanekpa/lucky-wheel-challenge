@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import React, { useEffect, useRef } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { wheelSegments } from '@/data/puzzles';
 
 interface WheelDetailViewProps {
   rotation: number;
+  rotationRef?: React.MutableRefObject<number>;
 }
 
 const getColorFromSegment = (colorName: string): string => {
@@ -179,16 +180,21 @@ const WheelSegment3D = ({ segment, index, segmentAngle, innerRadius, outerRadius
   );
 };
 
-const WheelDisk = ({ rotation }: { rotation: number }) => {
-  const meshRef = React.useRef<THREE.Group>(null);
-  const rotationRef = React.useRef(rotation);
+const WheelDisk = ({ 
+  rotation,
+  rotationRef: externalRotationRef 
+}: { 
+  rotation: number;
+  rotationRef?: React.MutableRefObject<number>;
+}) => {
+  const meshRef = useRef<THREE.Group>(null);
   
-  useEffect(() => {
-    rotationRef.current = rotation;
+  useFrame(() => {
     if (meshRef.current) {
-      meshRef.current.rotation.y = -rotation;
+      const currentRotation = externalRotationRef?.current ?? rotation;
+      meshRef.current.rotation.y = -currentRotation;
     }
-  }, [rotation]);
+  });
   
   const diskRadius = 3;
   const innerRadius = 0.3;
@@ -217,7 +223,13 @@ const WheelDisk = ({ rotation }: { rotation: number }) => {
   );
 };
 
-const Scene = ({ rotation }: { rotation: number }) => {
+const Scene = ({ 
+  rotation,
+  rotationRef 
+}: { 
+  rotation: number;
+  rotationRef?: React.MutableRefObject<number>;
+}) => {
   return (
     <>
       <CameraController />
@@ -225,13 +237,13 @@ const Scene = ({ rotation }: { rotation: number }) => {
       <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
       <pointLight position={[-5, 5, -5]} intensity={0.5} />
       
-      <WheelDisk rotation={rotation} />
+      <WheelDisk rotation={rotation} rotationRef={rotationRef} />
       <Pointer3D />
     </>
   );
 };
 
-export const WheelDetailView = ({ rotation }: WheelDetailViewProps) => {
+export const WheelDetailView = ({ rotation, rotationRef }: WheelDetailViewProps) => {
   return (
     <div className="w-full h-full">
       <Canvas
@@ -242,8 +254,9 @@ export const WheelDetailView = ({ rotation }: WheelDetailViewProps) => {
           far: 100
         }}
         shadows
+        frameloop="always"
       >
-        <Scene rotation={rotation} />
+        <Scene rotation={rotation} rotationRef={rotationRef} />
       </Canvas>
     </div>
   );
