@@ -114,7 +114,7 @@ const CameraController = () => {
   const { camera } = useThree();
   
   useEffect(() => {
-    camera.lookAt(0, 1.9, 0);
+    camera.lookAt(0, 2.2, -1.4);
     camera.updateProjectionMatrix();
   }, [camera]);
   
@@ -233,9 +233,10 @@ const Scene = ({
   return (
     <>
       <CameraController />
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
-      <pointLight position={[-5, 5, -5]} intensity={0.5} />
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[2, 5, -3]} intensity={1.5} castShadow />
+      <pointLight position={[-2, 3, -4]} intensity={0.8} />
+      <pointLight position={[2, 3, -4]} intensity={0.5} color="#ffffff" />
       
       <WheelDisk rotation={rotation} rotationRef={rotationRef} />
       <Pointer3D />
@@ -248,8 +249,8 @@ export const WheelDetailView = ({ rotation, rotationRef }: WheelDetailViewProps)
     <div className="w-full h-full">
       <Canvas
         camera={{ 
-          position: [0, 4.5, -7],
-          fov: 60,
+          position: [-1.5, 2.8, -3.5],
+          fov: 40,
           near: 0.1,
           far: 100
         }}
