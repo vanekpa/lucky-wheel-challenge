@@ -169,6 +169,9 @@ const Index = () => {
   };
 
   const handleSpin = () => {
+    console.log('🎰 SPIN BUTTON CLICKED!');
+    console.log('Current wheelRotation:', wheelRotation);
+    
     setGameState((prev) => ({ ...prev, isSpinning: true }));
     setShowLetterSelector(false);
     
@@ -189,6 +192,10 @@ const Index = () => {
     // Add full spins
     const finalRotation = wheelRotation + spins * Math.PI * 2 + normalizedTarget;
     
+    console.log('🎯 Target segment:', finalSegmentIndex);
+    console.log('🔄 Final rotation:', finalRotation);
+    console.log('🔄 Starting rotation:', wheelRotation);
+    
     // Animate rotation
     const duration = 4000;
     const startTime = Date.now();
@@ -201,6 +208,8 @@ const Index = () => {
       // Easing function
       const eased = 1 - Math.pow(1 - progress, 3);
       const currentRotation = startRotation + (finalRotation - startRotation) * eased;
+      
+      console.log(`⏱️ Animation progress: ${(progress * 100).toFixed(1)}%, rotation: ${currentRotation.toFixed(2)}`);
       
       setWheelRotation(currentRotation);
       
@@ -225,10 +234,12 @@ const Index = () => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
+        console.log('✅ Animation complete! Final segment:', currentSegment);
         handleSpinComplete(currentSegment);
       }
     };
     
+    console.log('🚀 Starting animation loop...');
     animate();
   };
 

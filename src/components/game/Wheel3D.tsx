@@ -427,6 +427,7 @@ const WheelDisk = ({
   
   // Update ref when rotation prop changes
   useEffect(() => {
+    console.log('🔄 Wheel3D rotation updated:', rotation);
     rotationRef.current = rotation;
   }, [rotation]);
   
@@ -566,6 +567,7 @@ export const Wheel3D = ({
           far: 100
         }}
         shadows
+        frameloop="always"
         gl={{ 
           antialias: true,
           alpha: true 
