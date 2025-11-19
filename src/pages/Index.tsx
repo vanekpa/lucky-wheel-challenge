@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Wheel3D } from '@/components/game/Wheel3D';
 import { WheelDetailView } from '@/components/game/WheelDetailView';
 import { PlayerScores } from '@/components/game/PlayerScores';
@@ -31,6 +31,7 @@ const Index = () => {
   const [tokenPositions, setTokenPositions] = useState<Map<number, number>>(new Map());
   const [tokensPlaced, setTokensPlaced] = useState<Set<number>>(new Set());
   const [wheelRotation, setWheelRotation] = useState(0);
+  const wheelRotationRef = useRef(0);
   
   // Debug state
   const [debugInfo, setDebugInfo] = useState({
@@ -211,6 +212,8 @@ const Index = () => {
       
       console.log(`⏱️ Animation progress: ${(progress * 100).toFixed(1)}%, rotation: ${currentRotation.toFixed(2)}`);
       
+      // Update both state and ref
+      wheelRotationRef.current = currentRotation;
       setWheelRotation(currentRotation);
       
       // Update debug info during animation
@@ -304,14 +307,15 @@ const Index = () => {
         {/* Wheel Container with fixed dimensions */}
         <div className="relative w-full max-w-3xl h-[500px] flex items-center justify-center">
           <Wheel3D
-          rotation={wheelRotation}
-          onSpinComplete={handleSpinComplete}
-          isSpinning={gameState.isSpinning}
-          tokenPositions={tokenPositions}
-          onSegmentClick={handleTokenPlace}
-          placingTokensMode={isPlacingTokens}
-          players={gameState.players}
-          currentPlayer={gameState.currentPlayer}
+            rotation={wheelRotation}
+            rotationRef={wheelRotationRef}
+            isSpinning={gameState.isSpinning}
+            onSpinComplete={handleSpinComplete}
+            tokenPositions={tokenPositions}
+            onSegmentClick={handleTokenPlace}
+            placingTokensMode={isPlacingTokens}
+            players={gameState.players}
+            currentPlayer={gameState.currentPlayer}
           />
         </div>
         
