@@ -132,12 +132,13 @@ const WheelSegment3D = ({
         rotation={
           debugRotation 
             ? [
-                debugRotation.x * Math.PI / 180, 
-                midAngle + debugRotation.y * Math.PI / 180, 
-                debugRotation.z * Math.PI / 180
+                midAngle + debugRotation.y * Math.PI / 180,  // Y first (radial)
+                debugRotation.x * Math.PI / 180,              // X second (tilt)
+                debugRotation.z * Math.PI / 180               // Z third
               ]
-            : [-Math.PI / 2, midAngle - Math.PI / 2, 0]
+            : [midAngle - Math.PI / 2, -Math.PI / 2, 0]  // Y, X, Z order
         }
+        rotation-order="YXZ"
         fontSize={0.18}
         color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
         anchorX="center"
