@@ -112,18 +112,23 @@ const WheelSegment3D = ({
         <primitive object={wedgeGeometry} attach="geometry" />
         <meshStandardMaterial 
           color={color}
-          roughness={0.65}
-          metalness={0.15}
+          roughness={0.4}
+          metalness={0.2}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
         />
       </mesh>
       
       <Text
-        position={[textX, diskHeight/2 + segmentThickness + 0.01, textZ]}
+        position={[textX, diskHeight/2 + segmentThickness + 0.05, textZ]}
         rotation={[-Math.PI / 2, 0, midAngle + Math.PI / 2]}
-        fontSize={0.15}
+        fontSize={0.18}
         color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
         anchorX="center"
         anchorY="middle"
+        outlineWidth={0.01}
+        outlineColor="#000000"
       >
         {segment.value}
       </Text>

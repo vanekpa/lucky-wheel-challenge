@@ -25,6 +25,10 @@ export const createWedgeGeometry = (
   const vertices: number[] = [];
   const indices: number[] = [];
   
+  // Add small overlap to prevent gaps between segments
+  const overlap = 0.002;
+  const adjustedEndAngle = endAngle + overlap;
+  
   let vertexIndex = 0;
   
   const topInnerVertices: number[] = [];
@@ -33,7 +37,7 @@ export const createWedgeGeometry = (
   const bottomOuterVertices: number[] = [];
   
   for (let i = 0; i <= segments; i++) {
-    const angle = startAngle + (endAngle - startAngle) * (i / segments);
+    const angle = startAngle + (adjustedEndAngle - startAngle) * (i / segments);
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     
