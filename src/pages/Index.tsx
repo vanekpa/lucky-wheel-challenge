@@ -3,6 +3,7 @@ import { Wheel3D } from '@/components/game/Wheel3D';
 import { WheelDetailView } from '@/components/game/WheelDetailView';
 import { PlayerScores } from '@/components/game/PlayerScores';
 import { BottomDock } from '@/components/game/BottomDock';
+import { TextDebugPanel } from '@/components/game/TextDebugPanel';
 import { GameState, WheelSegment } from '@/types/game';
 import { puzzles, wheelSegments } from '@/data/puzzles';
 import { toast } from 'sonner';
@@ -41,6 +42,14 @@ const Index = () => {
     color: '',
     rotation: 0,
     pointerAngle: 0,
+  });
+
+  // Debug rotation values
+  const [debugRotation, setDebugRotation] = useState({
+    x: -90,
+    y: -90,
+    z: 0,
+    yOffset: 0.01
   });
 
   useEffect(() => {
@@ -295,6 +304,7 @@ const Index = () => {
           rotationRef={wheelRotationRef}
           tokenPositions={tokenPositions}
           players={gameState.players}
+          debugRotation={debugRotation}
         />
       </div>
 
@@ -332,6 +342,7 @@ const Index = () => {
             placingTokensMode={isPlacingTokens}
             players={gameState.players}
             currentPlayer={gameState.currentPlayer}
+            debugRotation={debugRotation}
           />
         </div>
         
@@ -380,6 +391,18 @@ const Index = () => {
         showLetterSelector={showLetterSelector}
         onLetterSelect={handleLetterSelect}
         disabled={gameState.isSpinning}
+      />
+
+      {/* Debug Panel */}
+      <TextDebugPanel
+        rotationX={debugRotation.x}
+        rotationY={debugRotation.y}
+        rotationZ={debugRotation.z}
+        yOffset={debugRotation.yOffset}
+        onRotationXChange={(x) => setDebugRotation({ ...debugRotation, x })}
+        onRotationYChange={(y) => setDebugRotation({ ...debugRotation, y })}
+        onRotationZChange={(z) => setDebugRotation({ ...debugRotation, z })}
+        onYOffsetChange={(yOffset) => setDebugRotation({ ...debugRotation, yOffset })}
       />
     </div>
   );
