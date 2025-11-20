@@ -124,7 +124,6 @@ const WheelSegment3D = ({
         color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
         anchorX="center"
         anchorY="middle"
-        font="/fonts/Arial-Bold.ttf"
       >
         {segment.value}
       </Text>
