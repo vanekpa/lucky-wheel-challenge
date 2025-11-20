@@ -260,7 +260,7 @@ const Index = () => {
       const pointerAngle = Math.PI * 3 / 2;
       const segmentAngle = (Math.PI * 2) / 32;
       // Account for the -90° offset in Wheel3D segment rendering
-      const targetAngle = (pointerAngle - normalizedRotation + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
+      const targetAngle = (pointerAngle - normalizedRotation - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
       const detectedSegmentIndex = Math.floor(targetAngle / segmentAngle) % 32;
       const currentSegment = wheelSegments[detectedSegmentIndex];
       
@@ -276,22 +276,30 @@ const Index = () => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        console.log('✅ Animation complete! Final segment:', currentSegment);
-        
-        // ✅ Update debugInfo i po dokončení animace
+        // ✅ PŘEPOČÍTAT segment s FINÁLNÍ rotací
         const finalNormalizedRotation = ((finalRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const pointerAngle = Math.PI * 3 / 2;
+        const segmentAngle = (Math.PI * 2) / 32;
+        
+        // ✅ Správný offset: - Math.PI / 2
+        const finalTargetAngle = (pointerAngle - finalNormalizedRotation - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
+        const finalDetectedSegmentIndex = Math.floor(finalTargetAngle / segmentAngle) % 32;
+        const finalCurrentSegment = wheelSegments[finalDetectedSegmentIndex];
+        
+        console.log('✅ Animation complete! Final segment:', finalCurrentSegment);
+        
         setDebugInfo({
-          segmentIndex: detectedSegmentIndex,
-          segmentId: currentSegment.id,
-          value: String(currentSegment.value),
-          color: currentSegment.color,
+          segmentIndex: finalDetectedSegmentIndex,
+          segmentId: finalCurrentSegment.id,
+          value: String(finalCurrentSegment.value),
+          color: finalCurrentSegment.color,
           rotation: finalNormalizedRotation * 180 / Math.PI,
-          pointerAngle: (Math.PI * 3 / 2) * 180 / Math.PI,
+          pointerAngle: pointerAngle * 180 / Math.PI,
         });
         
-        // ✅ Přesunout handleSpinComplete MIMO requestAnimationFrame
+        // ✅ Použít přepočítaný segment
         setTimeout(() => {
-          handleSpinComplete(currentSegment);
+          handleSpinComplete(finalCurrentSegment);
         }, 0);
       }
     };
