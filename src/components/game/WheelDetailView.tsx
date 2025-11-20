@@ -9,6 +9,7 @@ interface WheelDetailViewProps {
   rotationRef?: React.MutableRefObject<number>;
   tokenPositions: Map<number, number>;
   players: Player[];
+  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }
 
 const CameraController = () => {
@@ -37,12 +38,14 @@ const Scene = ({
   rotation,
   rotationRef,
   tokenPositions,
-  players
+  players,
+  debugRotation
 }: { 
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
   tokenPositions: Map<number, number>;
   players: Player[];
+  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }) => {
   return (
     <>
@@ -57,13 +60,14 @@ const Scene = ({
         rotationRef={rotationRef}
         tokenPositions={tokenPositions}
         players={players}
+        debugRotation={debugRotation}
       />
       <Pointer3D />
     </>
   );
 };
 
-export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players }: WheelDetailViewProps) => {
+export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players, debugRotation }: WheelDetailViewProps) => {
   return (
     <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
       <Canvas
@@ -82,6 +86,7 @@ export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players
           rotationRef={rotationRef}
           tokenPositions={tokenPositions}
           players={players}
+          debugRotation={debugRotation}
         />
       </Canvas>
     </div>

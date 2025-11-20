@@ -14,6 +14,7 @@ interface WheelModelProps {
   players: Player[];
   onSegmentClick?: (segmentId: number) => void;
   isClickable?: boolean;
+  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }
 
 const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; height: number }) => {
@@ -56,7 +57,8 @@ const WheelSegment3D = ({
   radius, 
   diskHeight,
   onClick,
-  isClickable
+  isClickable,
+  debugRotation
 }: { 
   segment: WheelSegment; 
   index: number; 
@@ -65,6 +67,7 @@ const WheelSegment3D = ({
   diskHeight: number;
   onClick?: () => void;
   isClickable?: boolean;
+  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }) => {
   const angleOffset = -Math.PI / 2;
   const angle = (index * Math.PI * 2) / totalSegments + angleOffset;
@@ -121,8 +124,20 @@ const WheelSegment3D = ({
       </mesh>
       
       <Text
-        position={[textX, diskHeight/2 + segmentThickness/2 + 0.01, textZ]}
-        rotation={[-Math.PI / 2, midAngle - Math.PI / 2, 0]}
+        position={[
+          textX, 
+          diskHeight/2 + segmentThickness/2 + (debugRotation?.yOffset ?? 0.01), 
+          textZ
+        ]}
+        rotation={
+          debugRotation 
+            ? [
+                debugRotation.x * Math.PI / 180, 
+                midAngle + debugRotation.y * Math.PI / 180, 
+                debugRotation.z * Math.PI / 180
+              ]
+            : [-Math.PI / 2, midAngle - Math.PI / 2, 0]
+        }
         fontSize={0.18}
         color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
         anchorX="center"
@@ -195,7 +210,8 @@ export const WheelModel = ({
   tokenPositions,
   players,
   onSegmentClick,
-  isClickable
+  isClickable,
+  debugRotation
 }: WheelModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   
@@ -226,6 +242,7 @@ export const WheelModel = ({
           diskHeight={WHEEL_DISK_HEIGHT}
           onClick={() => onSegmentClick?.(segment.id)}
           isClickable={isClickable}
+          debugRotation={debugRotation}
         />
       ))}
       
