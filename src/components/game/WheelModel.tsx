@@ -121,8 +121,8 @@ const WheelSegment3D = ({
       </mesh>
       
       <Text
-        position={[textX, diskHeight/2 + segmentThickness + 0.05, textZ]}
-        rotation={[-Math.PI / 2, 0, midAngle + Math.PI / 2]}
+        position={[textX, diskHeight/2 + segmentThickness/2 + 0.01, textZ]}
+        rotation={[-Math.PI / 2, midAngle + Math.PI / 2, 0]}
         fontSize={0.18}
         color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
         anchorX="center"
