@@ -80,15 +80,20 @@ export const TextDebugPanel = ({
       </div>
 
       <div className="text-xs text-muted-foreground mt-4 space-y-1">
-        <p>• Rotace X: Sklápění z vertikály do horizontály</p>
-        <p>• Rotace Y: Radiální otáčení podle segmentu</p>
-        <p>• Rotace Z: Otáčení v rovině</p>
+        <p>• Rotace X: Sklápění (konstantní pro všechny)</p>
+        <p className="text-yellow-400 font-bold">• Rotace Y: OFFSET přičítaný k midAngle každého segmentu</p>
+        <p>• Rotace Z: Otáčení v rovině (konstantní)</p>
         <p>• Y Offset: Výška nad povrchem segmentu</p>
       </div>
 
-      <div className="text-xs bg-primary/10 p-2 rounded mt-2">
-        <p className="font-mono">
-          rotation: [{(rotationX * Math.PI / 180).toFixed(3)}, {(rotationY * Math.PI / 180).toFixed(3)}, {(rotationZ * Math.PI / 180).toFixed(3)}]
+      <div className="text-xs bg-yellow-500/20 border border-yellow-500/50 p-2 rounded mt-2">
+        <p className="font-bold text-yellow-400 mb-1">Pro každý segment:</p>
+        <p className="font-mono text-xs">
+          rotation: [<br/>
+          &nbsp;&nbsp;{(rotationX * Math.PI / 180).toFixed(3)},<br/>
+          &nbsp;&nbsp;<span className="text-yellow-300">midAngle + {(rotationY * Math.PI / 180).toFixed(3)}</span>,<br/>
+          &nbsp;&nbsp;{(rotationZ * Math.PI / 180).toFixed(3)}<br/>
+          ]
         </p>
       </div>
     </Card>
