@@ -90,6 +90,9 @@ const Index = () => {
   };
 
   const handleSpinComplete = (segment: WheelSegment) => {
+    // Záchranná síť: vždy ukončit spinning stav
+    console.log('🛑 handleSpinComplete called with segment:', segment);
+    
     setShowLetterSelector(false);
     setGameState((prev) => ({ ...prev, isSpinning: false, wheelResult: segment }));
 
@@ -286,9 +289,19 @@ const Index = () => {
         const pointerAngle = Math.PI * 3 / 2;
         const segmentAngle = (Math.PI * 2) / 32;
         
-        // ✅ Správný offset: - Math.PI / 2
+        // ✅ Robustní výpočet segmentu - vždy vrátí 0-31
         const finalTargetAngle = (pointerAngle - finalNormalizedRotation - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
-        const finalDetectedSegmentIndex = Math.floor(finalTargetAngle / segmentAngle) % 32;
+        let finalDetectedSegmentIndex = Math.floor(finalTargetAngle / segmentAngle);
+        
+        // Záchranná síť: zajistit rozsah 0-31
+        finalDetectedSegmentIndex = ((finalDetectedSegmentIndex % 32) + 32) % 32;
+        
+        // Další záchrana: pokud je index stále neplatný, použít fallback
+        if (finalDetectedSegmentIndex < 0 || finalDetectedSegmentIndex >= 32 || isNaN(finalDetectedSegmentIndex)) {
+          console.warn('⚠️ Invalid segment index detected, using fallback:', finalDetectedSegmentIndex);
+          finalDetectedSegmentIndex = 0;
+        }
+        
         const finalCurrentSegment = wheelSegments[finalDetectedSegmentIndex];
         
         console.log('✅ Animation complete! Final segment:', finalCurrentSegment);

@@ -250,7 +250,7 @@ export const WheelDetailView = ({ rotation, rotationRef }: WheelDetailViewProps)
     <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
       <Canvas
         camera={{ 
-          position: [0, 2.5, -1.8],
+          position: [0, 2.5, -4.5],
           fov: 45,
           near: 0.1,
           far: 100
