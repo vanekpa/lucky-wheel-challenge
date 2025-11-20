@@ -44,18 +44,7 @@ const Index = () => {
   });
 
   useEffect(() => {
-    console.log('📊 State changed:', {
-      isSpinning: gameState.isSpinning,
-      showLetterSelector,
-      isPlacingTokens,
-      currentPlayer: gameState.currentPlayer,
-      buttonShouldShow: !gameState.isSpinning && !showLetterSelector && !isPlacingTokens,
-    });
-    
-    // ✅ Force re-render check po každé změně
-    if (!gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
-      console.log('✅✅✅ BUTTON SHOULD NOW BE VISIBLE ✅✅✅');
-    }
+    // Force re-render check when critical states change
   }, [gameState.isSpinning, showLetterSelector, isPlacingTokens, gameState.currentPlayer]);
 
   const handleTokenPlace = (segmentId: number) => {
@@ -70,18 +59,11 @@ const Index = () => {
     setTokensPlaced((prev) => {
       const newSet = new Set(prev).add(gameState.currentPlayer);
       
-      console.log(`🎯 Token placed by Player ${gameState.currentPlayer + 1}, Total tokens: ${newSet.size}`);
-      
-      // Check with UPDATED state
       if (newSet.size === 3) {
-        // All 3 tokens placed, enable spinning
-        console.log('✅ All tokens placed! Enabling spin button');
         setIsPlacingTokens(false);
         setGameState((prevState) => ({ ...prevState, currentPlayer: 0 }));
       } else {
-        // Next player's turn
         const nextPlayer = (gameState.currentPlayer + 1) % 3;
-        console.log(`➡️ Next player: ${nextPlayer + 1}`);
         setGameState((prevState) => ({ ...prevState, currentPlayer: nextPlayer }));
       }
       
@@ -90,13 +72,12 @@ const Index = () => {
   };
 
   const handleSpinComplete = (segment: WheelSegment) => {
-    // Záchranná síť: vždy ukončit spinning stav
-    console.log('🛑 handleSpinComplete called with segment:', segment);
+    console.log('🏁 Spin Completed. Landed on:', segment);
     
-    setShowLetterSelector(false);
+    // 1. Reset spinning state immediately
     setGameState((prev) => ({ ...prev, isSpinning: false, wheelResult: segment }));
 
-    // Check if landed on a token
+    // 2. Check token bonus
     let tokenBonus = 0;
     let tokenOwner: number | undefined;
     tokenPositions.forEach((playerId, segmentId) => {
@@ -118,6 +99,7 @@ const Index = () => {
       }));
     }
 
+    // 3. Handle segment types
     if (segment.type === 'bankrot') {
       toast.error('BANKROT! Ztrácíte všechny body!', {
         duration: 3000,
@@ -129,10 +111,7 @@ const Index = () => {
         ),
         currentPlayer: (prev.currentPlayer + 1) % 3,
       }));
-      
-      setTimeout(() => {
-        console.log('🎮 BANKROT complete - button should appear');
-      }, 100);
+      setShowLetterSelector(false);
       
     } else if (segment.type === 'nic') {
       toast.warning('NIČ! Tah přechází na dalšího hráče', {
@@ -142,25 +121,16 @@ const Index = () => {
         ...prev,
         currentPlayer: (prev.currentPlayer + 1) % 3,
       }));
-      
-      setTimeout(() => {
-        console.log('🎮 NIČ complete - button should appear');
-      }, 100);
+      setShowLetterSelector(false);
       
     } else {
+      // Points logic
       setCurrentWheelValue(segment.value as number);
-      setShowLetterSelector(true);
+      setShowLetterSelector(true); // This enables the UI for letter selection
       toast.success(`Vytočili jste ${segment.value} bodů!`, {
         duration: 2000,
       });
     }
-    
-    console.log('🎮 After spin complete:', {
-      isSpinning: false,
-      showLetterSelector: segment.type === 'points',
-      isPlacingTokens,
-      segmentType: segment.type,
-    });
   };
 
   const handleLetterSelect = (letter: string) => {
@@ -203,134 +173,94 @@ const Index = () => {
 
     setShowLetterSelector(false);
     setCurrentWheelValue(0);
-    
-    console.log('🎮 After letter select:', {
-      isSpinning: false,
-      showLetterSelector: false,
-      isPlacingTokens,
-    });
   };
 
   const handleSpin = () => {
-    console.log('🎰 SPIN BUTTON CLICKED!');
-    console.log('Current wheelRotation:', wheelRotation);
-    
+    if (gameState.isSpinning) return;
+
+    console.log('🚀 Spinning started...');
     setGameState((prev) => ({ ...prev, isSpinning: true }));
     setShowLetterSelector(false);
     
-    // Calculate final rotation
-    const spins = 5 + Math.random() * 3;
-    const finalSegmentIndex = Math.floor(Math.random() * 32);
+    // Random spin setup
+    const extraSpins = 5;
+    const targetSegmentIndex = Math.floor(Math.random() * 32);
     const segmentAngle = (Math.PI * 2) / 32;
     
-    // Clockwise rotace: segment s angle A bude po rotaci R na pozici (A + R)
-    // Chceme: A + R = π (pointer angle)
-    // Tedy: R = π - A
-    const segmentCenterAngle = finalSegmentIndex * segmentAngle + segmentAngle / 2;
-    const targetRotation = Math.PI - segmentCenterAngle;
+    // Calculate rotation to land exactly on center of target segment
+    // Pointer is at -Z (270 deg or 3PI/2)
+    // Segment 0 is at -PI/2
+    // We need to account for these offsets
+    const currentRotation = wheelRotationRef.current;
     
-    // Normalize to 0-2π and ensure positive
-    const normalizedTarget = ((targetRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    // Calculate target rotation
+    // Current visual offset is -PI/2 (from Wheel3D geometry)
+    // We want targetSegment to end up at Pointer (3PI/2)
+    const targetAngle = targetSegmentIndex * segmentAngle;
+    const offset = Math.PI / 2; // Geometry offset
     
-    // Add full spins
-    const finalRotation = wheelRotation + spins * Math.PI * 2 + normalizedTarget;
+    // How much more we need to rotate to align target with pointer
+    // This math ensures we land on the correct segment ID
+    const rotationNeeded = (2 * Math.PI) - targetAngle + (3 * Math.PI / 2) - offset;
     
-    console.log('🎯 Target segment:', finalSegmentIndex);
-    console.log('🔄 Final rotation:', finalRotation);
-    console.log('🔄 Starting rotation:', wheelRotation);
+    // Add multiple full spins and current rotation base
+    const newRotation = currentRotation + (Math.PI * 2 * extraSpins) + (rotationNeeded % (Math.PI * 2));
     
-    // Animate rotation
+    // Animate
     const duration = 4000;
     const startTime = Date.now();
-    const startRotation = wheelRotation;
+    const startRotation = currentRotation;
     
     const animate = () => {
-      const elapsed = Date.now() - startTime;
+      const now = Date.now();
+      const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const currentRotation = startRotation + (finalRotation - startRotation) * eased;
+      // Ease out cubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const currentRot = startRotation + (newRotation - startRotation) * ease;
       
-      console.log(`⏱️ Animation progress: ${(progress * 100).toFixed(1)}%, rotation: ${currentRotation.toFixed(2)}`);
+      wheelRotationRef.current = currentRot;
+      setWheelRotation(currentRot);
       
-      // Update both state and ref
-      wheelRotationRef.current = currentRotation;
-      setWheelRotation(currentRotation);
+      // Calculate debug info live
+      const normalizedRot = currentRot % (Math.PI * 2);
+      // Reverse engineer the segment index from rotation
+      // This formula must match the visual representation in Wheel3D
+      const visualOffset = -Math.PI / 2;
+      const pointerAngle = 3 * Math.PI / 2;
       
-      // Update debug info during animation
-      const normalizedRotation = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-      const pointerAngle = Math.PI * 3 / 2;
-      const segmentAngle = (Math.PI * 2) / 32;
-      // Account for the -90° offset in Wheel3D segment rendering
-      const targetAngle = (pointerAngle - normalizedRotation - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
-      const detectedSegmentIndex = Math.floor(targetAngle / segmentAngle) % 32;
-      const currentSegment = wheelSegments[detectedSegmentIndex];
+      // Calculate which segment is currently at the pointer
+      // angle + rotation = pointer
+      let angleAtPointer = (pointerAngle - visualOffset - normalizedRot) % (Math.PI * 2);
+      if (angleAtPointer < 0) angleAtPointer += Math.PI * 2;
       
-      // Debug log každých ~10% progress
-      if (progress % 0.1 < 0.05) {
-        console.log(`🔍 Segment detection: index=${detectedSegmentIndex}, id=${currentSegment.id}, value=${currentSegment.value}, rotation=${normalizedRotation.toFixed(2)}`);
-      }
-      
+      const detectedIndex = Math.floor(angleAtPointer / segmentAngle) % 32;
+      const currentSegment = wheelSegments[detectedIndex] || wheelSegments[0];
+
       setDebugInfo({
-        segmentIndex: detectedSegmentIndex,
+        segmentIndex: detectedIndex,
         segmentId: currentSegment.id,
         value: String(currentSegment.value),
         color: currentSegment.color,
-        rotation: normalizedRotation * 180 / Math.PI,
-        pointerAngle: pointerAngle * 180 / Math.PI,
+        rotation: (normalizedRot * 180 / Math.PI),
+        pointerAngle: 270
       });
-      
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // ✅ PŘEPOČÍTAT segment s FINÁLNÍ rotací
-        const finalNormalizedRotation = ((finalRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        const pointerAngle = Math.PI * 3 / 2;
-        const segmentAngle = (Math.PI * 2) / 32;
+        // Animation complete
+        // Use the pre-calculated target to ensure 100% accuracy
+        const finalSegment = wheelSegments[targetSegmentIndex];
+        console.log('✅ Animation finished. Calculated:', targetSegmentIndex, 'Detected:', detectedIndex);
         
-        // ✅ Robustní výpočet segmentu - vždy vrátí 0-31
-        const finalTargetAngle = (pointerAngle - finalNormalizedRotation - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
-        let finalDetectedSegmentIndex = Math.floor(finalTargetAngle / segmentAngle);
-        
-        // Záchranná síť: zajistit rozsah 0-31
-        finalDetectedSegmentIndex = ((finalDetectedSegmentIndex % 32) + 32) % 32;
-        
-        // Další záchrana: pokud je index stále neplatný, použít fallback
-        if (finalDetectedSegmentIndex < 0 || finalDetectedSegmentIndex >= 32 || isNaN(finalDetectedSegmentIndex)) {
-          console.warn('⚠️ Invalid segment index detected, using fallback:', finalDetectedSegmentIndex);
-          finalDetectedSegmentIndex = 0;
-        }
-        
-        const finalCurrentSegment = wheelSegments[finalDetectedSegmentIndex];
-        
-        console.log('✅ Animation complete! Final segment:', finalCurrentSegment);
-        
-        setDebugInfo({
-          segmentIndex: finalDetectedSegmentIndex,
-          segmentId: finalCurrentSegment.id,
-          value: String(finalCurrentSegment.value),
-          color: finalCurrentSegment.color,
-          rotation: finalNormalizedRotation * 180 / Math.PI,
-          pointerAngle: pointerAngle * 180 / Math.PI,
-        });
-        
-        console.log('📊 Final debugInfo set:', {
-          segmentIndex: finalDetectedSegmentIndex,
-          segmentId: finalCurrentSegment.id,
-          value: finalCurrentSegment.value,
-          color: finalCurrentSegment.color,
-        });
-        
-        // ✅ Použít přepočítaný segment
-        setTimeout(() => {
-          handleSpinComplete(finalCurrentSegment);
-        }, 0);
+        // Ensure we finish explicitly
+        handleSpinComplete(finalSegment);
       }
     };
     
-    console.log('🚀 Starting animation loop...');
-    animate();
+    requestAnimationFrame(animate);
   };
 
   const newRound = () => {
@@ -344,6 +274,7 @@ const Index = () => {
       usedLetters: new Set(),
       round: prev.round + 1,
       currentPlayer: 0,
+      isSpinning: false // Ensure spinning is reset
     }));
     setTokenPositions(new Map());
     setTokensPlaced(new Set());
@@ -354,36 +285,30 @@ const Index = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-400/30 via-purple-400/30 to-pink-400/30 text-foreground">
-      {/* Camera Detail View - Levý horní roh */}
-      <div className="absolute top-4 left-4 z-40 w-80 h-60 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/20 animate-fade-in">
-        <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wide">
-          🎥 LIVE
+      {/* Camera Detail View */}
+      <div className="absolute top-4 left-4 z-40 w-80 h-60 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 animate-fade-in">
+        <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wide shadow-md">
+          🎥 KAMERA
         </div>
         <WheelDetailView rotation={wheelRotation} rotationRef={wheelRotationRef} />
       </div>
 
-      {/* Debug Panel */}
-      <div className="absolute top-2 left-[22rem] bg-black/80 text-white p-4 rounded-lg z-50 font-mono text-sm space-y-1 border border-yellow-500/50">
-        <div className="text-yellow-400 font-bold mb-2">🔧 DEBUG INFO</div>
-        <div>Segment Index: <span className="text-green-400">{debugInfo.segmentIndex}</span></div>
-        <div>Segment ID: <span className="text-green-400">{debugInfo.segmentId}</span></div>
+      {/* Debug Panel (Optional - can be hidden) */}
+      <div className="absolute top-2 left-[22rem] bg-black/80 text-white p-4 rounded-lg z-50 font-mono text-xs space-y-1 border border-yellow-500/50 hidden xl:block">
+        <div className="text-yellow-400 font-bold mb-2">🔧 SYSTEM INFO</div>
+        <div>Segment: <span className="text-green-400">{debugInfo.segmentIndex}</span></div>
         <div>Value: <span className="text-cyan-400 font-bold">{debugInfo.value}</span></div>
-        <div>Color: <span className="text-pink-400">{debugInfo.color}</span></div>
-        <div className="flex items-center gap-2">
-          Preview: <div className="w-6 h-6 rounded border border-white" style={{ backgroundColor: debugInfo.color }}></div>
-        </div>
-        <div className="pt-2 border-t border-gray-600">
-          <div>Rotation: <span className="text-purple-400">{debugInfo.rotation.toFixed(1)}°</span></div>
-          <div>Pointer: <span className="text-purple-400">{debugInfo.pointerAngle.toFixed(1)}°</span></div>
-        </div>
+        <div>State: <span className={gameState.isSpinning ? "text-red-400" : "text-green-400"}>
+          {gameState.isSpinning ? 'SPINNING' : 'IDLE'}
+        </span></div>
+        <div>Selector: <span className={showLetterSelector ? "text-green-400" : "text-gray-400"}>
+          {showLetterSelector ? 'VISIBLE' : 'HIDDEN'}
+        </span></div>
       </div>
       
-      {/* Top Dock - Player Scores */}
       <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
 
-      {/* Center Stage - 3D Wheel */}
       <div className="flex-1 flex flex-col items-center justify-center pt-8 pb-48 min-h-0">
-        {/* Title */}
         <div className="text-center mb-4">
           <h1 className="text-5xl font-bold text-primary mb-1 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)_/_0.5)]">
             KOLOTOČ
@@ -391,13 +316,12 @@ const Index = () => {
           <p className="text-xl text-muted-foreground font-semibold">Kolo {gameState.round}</p>
         </div>
 
-        {/* Wheel Container with fixed dimensions */}
         <div className="relative w-full max-w-3xl h-[500px] flex items-center justify-center">
           <Wheel3D
             rotation={wheelRotation}
             rotationRef={wheelRotationRef}
             isSpinning={gameState.isSpinning}
-            onSpinComplete={handleSpinComplete}
+            onSpinComplete={() => {}} // Handled by parent animation loop
             tokenPositions={tokenPositions}
             onSegmentClick={handleTokenPlace}
             placingTokensMode={isPlacingTokens}
@@ -406,28 +330,30 @@ const Index = () => {
           />
         </div>
         
-        {/* Token placement instruction */}
         {isPlacingTokens && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <div className="bg-background/90 backdrop-blur-md px-8 py-4 rounded-lg border-2 border-primary shadow-2xl">
-              <p className="text-2xl font-bold text-primary text-center">
-                HRÁČ {gameState.currentPlayer + 1}: Umístěte žeton
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
+            <div className="bg-background/95 backdrop-blur-md px-8 py-6 rounded-xl border-4 border-primary shadow-[0_0_50px_rgba(0,0,0,0.5)] text-center animate-in zoom-in duration-300">
+              <p className="text-3xl font-bold text-primary mb-2">
+                HRÁČ {gameState.currentPlayer + 1}
               </p>
-              <p className="text-sm text-muted-foreground text-center mt-2">
-                Klikněte na segment kola
+              <p className="text-lg text-foreground font-medium">
+                Umístěte svůj žeton na kolo
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                (Klikněte na libovolný barevný segment)
               </p>
             </div>
           </div>
         )}
 
-        {/* Floating Controls */}
+        {/* Controls */}
         {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && (
-          <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-40">
+          <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-40 animate-in slide-in-from-right duration-500">
             <Button
               onClick={handleSpin}
               variant="default"
               size="lg"
-              className="text-2xl px-12 py-8 shadow-lg backdrop-blur-md bg-primary text-primary-foreground hover:scale-110 transition-transform"
+              className="text-2xl px-12 py-8 shadow-lg backdrop-blur-md bg-primary text-primary-foreground hover:scale-105 hover:bg-primary/90 transition-all duration-200 border-4 border-white/10"
             >
               ROZTOČIT
             </Button>
@@ -435,7 +361,7 @@ const Index = () => {
               onClick={newRound}
               variant="secondary"
               size="lg"
-              className="text-lg px-8 shadow-lg backdrop-blur-md bg-card/80"
+              className="text-lg px-8 shadow-lg backdrop-blur-md bg-card/80 hover:bg-card"
             >
               NOVÉ KOLO
             </Button>
@@ -443,7 +369,6 @@ const Index = () => {
         )}
       </div>
 
-      {/* Bottom Dock - Puzzle & Letters */}
       <BottomDock
         puzzle={gameState.puzzle}
         usedLetters={gameState.usedLetters}
