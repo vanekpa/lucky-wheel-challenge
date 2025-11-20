@@ -115,7 +115,7 @@ const CameraController = () => {
   
   useEffect(() => {
     // Zaměřit na pointer pozici
-    camera.lookAt(0, 2.7, -2.76);
+    camera.lookAt(0, 1.875, -2.76);
     camera.updateProjectionMatrix();
   }, [camera]);
   
@@ -124,7 +124,7 @@ const CameraController = () => {
 
 const Pointer3D = () => {
   return (
-    <group position={[0, 2.7, -2.76]}>
+    <group position={[0, 1.875, -2.76]}>
       <mesh rotation={[0, 0, Math.PI]}>
         <coneGeometry args={[0.15, 0.4, 32]} />
         <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
@@ -203,7 +203,7 @@ const WheelDisk = ({
   const segmentAngle = (2 * Math.PI) / wheelSegments.length;
   
   return (
-    <group ref={meshRef} position={[0, 2, 0]}>
+    <group ref={meshRef} position={[0, 1.675, 0]}>
       <mesh>
         <cylinderGeometry args={[diskRadius, diskRadius, thickness, 64]} />
         <meshStandardMaterial color="#8B4513" metalness={0.4} roughness={0.6} />
@@ -250,8 +250,8 @@ export const WheelDetailView = ({ rotation, rotationRef }: WheelDetailViewProps)
     <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
       <Canvas
         camera={{ 
-          position: [0, 3.5, -1.5],
-          fov: 50,
+          position: [0, 2.5, -1.8],
+          fov: 45,
           near: 0.1,
           far: 100
         }}
