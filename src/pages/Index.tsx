@@ -51,6 +51,11 @@ const Index = () => {
       currentPlayer: gameState.currentPlayer,
       buttonShouldShow: !gameState.isSpinning && !showLetterSelector && !isPlacingTokens,
     });
+    
+    // ✅ Force re-render check po každé změně
+    if (!gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
+      console.log('✅✅✅ BUTTON SHOULD NOW BE VISIBLE ✅✅✅');
+    }
   }, [gameState.isSpinning, showLetterSelector, isPlacingTokens, gameState.currentPlayer]);
 
   const handleTokenPlace = (segmentId: number) => {
@@ -272,7 +277,22 @@ const Index = () => {
         requestAnimationFrame(animate);
       } else {
         console.log('✅ Animation complete! Final segment:', currentSegment);
-        handleSpinComplete(currentSegment);
+        
+        // ✅ Update debugInfo i po dokončení animace
+        const finalNormalizedRotation = ((finalRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        setDebugInfo({
+          segmentIndex: detectedSegmentIndex,
+          segmentId: currentSegment.id,
+          value: String(currentSegment.value),
+          color: currentSegment.color,
+          rotation: finalNormalizedRotation * 180 / Math.PI,
+          pointerAngle: (Math.PI * 3 / 2) * 180 / Math.PI,
+        });
+        
+        // ✅ Přesunout handleSpinComplete MIMO requestAnimationFrame
+        setTimeout(() => {
+          handleSpinComplete(currentSegment);
+        }, 0);
       }
     };
     

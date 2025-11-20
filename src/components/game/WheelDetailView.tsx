@@ -114,7 +114,8 @@ const CameraController = () => {
   const { camera } = useThree();
   
   useEffect(() => {
-    camera.lookAt(0, 2.3, -2.5);
+    // Zaměřit na střed kola, kde je pointer
+    camera.lookAt(0, 2, 0);
     camera.updateProjectionMatrix();
   }, [camera]);
   
@@ -249,8 +250,8 @@ export const WheelDetailView = ({ rotation, rotationRef }: WheelDetailViewProps)
     <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
       <Canvas
         camera={{ 
-          position: [-1.2, 3.2, -2.8],
-          fov: 35,
+          position: [0, 2.5, 2.5], // Pozice: přímo vpředu, trochu výše
+          fov: 45, // Střední FOV pro dobrý zoom
           near: 0.1,
           far: 100
         }}
