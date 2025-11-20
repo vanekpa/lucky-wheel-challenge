@@ -114,7 +114,7 @@ const CameraController = () => {
   const { camera } = useThree();
   
   useEffect(() => {
-    camera.lookAt(0, 2, 0);
+    camera.lookAt(0, 2.3, -2.5);
     camera.updateProjectionMatrix();
   }, [camera]);
   
@@ -249,8 +249,8 @@ export const WheelDetailView = ({ rotation, rotationRef }: WheelDetailViewProps)
     <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
       <Canvas
         camera={{ 
-          position: [0, 2.5, -3],
-          fov: 50,
+          position: [-1.2, 3.2, -2.8],
+          fov: 35,
           near: 0.1,
           far: 100
         }}
