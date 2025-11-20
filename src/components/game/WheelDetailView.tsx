@@ -114,8 +114,8 @@ const CameraController = () => {
   const { camera } = useThree();
   
   useEffect(() => {
-    // Zaměřit na střed kola, kde je pointer
-    camera.lookAt(0, 2, 0);
+    // Zaměřit na pointer pozici
+    camera.lookAt(0, 2.7, -2.76);
     camera.updateProjectionMatrix();
   }, [camera]);
   
@@ -234,10 +234,10 @@ const Scene = ({
   return (
     <>
       <CameraController />
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[2, 5, -3]} intensity={1.5} castShadow />
-      <pointLight position={[-2, 3, -4]} intensity={0.8} />
-      <pointLight position={[2, 3, -4]} intensity={0.5} color="#ffffff" />
+      <ambientLight intensity={1.2} />
+      <directionalLight position={[2, 5, -3]} intensity={2.0} castShadow />
+      <pointLight position={[-2, 3, -4]} intensity={1.2} />
+      <pointLight position={[2, 3, -4]} intensity={0.8} color="#ffffff" />
       
       <WheelDisk rotation={rotation} rotationRef={rotationRef} />
       <Pointer3D />
@@ -250,8 +250,8 @@ export const WheelDetailView = ({ rotation, rotationRef }: WheelDetailViewProps)
     <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
       <Canvas
         camera={{ 
-          position: [0, 2.5, 2.5], // Pozice: přímo vpředu, trochu výše
-          fov: 45, // Střední FOV pro dobrý zoom
+          position: [0, 3.5, -1.5],
+          fov: 50,
           near: 0.1,
           far: 100
         }}
