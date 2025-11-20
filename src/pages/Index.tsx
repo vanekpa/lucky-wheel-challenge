@@ -43,6 +43,16 @@ const Index = () => {
     pointerAngle: 0,
   });
 
+  useEffect(() => {
+    console.log('📊 State changed:', {
+      isSpinning: gameState.isSpinning,
+      showLetterSelector,
+      isPlacingTokens,
+      currentPlayer: gameState.currentPlayer,
+      buttonShouldShow: !gameState.isSpinning && !showLetterSelector && !isPlacingTokens,
+    });
+  }, [gameState.isSpinning, showLetterSelector, isPlacingTokens, gameState.currentPlayer]);
+
   const handleTokenPlace = (segmentId: number) => {
     if (tokensPlaced.has(gameState.currentPlayer)) return;
 
@@ -111,6 +121,11 @@ const Index = () => {
         ),
         currentPlayer: (prev.currentPlayer + 1) % 3,
       }));
+      
+      setTimeout(() => {
+        console.log('🎮 BANKROT complete - button should appear');
+      }, 100);
+      
     } else if (segment.type === 'nic') {
       toast.warning('NIČ! Tah přechází na dalšího hráče', {
         duration: 2000,
@@ -119,6 +134,11 @@ const Index = () => {
         ...prev,
         currentPlayer: (prev.currentPlayer + 1) % 3,
       }));
+      
+      setTimeout(() => {
+        console.log('🎮 NIČ complete - button should appear');
+      }, 100);
+      
     } else {
       setCurrentWheelValue(segment.value as number);
       setShowLetterSelector(true);
