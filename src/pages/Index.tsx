@@ -264,6 +264,11 @@ const Index = () => {
       const detectedSegmentIndex = Math.floor(targetAngle / segmentAngle) % 32;
       const currentSegment = wheelSegments[detectedSegmentIndex];
       
+      // Debug log každých ~10% progress
+      if (progress % 0.1 < 0.05) {
+        console.log(`🔍 Segment detection: index=${detectedSegmentIndex}, id=${currentSegment.id}, value=${currentSegment.value}, rotation=${normalizedRotation.toFixed(2)}`);
+      }
+      
       setDebugInfo({
         segmentIndex: detectedSegmentIndex,
         segmentId: currentSegment.id,
@@ -295,6 +300,13 @@ const Index = () => {
           color: finalCurrentSegment.color,
           rotation: finalNormalizedRotation * 180 / Math.PI,
           pointerAngle: pointerAngle * 180 / Math.PI,
+        });
+        
+        console.log('📊 Final debugInfo set:', {
+          segmentIndex: finalDetectedSegmentIndex,
+          segmentId: finalCurrentSegment.id,
+          value: finalCurrentSegment.value,
+          color: finalCurrentSegment.color,
         });
         
         // ✅ Použít přepočítaný segment
