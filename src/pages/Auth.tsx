@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 const Auth = () => {
-  const [email, setEmail] = useState('vanekpa@zs16.plzen-edu.cz');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -25,8 +25,8 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!password) {
-      toast.error('Zadejte heslo');
+    if (!email || !password) {
+      toast.error('Vyplňte email a heslo');
       return;
     }
 
@@ -93,8 +93,9 @@ const Auth = () => {
                   id="email"
                   type="email"
                   value={email}
-                  readOnly
-                  className="pl-10 bg-white/5 border-white/20 text-white/60 cursor-not-allowed"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="vas@email.cz"
+                  className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:border-yellow-400/50"
                 />
               </div>
             </div>
