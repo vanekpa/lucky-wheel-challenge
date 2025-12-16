@@ -14,7 +14,6 @@ interface WheelModelProps {
   players: Player[];
   onSegmentClick?: (segmentId: number) => void;
   isClickable?: boolean;
-  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }
 
 const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; height: number }) => {
@@ -57,8 +56,7 @@ const WheelSegment3D = ({
   radius, 
   diskHeight,
   onClick,
-  isClickable,
-  debugRotation
+  isClickable
 }: { 
   segment: WheelSegment; 
   index: number; 
@@ -67,7 +65,6 @@ const WheelSegment3D = ({
   diskHeight: number;
   onClick?: () => void;
   isClickable?: boolean;
-  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }) => {
   const angleOffset = -Math.PI / 2;
   const angle = (index * Math.PI * 2) / totalSegments + angleOffset;
@@ -124,17 +121,19 @@ const WheelSegment3D = ({
       </mesh>
       
       <group 
-        position={[textX, diskHeight/2 + segmentThickness/2 + (debugRotation?.yOffset ?? 0.01), textZ]}
+        position={[textX, diskHeight/2 + segmentThickness/2 + 0.01, textZ]}
         rotation={[0, -midAngle + Math.PI/2, 0]}
       >
         <Text
           rotation={[-Math.PI/2, 0, Math.PI/2]}
-          fontSize={0.18}
+          fontSize={0.28}
           color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.01}
+          outlineWidth={0.02}
           outlineColor="#000000"
+          strokeWidth="3%"
+          strokeColor="#000000"
         >
           {segment.value}
         </Text>
@@ -202,8 +201,7 @@ export const WheelModel = ({
   tokenPositions,
   players,
   onSegmentClick,
-  isClickable,
-  debugRotation
+  isClickable
 }: WheelModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   
@@ -234,7 +232,6 @@ export const WheelModel = ({
           diskHeight={WHEEL_DISK_HEIGHT}
           onClick={() => onSegmentClick?.(segment.id)}
           isClickable={isClickable}
-          debugRotation={debugRotation}
         />
       ))}
       

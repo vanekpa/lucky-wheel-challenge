@@ -15,7 +15,6 @@ interface Wheel3DProps {
   placingTokensMode: boolean;
   players: Player[];
   currentPlayer: number;
-  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }
 
 const CameraController = () => {
@@ -81,8 +80,7 @@ const Scene = ({
   tokenPositions,
   players,
   onSegmentClick,
-  isClickable,
-  debugRotation
+  isClickable
 }: { 
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
@@ -90,7 +88,6 @@ const Scene = ({
   players: Player[];
   onSegmentClick?: (segmentId: number) => void;
   isClickable?: boolean;
-  debugRotation?: { x: number; y: number; z: number; yOffset: number };
 }) => {
   return (
     <>
@@ -137,7 +134,6 @@ const Scene = ({
         players={players}
         onSegmentClick={onSegmentClick}
         isClickable={isClickable}
-        debugRotation={debugRotation}
       />
     </>
   );
@@ -152,8 +148,7 @@ export const Wheel3D = ({
   onSegmentClick,
   placingTokensMode,
   players,
-  currentPlayer,
-  debugRotation
+  currentPlayer
 }: Wheel3DProps) => {
   return (
     <div className="w-full h-full bg-gradient-to-br from-blue-950/40 via-purple-950/40 to-indigo-950/40">
@@ -174,7 +169,6 @@ export const Wheel3D = ({
           players={players}
           onSegmentClick={onSegmentClick}
           isClickable={placingTokensMode}
-          debugRotation={debugRotation}
         />
       </Canvas>
     </div>
