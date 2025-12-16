@@ -8,7 +8,7 @@ import { GameModeSelect } from '@/components/game/GameModeSelect';
 import { TeacherPuzzleInput } from '@/components/game/TeacherPuzzleInput';
 import { DeviceHandover } from '@/components/game/DeviceHandover';
 import { GuessPhraseDialog } from '@/components/game/GuessPhraseDialog';
-import { GameSettingsDialog } from '@/components/game/GameSettingsDialog';
+import { PlayerSettings } from '@/components/game/PlayerSettings';
 import { GameState, WheelSegment, Player } from '@/types/game';
 import { wheelSegments } from '@/data/puzzles';
 import { usePuzzles } from '@/hooks/usePuzzles';
@@ -492,8 +492,8 @@ const Index = () => {
 
   return (
     <div className={`h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br ${colors.gradient} text-foreground transition-colors duration-1000`}>
-      {/* Game Settings Dialog */}
-      <GameSettingsDialog effectsEnabled={effectsEnabled} onEffectsChange={setEffectsEnabled} />
+      {/* Player Settings Popover */}
+      <PlayerSettings effectsEnabled={effectsEnabled} onEffectsChange={setEffectsEnabled} />
 
       {/* Seasonal Effects Background */}
       {effectsEnabled && <SeasonalEffects />}
