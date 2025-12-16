@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert, Upload, FileText, Snowflake, Flower2, Sun, Leaf, Moon, CloudSun, Settings2, Sparkles, Volume2, VolumeX, Eye } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert, Upload, FileText, Snowflake, Flower2, Sun, Leaf, Moon, CloudSun, Settings2, Sparkles, Volume2, VolumeX, Eye, Gift } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -385,6 +385,7 @@ const Admin = () => {
                     }}
                   >
                     {displaySeason === 'winter' && '❄️'}
+                    {displaySeason === 'christmas' && '🎄'}
                     {displaySeason === 'spring' && '🌸'}
                     {displaySeason === 'summer' && '✨'}
                     {displaySeason === 'autumn' && '🍂'}
@@ -395,6 +396,7 @@ const Admin = () => {
               {/* Label */}
               <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg text-white text-sm">
                 {displaySeason === 'winter' && '❄️ Zima'}
+                {displaySeason === 'christmas' && '🎄 Vánoce'}
                 {displaySeason === 'spring' && '🌸 Jaro'}
                 {displaySeason === 'summer' && '☀️ Léto'}
                 {displaySeason === 'autumn' && '🍂 Podzim'}
@@ -406,7 +408,7 @@ const Admin = () => {
             {/* Quick preview buttons */}
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="text-white/50 text-xs mr-2 self-center">Rychlý náhled:</span>
-              {(['winter', 'spring', 'summer', 'autumn'] as Season[]).map((s) => (
+              {(['winter', 'christmas', 'spring', 'summer', 'autumn'] as Season[]).map((s) => (
                 <Button
                   key={s}
                   variant="ghost"
@@ -415,6 +417,7 @@ const Admin = () => {
                   className={`text-xs px-2 py-1 h-7 ${previewSeason === s ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                 >
                   {s === 'winter' && '❄️'}
+                  {s === 'christmas' && '🎄'}
                   {s === 'spring' && '🌸'}
                   {s === 'summer' && '☀️'}
                   {s === 'autumn' && '🍂'}
@@ -452,6 +455,7 @@ const Admin = () => {
               {[
                 { value: 'auto', label: 'Auto', icon: Sparkles },
                 { value: 'winter', label: 'Zima', icon: Snowflake },
+                { value: 'christmas', label: 'Vánoce', icon: Gift },
                 { value: 'spring', label: 'Jaro', icon: Flower2 },
                 { value: 'summer', label: 'Léto', icon: Sun },
                 { value: 'autumn', label: 'Podzim', icon: Leaf },

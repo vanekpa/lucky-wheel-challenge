@@ -186,6 +186,26 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes christmas-lights {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px 3px currentColor; }
+  50% { opacity: 0.4; box-shadow: 0 0 5px 1px currentColor; }
+}
+
+@keyframes santa-fly {
+  0% { transform: translateX(-150px); }
+  100% { transform: translateX(calc(100vw + 150px)); }
+}
+
+@keyframes gift-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes bell-swing {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+
 @keyframes sun-ray {
   0%, 100% {
     opacity: 0.3;
@@ -273,6 +293,22 @@ All colors MUST be HSL.
   
   .animate-sun-ray {
     animation: sun-ray 8s ease-in-out infinite;
+  }
+  
+  .animate-christmas-lights {
+    animation: christmas-lights 1s ease-in-out infinite;
+  }
+  
+  .animate-santa-fly {
+    animation: santa-fly 8s linear forwards;
+  }
+  
+  .animate-gift-bounce {
+    animation: gift-bounce 2s ease-in-out infinite;
+  }
+  
+  .animate-bell-swing {
+    animation: bell-swing 1s ease-in-out infinite;
   }
 
   .animate-flip-tile {

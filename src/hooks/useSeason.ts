@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type Season = 'winter' | 'spring' | 'summer' | 'autumn';
+export type Season = 'winter' | 'spring' | 'summer' | 'autumn' | 'christmas';
 export type DayTime = 'day' | 'night';
 
 interface SeasonColors {
@@ -59,14 +59,31 @@ export const seasonColors: Record<Season, Record<DayTime, SeasonColors>> = {
       particle: '#cc5500',
     },
   },
+  christmas: {
+    day: {
+      gradient: 'from-red-800/40 via-green-800/40 to-red-900/40',
+      accent: '#ff0000',
+      particle: '#ffd700',
+    },
+    night: {
+      gradient: 'from-red-950/60 via-green-950/60 to-slate-950/60',
+      accent: '#00ff00',
+      particle: '#ffd700',
+    },
+  },
 };
 
 const getAutoSeason = (): Season => {
   const month = new Date().getMonth();
+  const day = new Date().getDate();
+  
+  // December 1-26 = Christmas
+  if (month === 11 && day <= 26) return 'christmas';
+  // Rest of winter
+  if (month >= 11 || month <= 1) return 'winter';
   if (month >= 2 && month <= 4) return 'spring';
   if (month >= 5 && month <= 7) return 'summer';
-  if (month >= 8 && month <= 10) return 'autumn';
-  return 'winter';
+  return 'autumn';
 };
 
 const getAutoDayTime = (): DayTime => {
