@@ -161,39 +161,41 @@ const PlayerToken3D = ({
   
   return (
     <group position={[x, y, z]}>
-      {/* Větší bílý podstavec - puk */}
+      {/* Bílý podstavec - puk */}
       <mesh castShadow>
-        <cylinderGeometry args={[0.28, 0.32, 0.14, 32]} />
+        <cylinderGeometry args={[0.2, 0.2, 0.08, 32]} />
         <meshStandardMaterial 
           color="#ffffff"
-          metalness={0.5}
-          roughness={0.4}
+          metalness={0.6}
+          roughness={0.3}
           emissive="#ffffff"
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.15}
         />
       </mesh>
       
-      {/* Zkosený kvádr v barvě hráče */}
-      <group position={[0, 0.12, 0]} rotation={[0.12, 0.1, 0.08]}>
-        {/* Hlavní tělo kvádru */}
-        <mesh castShadow>
-          <boxGeometry args={[0.22, 0.12, 0.22]} />
-          <meshStandardMaterial 
-            color={player.color} 
-            metalness={0.3} 
-            roughness={0.6}
-          />
+      {/* Hráč 0: Trojúhelník - trojboký hranol ležící na plocho */}
+      {playerId === 0 && (
+        <mesh position={[0, 0.07, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.12, 0.12, 0.05, 3]} />
+          <meshStandardMaterial color={player.color} metalness={0.3} roughness={0.5} />
         </mesh>
-        {/* Horní zkosená část */}
-        <mesh position={[0, 0.055, 0]} castShadow>
-          <boxGeometry args={[0.18, 0.05, 0.18]} />
-          <meshStandardMaterial 
-            color={player.color} 
-            metalness={0.3} 
-            roughness={0.6}
-          />
+      )}
+      
+      {/* Hráč 1: Čtverec - kvádr ležící na plocho */}
+      {playerId === 1 && (
+        <mesh position={[0, 0.07, 0]} castShadow>
+          <boxGeometry args={[0.17, 0.05, 0.17]} />
+          <meshStandardMaterial color={player.color} metalness={0.3} roughness={0.5} />
         </mesh>
-      </group>
+      )}
+      
+      {/* Hráč 2: Kruh - placatý válec (disk) */}
+      {playerId === 2 && (
+        <mesh position={[0, 0.07, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 0.05, 32]} />
+          <meshStandardMaterial color={player.color} metalness={0.3} roughness={0.5} />
+        </mesh>
+      )}
     </group>
   );
 };
