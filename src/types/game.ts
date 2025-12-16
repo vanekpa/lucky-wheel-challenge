@@ -14,7 +14,7 @@ export interface WheelSegment {
 }
 
 export interface BonusWheelState {
-  phase: 'intro' | 'spin' | 'blackout' | 'choice' | 'reveal' | 'result';
+  phase: 'intro' | 'ready' | 'spin' | 'blackout' | 'choice' | 'reveal' | 'result';
   initialSegmentIndex: number;
   selectedOffset: number;
   finalSegmentIndex: number;

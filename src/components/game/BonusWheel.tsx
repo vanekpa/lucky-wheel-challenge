@@ -195,18 +195,22 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
             const x2 = Math.cos(endAngle) * 100;
             const y2 = Math.sin(endAngle) * 100;
             
-            // Calculate text position and rotation
+            // Calculate text position - text sits on a radius line pointing outward
             const midAngle = startAngle + angle / 2;
-            const midAngleDeg = midAngle * 180 / Math.PI;
-            // Normalize to 0-360 range
-            const normalizedAngle = ((midAngleDeg % 360) + 360) % 360;
-            // If in lower half (90° to 270°), flip text 180° so it's readable from outside
-            const textRotation = normalizedAngle > 90 && normalizedAngle < 270 
-              ? midAngleDeg - 90  // Text points outward, readable from outside
-              : midAngleDeg + 90; // Text points outward, readable from outside
+            const textRadius = 65;
+            const textX = Math.cos(midAngle) * textRadius;
+            const textY = Math.sin(midAngle) * textRadius;
             
-            const textX = Math.cos(midAngle) * 65;
-            const textY = Math.sin(midAngle) * 65;
+            // Text rotation: rotate so text reads from outside the wheel
+            // midAngle points from center outward, we want text perpendicular to radius
+            const midAngleDeg = midAngle * 180 / Math.PI;
+            // Text should be rotated to be tangent to the circle and readable
+            // For top half (text faces down), use midAngle + 90
+            // For bottom half (text would be upside down), flip by adding 180
+            const normalizedAngle = ((midAngleDeg + 90) % 360 + 360) % 360;
+            const textRotation = normalizedAngle > 90 && normalizedAngle < 270
+              ? midAngleDeg + 90 + 180
+              : midAngleDeg + 90;
             
             const isRevealed = revealedSegments.has(index);
             const showBlack = isBlackout && !isRevealed;
@@ -238,12 +242,11 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
                   <text
                     x={textX}
                     y={textY}
-                    fill="#444"
-                    fontSize="16"
+                    fill="#555"
+                    fontSize="14"
                     fontWeight="bold"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    transform={`rotate(${textRotation}, ${textX}, ${textY})`}
                   >
                     ?
                   </text>
@@ -333,11 +336,30 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
           </div>
           
           <Button 
-            onClick={handleStartSpin}
+            onClick={() => setPhase('ready')}
             className="px-12 py-6 text-2xl animate-bonus-glow"
             size="lg"
           >
-            ROZTOČIT BONUS KOLO
+            POKRAČOVAT K BONUS KOLU
+          </Button>
+        </div>
+      )}
+
+      {/* Ready Phase - Wheel stationary, values visible */}
+      {phase === 'ready' && (
+        <div className="text-center animate-in fade-in duration-500">
+          <h2 className="text-3xl font-bold text-primary mb-6">
+            Připraven? Zatoč kolem!
+          </h2>
+          
+          {renderWheel()}
+          
+          <Button 
+            onClick={handleStartSpin}
+            className="mt-8 px-12 py-6 text-2xl animate-bonus-glow"
+            size="lg"
+          >
+            ROZTOČIT
           </Button>
         </div>
       )}
