@@ -266,7 +266,7 @@ export const Wheel3D = ({
   pointerBounce = 0
 }: Wheel3DProps) => {
   return (
-    <div className="w-full h-full bg-gradient-to-br from-blue-950/40 via-purple-950/40 to-indigo-950/40">
+    <div className="w-full h-full">
       <Canvas
         camera={{ 
           position: [0, 6, 8],
@@ -275,7 +275,8 @@ export const Wheel3D = ({
           far: 1000
         }}
         shadows
-        gl={{ antialias: true }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: 'transparent' }}
       >
         <Scene 
           rotation={rotation}
