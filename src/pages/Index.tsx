@@ -7,6 +7,7 @@ import { PlayerSetup } from '@/components/game/PlayerSetup';
 import { GameModeSelect } from '@/components/game/GameModeSelect';
 import { TeacherPuzzleInput } from '@/components/game/TeacherPuzzleInput';
 import { DeviceHandover } from '@/components/game/DeviceHandover';
+import { GuessPhraseDialog } from '@/components/game/GuessPhraseDialog';
 import { GameState, WheelSegment, Player } from '@/types/game';
 import { wheelSegments } from '@/data/puzzles';
 import { usePuzzles } from '@/hooks/usePuzzles';
@@ -57,6 +58,7 @@ const Index = () => {
   const [wheelRotation, setWheelRotation] = useState(0);
   const wheelRotationRef = useRef(0);
   const [pointerBounce, setPointerBounce] = useState(0);
+  const [showGuessDialog, setShowGuessDialog] = useState(false);
 
   // Mode selection handlers
   const handleSelectRandom = () => {
@@ -256,6 +258,49 @@ const Index = () => {
     setShowLetterSelector(false);
     setCurrentWheelValue(0);
   };
+
+  const handleGuessPhrase = (guess: string) => {
+    const correctPhrase = gameState.puzzle.phrase.toUpperCase().trim();
+    const playerGuess = guess.toUpperCase().trim();
+
+    if (playerGuess === correctPhrase) {
+      // Correct guess - bonus points!
+      const bonusPoints = 5000;
+      playWinSound();
+      toast.success(`🎉 SPRÁVNĚ! "${correctPhrase}" - Bonus ${bonusPoints} bodů!`, {
+        duration: 5000,
+      });
+
+      setGameState((prev) => ({
+        ...prev,
+        puzzle: {
+          ...prev.puzzle,
+          revealedLetters: new Set(correctPhrase.split('')),
+        },
+        players: prev.players.map((p) =>
+          p.id === prev.currentPlayer ? { ...p, score: p.score + bonusPoints } : p
+        ),
+      }));
+
+      // Auto-advance to next round after delay
+      setTimeout(() => {
+        newRound();
+      }, 3000);
+    } else {
+      // Wrong guess - lose turn
+      playNothingSound();
+      toast.error(`❌ Špatně! Tah přechází na dalšího hráče.`, {
+        duration: 3000,
+      });
+      setGameState((prev) => ({
+        ...prev,
+        currentPlayer: (prev.currentPlayer + 1) % 3,
+      }));
+    }
+  };
+
+  // Can player guess? Only when not spinning, not placing tokens, and game is active
+  const canGuessPhrase = !gameState.isSpinning && !isPlacingTokens && gamePhase === 'playing';
 
   const handleSpin = () => {
     if (gameState.isSpinning) return;
@@ -477,7 +522,18 @@ const Index = () => {
         usedLetters={gameState.usedLetters}
         showLetterSelector={showLetterSelector}
         onLetterSelect={handleLetterSelect}
+        onGuessPhrase={() => setShowGuessDialog(true)}
         disabled={gameState.isSpinning}
+        canGuess={canGuessPhrase}
+      />
+
+      <GuessPhraseDialog
+        open={showGuessDialog}
+        onOpenChange={setShowGuessDialog}
+        onGuess={handleGuessPhrase}
+        category={gameState.puzzle.category}
+        revealedLetters={gameState.puzzle.revealedLetters}
+        phrase={gameState.puzzle.phrase}
       />
     </div>
   );

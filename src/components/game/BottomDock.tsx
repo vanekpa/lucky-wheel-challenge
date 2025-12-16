@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PuzzleBoard } from './PuzzleBoard';
 import { LetterSelector } from './LetterSelector';
 import { Puzzle } from '@/types/game';
-import { ChevronUp, ChevronDown, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface BottomDockProps {
@@ -10,7 +10,9 @@ interface BottomDockProps {
   usedLetters: Set<string>;
   showLetterSelector: boolean;
   onLetterSelect: (letter: string) => void;
+  onGuessPhrase: () => void;
   disabled: boolean;
+  canGuess: boolean;
 }
 
 export const BottomDock = ({
@@ -18,7 +20,9 @@ export const BottomDock = ({
   usedLetters,
   showLetterSelector,
   onLetterSelect,
+  onGuessPhrase,
   disabled,
+  canGuess,
 }: BottomDockProps) => {
   const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
   
@@ -63,6 +67,17 @@ export const BottomDock = ({
         </Button>
       )}
 
+      {/* Guess Phrase Button */}
+      {canGuess && (
+        <Button
+          onClick={onGuessPhrase}
+          className="absolute top-2 left-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold shadow-lg animate-pulse"
+        >
+          <Sparkles className="mr-2 h-4 w-4" />
+          Hádat tajenku
+        </Button>
+      )}
+
       <div className="container mx-auto px-4 py-4 space-y-4">
         {/* Compact Puzzle Board */}
         <div className="transform scale-90 origin-top">
@@ -83,3 +98,4 @@ export const BottomDock = ({
     </div>
   );
 };
+
