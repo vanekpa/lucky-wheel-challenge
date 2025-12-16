@@ -24,11 +24,36 @@ const CameraController = () => {
 
 const Pointer3D = () => {
   return (
-    <group position={[0, POINTER_Y_POSITION, POINTER_Z_POSITION]}>
-      <mesh rotation={[0, 0, Math.PI]}>
-        <coneGeometry args={[0.15, 0.4, 32]} />
-        <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
+    <group position={[0, POINTER_Y_POSITION, POINTER_Z_POSITION]} rotation={[0, Math.PI, 0]}>
+      {/* Dřevěná báze */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} castShadow>
+        <coneGeometry args={[0.15, 0.25, 3]} />
+        <meshStandardMaterial 
+          color="#5d4037"
+          roughness={0.85}
+          metalness={0.0}
+        />
       </mesh>
+      
+      {/* Zlatá špička */}
+      <mesh position={[0, 0, -0.15]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+        <coneGeometry args={[0.12, 0.15, 3]} />
+        <meshStandardMaterial 
+          color="#ffd700"
+          emissive="#ffd700"
+          emissiveIntensity={0.3}
+          metalness={0.8}
+          roughness={0.2}
+        />
+      </mesh>
+      
+      {/* Světelný efekt */}
+      <pointLight 
+        position={[0, 0, 0.2]} 
+        intensity={0.3} 
+        distance={0.8}
+        color="#ffd700"
+      />
     </group>
   );
 };
