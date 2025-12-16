@@ -67,6 +67,27 @@ All colors MUST be HSL.
   }
 }
 
+/* Touch optimizations for tablets */
+@media (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  button, [role="button"], .touch-target {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Larger touch targets on tablets */
+@media (min-width: 768px) and (pointer: coarse) {
+  .touch-target-lg {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
 /* Studio Effects Animations */
 @keyframes spotlight-left {
   0%, 100% { transform: rotate(-5deg); opacity: 0.08; }

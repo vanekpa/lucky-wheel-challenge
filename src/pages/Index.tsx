@@ -500,9 +500,9 @@ const Index = () => {
       {/* Studio Effects Background */}
       {effectsEnabled && <StudioEffects />}
 
-      {/* Camera Detail View */}
-      <div className="absolute top-4 left-4 z-40 w-80 h-60 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 animate-fade-in">
-        <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wide shadow-md">
+      {/* Camera Detail View - Responsive */}
+      <div className="absolute top-4 left-4 z-40 w-64 h-48 md:w-80 md:h-60 lg:w-96 lg:h-72 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 animate-fade-in">
+        <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-2 py-0.5 md:px-3 md:py-1 rounded text-[10px] md:text-xs font-bold uppercase tracking-wide shadow-md">
           🎥 KAMERA
         </div>
         <WheelDetailView 
@@ -526,7 +526,7 @@ const Index = () => {
           <p className="text-xl text-muted-foreground font-semibold">Kolo {gameState.round}</p>
         </div>
 
-        <div className="relative w-full h-[600px] flex items-center justify-center">
+        <div className="relative w-full h-[400px] sm:h-[500px] md:h-[550px] lg:h-[650px] flex items-center justify-center">
           <Wheel3D
             rotation={wheelRotation}
             rotationRef={wheelRotationRef}
@@ -542,12 +542,12 @@ const Index = () => {
         </div>
         
         {isPlacingTokens && (
-          <div className="absolute top-32 right-4 pointer-events-none z-50">
-            <div className="bg-black/70 backdrop-blur-xl px-5 py-4 rounded-xl border border-primary/40 shadow-[0_0_30px_hsl(var(--primary)/0.3)] text-center animate-in slide-in-from-right duration-300">
-              <p className="text-xl font-bold mb-1" style={{ color: gameState.players[gameState.currentPlayer]?.color }}>
+          <div className="absolute top-52 md:top-32 right-4 pointer-events-none z-50">
+            <div className="bg-black/70 backdrop-blur-xl px-4 py-3 md:px-5 md:py-4 rounded-xl border border-primary/40 shadow-[0_0_30px_hsl(var(--primary)/0.3)] text-center animate-in slide-in-from-right duration-300">
+              <p className="text-lg md:text-xl font-bold mb-1" style={{ color: gameState.players[gameState.currentPlayer]?.color }}>
                 {gameState.players[gameState.currentPlayer]?.name || `HRÁČ ${gameState.currentPlayer + 1}`}
               </p>
-              <p className="text-sm text-white/80 font-medium">
+              <p className="text-xs md:text-sm text-white/80 font-medium">
                 Umístěte žeton na kolo
               </p>
             </div>
@@ -556,12 +556,12 @@ const Index = () => {
 
         {/* Controls */}
         {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && !showResult && (
-          <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-40 animate-in slide-in-from-right duration-500">
+          <div className="fixed bottom-28 md:bottom-8 right-4 md:right-8 flex flex-col gap-4 z-40 animate-in slide-in-from-right duration-500">
             <Button
               onClick={handleSpin}
               variant="default"
               size="lg"
-              className="text-2xl px-12 py-8 shadow-lg backdrop-blur-md bg-primary text-primary-foreground hover:scale-105 hover:bg-primary/90 transition-all duration-200 border-4 border-white/10"
+              className="text-xl md:text-2xl px-8 py-6 md:px-12 md:py-8 shadow-lg backdrop-blur-md bg-primary text-primary-foreground hover:scale-105 hover:bg-primary/90 transition-all duration-200 border-4 border-white/10 touch-target-lg active:scale-95"
             >
               ROZTOČIT
             </Button>

@@ -56,18 +56,18 @@ export const BottomDock = ({
         style={{ backdropFilter: 'blur(12px)' }}
       />
 
-      {/* Toggle Handle */}
+      {/* Toggle Handle - Larger touch target */}
       <button
         onClick={() => setIsManuallyExpanded(!isManuallyExpanded)}
         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full 
-          bg-white/10 backdrop-blur-md rounded-t-xl px-5 py-1.5 
+          bg-white/10 backdrop-blur-md rounded-t-xl px-8 py-3 md:px-5 md:py-1.5
           border-t border-x border-primary/30 hover:border-primary/50 
-          hover:bg-white/15 transition-all"
+          hover:bg-white/15 transition-all touch-target-lg active:bg-white/20"
       >
         {isExpanded ? (
-          <ChevronDown className="w-5 h-5 text-primary" />
+          <ChevronDown className="w-6 h-6 md:w-5 md:h-5 text-primary" />
         ) : (
-          <ChevronUp className="w-5 h-5 text-primary" />
+          <ChevronUp className="w-6 h-6 md:w-5 md:h-5 text-primary" />
         )}
       </button>
 
@@ -83,13 +83,13 @@ export const BottomDock = ({
         </Button>
       )}
 
-      {/* Guess Phrase Button */}
+      {/* Guess Phrase Button - Touch optimized */}
       {canGuess && !showResult && (
         <Button
           onClick={onGuessPhrase}
-          className="absolute top-2 left-3 z-10 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold text-sm px-3 py-1.5 h-auto shadow-lg shadow-yellow-500/20 animate-pulse"
+          className="absolute top-2 left-3 z-10 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold text-xs md:text-sm px-3 py-2 md:px-3 md:py-1.5 h-auto shadow-lg shadow-yellow-500/20 animate-pulse touch-target-lg active:scale-95"
         >
-          <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+          <Sparkles className="mr-1.5 h-4 w-4 md:h-3.5 md:w-3.5" />
           Hádat tajenku
         </Button>
       )}
