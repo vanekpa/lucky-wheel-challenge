@@ -153,43 +153,47 @@ const PlayerToken3D = ({
   const player = players[playerId];
   const angleOffset = -Math.PI / 2;
   const angle = (segmentId * Math.PI * 2) / 32 + angleOffset + (Math.PI / 32);
-  const radius = 2.0; // Closer to center to avoid pointer overlap
+  const radius = 2.0;
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);
-  const y = 0.25;
+  const y = 0.18;
   
   return (
     <group position={[x, y, z]}>
-      <mesh castShadow rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, 0.08, 32]} />
+      {/* Větší bílý podstavec - puk */}
+      <mesh castShadow>
+        <cylinderGeometry args={[0.28, 0.32, 0.14, 32]} />
         <meshStandardMaterial 
           color="#ffffff"
-          metalness={0.6}
-          roughness={0.3}
+          metalness={0.5}
+          roughness={0.4}
           emissive="#ffffff"
-          emissiveIntensity={0.2}
+          emissiveIntensity={0.1}
         />
       </mesh>
       
-      {playerId === 0 && (
-        <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.1, 0.15, 3]} />
-          <meshStandardMaterial color={player.color} />
+      {/* Zkosený kvádr v barvě hráče */}
+      <group position={[0, 0.12, 0]} rotation={[0.12, 0.1, 0.08]}>
+        {/* Hlavní tělo kvádru */}
+        <mesh castShadow>
+          <boxGeometry args={[0.22, 0.12, 0.22]} />
+          <meshStandardMaterial 
+            color={player.color} 
+            metalness={0.3} 
+            roughness={0.6}
+          />
         </mesh>
-      )}
-      {playerId === 1 && (
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[0.15, 0.15, 0.02]} />
-          <meshStandardMaterial color={player.color} />
+        {/* Horní zkosená část */}
+        <mesh position={[0, 0.055, 0]} castShadow>
+          <boxGeometry args={[0.18, 0.05, 0.18]} />
+          <meshStandardMaterial 
+            color={player.color} 
+            metalness={0.3} 
+            roughness={0.6}
+          />
         </mesh>
-      )}
-      {playerId === 2 && (
-        <mesh position={[0, 0.05, 0]}>
-          <sphereGeometry args={[0.08, 16, 16]} />
-          <meshStandardMaterial color={player.color} />
-        </mesh>
-      )}
+      </group>
     </group>
   );
 };
