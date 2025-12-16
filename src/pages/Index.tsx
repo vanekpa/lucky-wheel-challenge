@@ -14,8 +14,7 @@ import { usePuzzles } from '@/hooks/usePuzzles';
 import { getLetterVariants } from '@/components/game/LetterSelector';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { StudioEffects } from '@/components/game/StudioEffects';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
 type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing';
@@ -442,12 +441,8 @@ const Index = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-400/30 via-purple-400/30 to-pink-400/30 text-foreground">
-      {/* Admin Link */}
-      <Link to="/admin" className="fixed top-4 right-4 z-[60]" style={{ right: '180px' }}>
-        <Button variant="outline" size="icon" className="bg-card/80 backdrop-blur-md">
-          <Settings className="h-4 w-4" />
-        </Button>
-      </Link>
+      {/* Studio Effects Background */}
+      <StudioEffects />
 
       {/* Camera Detail View */}
       <div className="absolute top-4 left-4 z-40 w-80 h-60 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 animate-fade-in">

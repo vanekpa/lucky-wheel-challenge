@@ -1,5 +1,4 @@
-import { Button } from '@/components/ui/button';
-
+// Unified keyboard with glassmorphism styling
 interface LetterSelectorProps {
   usedLetters: Set<string>;
   onLetterSelect: (letter: string) => void;
@@ -45,37 +44,50 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-card/50 rounded-lg p-4 border-2 border-primary/30">
-        <h3 className="text-center text-lg font-bold mb-3 text-primary">
-          VYBERTE PÍSMENO
+      <div className="relative bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+        {/* Glow effect behind */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+        
+        <h3 className="relative text-center text-lg font-bold mb-4 text-primary tracking-wider uppercase">
+          Vyberte písmeno
         </h3>
-        <div className="flex flex-wrap gap-2 justify-center">
+        
+        <div className="relative flex flex-wrap gap-2 justify-center">
           {BASE_ALPHABET.map((letter) => {
             const variants = getLetterVariants(letter);
             const isUsed = isGroupUsed(letter);
             const hasVariants = variants.length > 1;
             
             return (
-              <Button
+              <button
                 key={letter}
                 onClick={() => handleSelect(letter)}
                 disabled={disabled || isUsed}
-                variant={isUsed ? 'secondary' : 'default'}
-                className={`w-12 h-12 text-lg font-bold relative ${
-                  isUsed ? 'opacity-30' : ''
-                } ${hasVariants ? 'pr-1' : ''}`}
+                className={`
+                  relative w-11 h-11 text-lg font-bold rounded-xl
+                  transition-all duration-200 ease-out
+                  ${isUsed 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : `bg-white/10 text-white border border-white/20
+                       hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground
+                       hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)]
+                       hover:scale-110 hover:-translate-y-1
+                       active:scale-95`
+                  }
+                `}
               >
                 {letter}
-                {hasVariants && (
-                  <span className="absolute -top-1 -right-1 text-[10px] bg-primary/20 rounded-full w-4 h-4 flex items-center justify-center">
+                {hasVariants && !isUsed && (
+                  <span className="absolute -top-1.5 -right-1.5 text-[9px] bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center font-semibold shadow-lg">
                     +{variants.length - 1}
                   </span>
                 )}
-              </Button>
+              </button>
             );
           })}
         </div>
-        <p className="text-center text-sm text-muted-foreground mt-3">
+        
+        <p className="relative text-center text-xs text-white/40 mt-4 tracking-wide">
           Písmena s háčky a čárkami jsou sloučena (A=Á, C=Č, atd.)
         </p>
       </div>
