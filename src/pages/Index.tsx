@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Wheel3D } from '@/components/game/Wheel3D';
 import { WheelDetailView } from '@/components/game/WheelDetailView';
 import { PlayerScores } from '@/components/game/PlayerScores';
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { StudioEffects } from '@/components/game/StudioEffects';
 import { SeasonalEffects } from '@/components/game/SeasonalEffects';
 import { useSeason } from '@/hooks/useSeason';
+import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
 type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing';
@@ -29,10 +30,16 @@ interface CustomPuzzle {
 const Index = () => {
   const { puzzles, loading, getRandomPuzzle, getRandomPuzzles } = usePuzzles();
   const { colors } = useSeason();
+  const { soundsEnabled } = useSounds();
   const [gamePhase, setGamePhase] = useState<GamePhase>('intro');
   const [gameMode, setGameMode] = useState<'random' | 'teacher'>('random');
   const [customPuzzles, setCustomPuzzles] = useState<CustomPuzzle[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
+  
+  // Sync sounds enabled state globally
+  useEffect(() => {
+    setSoundsEnabledGlobal(soundsEnabled);
+  }, [soundsEnabled]);
   
   const [gameState, setGameState] = useState<GameState>({
     currentPlayer: 0,
@@ -305,6 +312,29 @@ const Index = () => {
   // Can player guess? Only when not spinning, not placing tokens, and game is active
   const canGuessPhrase = !gameState.isSpinning && !isPlacingTokens && gamePhase === 'playing';
 
+  // Auto-detect puzzle completion
+  useEffect(() => {
+    if (gamePhase !== 'playing' || gameState.isSpinning) return;
+    
+    const phrase = gameState.puzzle.phrase.toUpperCase();
+    const lettersInPhrase = new Set(
+      phrase.split('').filter(char => /[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/.test(char))
+    );
+    
+    const allRevealed = [...lettersInPhrase].every(letter => {
+      const variants = getLetterVariants(letter);
+      return variants.some(v => gameState.puzzle.revealedLetters.has(v));
+    });
+    
+    if (allRevealed && lettersInPhrase.size > 0) {
+      playWinSound();
+      toast.success('🎉 TAJENKA VYŘEŠENA! Přechod na další kolo...', { duration: 3000 });
+      setTimeout(() => {
+        newRound();
+      }, 3000);
+    }
+  }, [gameState.puzzle.revealedLetters, gamePhase, gameState.isSpinning]);
+
   const handleSpin = () => {
     if (gameState.isSpinning) return;
 
@@ -513,14 +543,6 @@ const Index = () => {
               className="text-2xl px-12 py-8 shadow-lg backdrop-blur-md bg-primary text-primary-foreground hover:scale-105 hover:bg-primary/90 transition-all duration-200 border-4 border-white/10"
             >
               ROZTOČIT
-            </Button>
-            <Button
-              onClick={newRound}
-              variant="secondary"
-              size="lg"
-              className="text-lg px-8 shadow-lg backdrop-blur-md bg-card/80 hover:bg-card"
-            >
-              NOVÉ KOLO
             </Button>
           </div>
         )}
