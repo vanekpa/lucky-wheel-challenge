@@ -123,31 +123,22 @@ const WheelSegment3D = ({
         />
       </mesh>
       
-      <Text
-        position={[
-          textX, 
-          diskHeight/2 + segmentThickness/2 + (debugRotation?.yOffset ?? 0.01), 
-          textZ
-        ]}
-        rotation={
-          debugRotation 
-            ? [
-                midAngle + debugRotation.y * Math.PI / 180,  // Y first (radial)
-                debugRotation.x * Math.PI / 180,              // X second (tilt)
-                debugRotation.z * Math.PI / 180               // Z third
-              ]
-            : [midAngle - Math.PI / 2, -Math.PI / 2, 0]  // Y, X, Z order
-        }
-        rotation-order="YXZ"
-        fontSize={0.18}
-        color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.01}
-        outlineColor="#000000"
+      <group 
+        position={[textX, diskHeight/2 + segmentThickness/2 + (debugRotation?.yOffset ?? 0.01), textZ]}
+        rotation={[0, -midAngle + Math.PI/2, 0]}
       >
-        {segment.value}
-      </Text>
+        <Text
+          rotation={[-Math.PI/2, 0, 0]}
+          fontSize={0.18}
+          color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.01}
+          outlineColor="#000000"
+        >
+          {segment.value}
+        </Text>
+      </group>
     </group>
   );
 };

@@ -259,12 +259,23 @@ const Index = () => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Animation complete
-        // Use the pre-calculated target to ensure 100% accuracy
+        // Animation complete - SNAP to exact segment center
         const finalSegment = wheelSegments[targetSegmentIndex];
-        console.log('✅ Animation finished. Calculated:', targetSegmentIndex, 'Detected:', detectedIndex);
         
-        // Ensure we finish explicitly
+        // Calculate exact rotation for perfect center alignment
+        const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2;
+        const pointerPos = 3 * Math.PI / 2; // 270°
+        const geometryOffset = -Math.PI / 2;
+        const snappedRotation = pointerPos - segmentCenterAngle - geometryOffset;
+        
+        // Keep full rotations, just snap the final position
+        const fullRotations = Math.floor(currentRot / (Math.PI * 2)) * (Math.PI * 2);
+        const finalRotation = fullRotations + ((snappedRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        
+        wheelRotationRef.current = finalRotation;
+        setWheelRotation(finalRotation);
+        
+        console.log('✅ Animation finished. Target:', targetSegmentIndex, 'Snapped to center');
         handleSpinComplete(finalSegment);
       }
     };
