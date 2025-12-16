@@ -77,7 +77,8 @@ const BonusWheelSegment3D = ({
   radius, 
   diskHeight,
   blackoutMode,
-  isRevealed
+  isRevealed,
+  visualOffset
 }: { 
   segment: WheelSegment; 
   index: number; 
@@ -86,6 +87,7 @@ const BonusWheelSegment3D = ({
   diskHeight: number;
   blackoutMode: boolean;
   isRevealed: boolean;
+  visualOffset: number;
 }) => {
   const materialRef = useRef<THREE.MeshStandardMaterial>(null);
   const glowRef = useRef<THREE.PointLight>(null);
@@ -187,6 +189,29 @@ const BonusWheelSegment3D = ({
   );
 };
 
+// Calculate visual offset from pointer for a given segment index
+const getVisualOffsetFromPointer = (index: number, rotation: number, totalSegments: number): number => {
+  const segmentAngle = (Math.PI * 2) / totalSegments;
+  const geometryOffset = -Math.PI / 2;
+  const pointerPos = 3 * Math.PI / 2; // 270° = top
+  
+  // Calculate where this segment is visually after rotation
+  // Segment's base angle + geometry offset, then subtract rotation (wheel rotates with -rotation.y)
+  const segmentCenterAngle = index * segmentAngle + segmentAngle / 2 + geometryOffset;
+  const visualAngle = ((segmentCenterAngle - rotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  
+  // Calculate angular distance from pointer
+  let angleDiff = visualAngle - pointerPos;
+  // Normalize to -PI to PI
+  while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+  while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+  
+  // Convert to segment offset (negative = clockwise from pointer perspective)
+  const offset = Math.round(angleDiff / segmentAngle);
+  
+  return offset;
+};
+
 export const BonusWheelModel = ({
   rotation, 
   rotationRef: externalRotationRef,
@@ -195,13 +220,22 @@ export const BonusWheelModel = ({
   segments
 }: BonusWheelModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
+  const currentRotationRef = useRef(rotation);
   
   useFrame(() => {
     if (groupRef.current) {
       const currentRotation = externalRotationRef?.current ?? rotation;
+      currentRotationRef.current = currentRotation;
       groupRef.current.rotation.y = -currentRotation;
     }
   });
+  
+  // Calculate which segments are revealed based on visual offset
+  const getIsRevealed = (index: number) => {
+    const currentRot = externalRotationRef?.current ?? rotation;
+    const visualOffset = getVisualOffsetFromPointer(index, currentRot, segments.length);
+    return revealedSegments.has(visualOffset);
+  };
   
   return (
     <group 
@@ -213,18 +247,24 @@ export const BonusWheelModel = ({
         <meshStandardMaterial color="#2a2a2a" side={THREE.DoubleSide} />
       </mesh>
       
-      {segments.map((segment, index) => (
-        <BonusWheelSegment3D 
-          key={index}
-          segment={segment}
-          index={index}
-          totalSegments={segments.length}
-          radius={WHEEL_RADIUS}
-          diskHeight={WHEEL_DISK_HEIGHT}
-          blackoutMode={blackoutMode}
-          isRevealed={revealedSegments.has(index)}
-        />
-      ))}
+      {segments.map((segment, index) => {
+        const currentRot = externalRotationRef?.current ?? rotation;
+        const visualOffset = getVisualOffsetFromPointer(index, currentRot, segments.length);
+        
+        return (
+          <BonusWheelSegment3D 
+            key={index}
+            segment={segment}
+            index={index}
+            totalSegments={segments.length}
+            radius={WHEEL_RADIUS}
+            diskHeight={WHEEL_DISK_HEIGHT}
+            blackoutMode={blackoutMode}
+            isRevealed={revealedSegments.has(visualOffset)}
+            visualOffset={visualOffset}
+          />
+        );
+      })}
       
       {segments.map((_, index) => (
         <WheelPeg 

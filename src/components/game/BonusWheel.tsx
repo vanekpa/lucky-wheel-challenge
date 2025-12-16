@@ -125,18 +125,19 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     // Calculate final segment
     const finalIndex = ((initialSegmentIndex + selectedOffset) % 32 + 32) % 32;
     
-    // Reveal segments one by one
-    const revealOrder = [];
+    // Reveal segments one by one using VISUAL OFFSETS from pointer (0 = under pointer)
+    // Instead of array indices, we store offsets: 0, +1, +2, +3, -1, -2, -3
+    const revealOrder: number[] = [];
     for (let i = 0; i <= Math.abs(selectedOffset); i++) {
       const step = selectedOffset >= 0 ? i : -i;
-      const segIdx = ((initialSegmentIndex + step) % 32 + 32) % 32;
-      revealOrder.push(segIdx);
+      revealOrder.push(step); // Visual offset from pointer position
     }
 
-    revealOrder.forEach((segIdx, i) => {
+    revealOrder.forEach((visualOffset, i) => {
       setTimeout(() => {
         playRevealSound();
-        setRevealedSegments(prev => new Set([...prev, segIdx]));
+        // Store visual offset, not array index
+        setRevealedSegments(prev => new Set([...prev, visualOffset]));
         
         if (i === revealOrder.length - 1) {
           // Final reveal
