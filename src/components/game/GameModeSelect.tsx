@@ -100,32 +100,32 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
         <Button
           onClick={onSelectRandom}
           size="lg"
-          className="group relative overflow-hidden text-2xl px-14 py-12 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 hover:from-emerald-400 hover:via-green-500 hover:to-teal-600 text-white shadow-[0_0_40px_rgba(16,185,129,0.4)] border-2 border-emerald-400/50 rounded-3xl transition-all duration-500 hover:scale-105 hover:shadow-[0_0_60px_rgba(16,185,129,0.6)]"
+          className="group relative overflow-hidden px-12 py-8 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 hover:from-emerald-400 hover:via-green-500 hover:to-teal-600 text-white shadow-[0_0_40px_rgba(16,185,129,0.4)] border-2 border-emerald-400/50 rounded-3xl transition-all duration-500 hover:scale-105 hover:shadow-[0_0_60px_rgba(16,185,129,0.6)]"
         >
           <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-          <div className="relative flex flex-col items-center gap-4">
-            <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <Shuffle className="h-14 w-14" />
+          <div className="relative flex items-center gap-4">
+            <Shuffle className="h-10 w-10" />
+            <div className="flex flex-col items-start">
+              <span className="font-bold text-2xl">Rychlá hra</span>
+              <span className="text-sm opacity-70 font-normal">Náhodné tajenky z databáze</span>
             </div>
-            <span className="font-bold text-3xl">Rychlá hra</span>
-            <span className="text-base opacity-70 font-normal">Náhodné tajenky z databáze</span>
           </div>
         </Button>
 
         <Button
           onClick={onSelectTeacher}
           size="lg"
-          className="group relative overflow-hidden text-2xl px-14 py-12 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 hover:from-blue-400 hover:via-indigo-500 hover:to-purple-600 text-white shadow-[0_0_40px_rgba(99,102,241,0.4)] border-2 border-blue-400/50 rounded-3xl transition-all duration-500 hover:scale-105 hover:shadow-[0_0_60px_rgba(99,102,241,0.6)]"
+          className="group relative overflow-hidden px-12 py-8 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 hover:from-blue-400 hover:via-indigo-500 hover:to-purple-600 text-white shadow-[0_0_40px_rgba(99,102,241,0.4)] border-2 border-blue-400/50 rounded-3xl transition-all duration-500 hover:scale-105 hover:shadow-[0_0_60px_rgba(99,102,241,0.6)]"
         >
           <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-3xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-          <div className="relative flex flex-col items-center gap-4">
-            <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <BookOpen className="h-14 w-14" />
+          <div className="relative flex items-center gap-4">
+            <BookOpen className="h-10 w-10" />
+            <div className="flex flex-col items-start">
+              <span className="font-bold text-2xl">Učitelský mód</span>
+              <span className="text-sm opacity-70 font-normal">Vlastní tajenky pro třídu</span>
             </div>
-            <span className="font-bold text-3xl">Učitelský mód</span>
-            <span className="text-base opacity-70 font-normal">Vlastní tajenky pro třídu</span>
           </div>
         </Button>
       </div>

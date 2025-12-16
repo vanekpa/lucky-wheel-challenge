@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { POINTER_Y_POSITION, POINTER_Z_POSITION } from '@/constants/wheel';
 import { WheelModel } from './WheelModel';
-import { Player } from '@/types/game';
+import { Player, WheelSegment } from '@/types/game';
 
 interface WheelDetailViewProps {
   rotation: number;
@@ -10,6 +10,8 @@ interface WheelDetailViewProps {
   tokenPositions: Map<number, number>;
   players: Player[];
   pointerBounce?: number;
+  currentSegment?: WheelSegment | null;
+  isSpinning?: boolean;
 }
 
 const CameraController = () => {
@@ -96,9 +98,43 @@ const Scene = ({
   );
 };
 
-export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players, pointerBounce = 0 }: WheelDetailViewProps) => {
+const ValueTicker = ({ segment, isSpinning }: { segment?: WheelSegment | null; isSpinning?: boolean }) => {
+  if (!segment && !isSpinning) return null;
+  
+  const getBackgroundColor = () => {
+    if (!segment) return 'bg-gray-800/90';
+    if (segment.type === 'bankrot') return 'bg-red-600/90';
+    if (segment.type === 'nic') return 'bg-gray-600/90';
+    return 'bg-emerald-600/90';
+  };
+  
+  const getDisplayValue = () => {
+    if (!segment) return '---';
+    if (segment.type === 'bankrot') return 'BANKROT';
+    if (segment.type === 'nic') return 'NIČ';
+    return `${segment.value}`;
+  };
+  
   return (
-    <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
+    <div className={`absolute bottom-0 left-0 right-0 h-12 ${getBackgroundColor()} backdrop-blur-sm flex items-center justify-center transition-all duration-200`}>
+      <span className={`text-white font-bold text-2xl tracking-wider ${isSpinning ? 'animate-pulse' : ''}`}>
+        {getDisplayValue()}
+      </span>
+    </div>
+  );
+};
+
+export const WheelDetailView = ({ 
+  rotation, 
+  rotationRef, 
+  tokenPositions, 
+  players, 
+  pointerBounce = 0,
+  currentSegment,
+  isSpinning 
+}: WheelDetailViewProps) => {
+  return (
+    <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50 relative">
       <Canvas
         camera={{ 
           position: [0, 2.5, -4.5],
@@ -118,6 +154,7 @@ export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players
           pointerBounce={pointerBounce}
         />
       </Canvas>
+      <ValueTicker segment={currentSegment} isSpinning={isSpinning} />
     </div>
   );
 };
