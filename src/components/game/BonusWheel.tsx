@@ -21,6 +21,26 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
+// Calculate visual offset from pointer for a given segment index
+const getVisualOffsetFromPointer = (index: number, rotation: number, totalSegments: number): number => {
+  const segmentAngle = (Math.PI * 2) / totalSegments;
+  const geometryOffset = -Math.PI / 2;
+  const pointerPos = 3 * Math.PI / 2; // 270° = top
+  
+  // Calculate where this segment is visually after rotation
+  const segmentCenterAngle = index * segmentAngle + segmentAngle / 2 + geometryOffset;
+  const visualAngle = ((segmentCenterAngle - rotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  
+  // Calculate angular distance from pointer
+  let angleDiff = visualAngle - pointerPos;
+  // Normalize to -PI to PI
+  while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+  while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+  
+  // Convert to segment offset
+  return Math.round(angleDiff / segmentAngle);
+};
+
 const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   const [phase, setPhase] = useState<BonusWheelState['phase']>('intro');
   const [wheelRotation, setWheelRotation] = useState(0);
@@ -161,9 +181,21 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   };
 
   const getFinalResult = () => {
-    const finalIndex = ((initialSegmentIndex + selectedOffset) % 32 + 32) % 32;
-    const segment = shuffledSegments[finalIndex];
+    // Find segment by visual offset from pointer (selectedOffset is the visual offset user chose)
+    const currentRot = wheelRotationRef.current;
     
+    // Find segment whose visual offset matches selectedOffset
+    const targetSegment = shuffledSegments.find((_, index) => {
+      const visualOffset = getVisualOffsetFromPointer(index, currentRot, shuffledSegments.length);
+      return visualOffset === selectedOffset;
+    });
+    
+    if (!targetSegment) {
+      console.error('No segment found for visual offset:', selectedOffset);
+      return { bonusPoints: 0, resultText: 'Chyba', segment: shuffledSegments[0] };
+    }
+    
+    const segment = targetSegment;
     let bonusPoints = 0;
     let resultText = '';
 
