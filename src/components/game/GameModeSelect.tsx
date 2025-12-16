@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Dices, GraduationCap, Settings } from 'lucide-react';
+import { Shuffle, BookOpen, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface GameModeSelectProps {
@@ -106,7 +106,7 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
           <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
           <div className="relative flex flex-col items-center gap-4">
             <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <Dices className="h-14 w-14" />
+              <Shuffle className="h-14 w-14" />
             </div>
             <span className="font-bold text-3xl">Rychlá hra</span>
             <span className="text-base opacity-70 font-normal">Náhodné tajenky z databáze</span>
@@ -122,7 +122,7 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-3xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
           <div className="relative flex flex-col items-center gap-4">
             <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <GraduationCap className="h-14 w-14" />
+              <BookOpen className="h-14 w-14" />
             </div>
             <span className="font-bold text-3xl">Učitelský mód</span>
             <span className="text-base opacity-70 font-normal">Vlastní tajenky pro třídu</span>
@@ -132,10 +132,10 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
 
       {/* Admin link */}
       <Link 
-        to="/admin" 
+        to="/auth" 
         className="relative z-10 text-white/40 hover:text-white/80 transition-all duration-300 flex items-center gap-2 text-sm animate-in fade-in duration-1000 delay-700 hover:scale-105"
       >
-        <Settings className="h-4 w-4" />
+        <Lock className="h-4 w-4" />
         Správa tajenek
       </Link>
 
