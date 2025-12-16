@@ -1,4 +1,5 @@
 // Web Audio API sound utilities for wheel game
+import { getSoundsEnabled } from '@/hooks/useSounds';
 
 let audioContext: AudioContext | null = null;
 
@@ -11,6 +12,8 @@ const getAudioContext = (): AudioContext => {
 
 // Ticking sound - short click when passing segments
 export const playTickSound = () => {
+  if (!getSoundsEnabled()) return;
+  
   const ctx = getAudioContext();
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
@@ -30,6 +33,8 @@ export const playTickSound = () => {
 
 // Win fanfare - ascending tones
 export const playWinSound = () => {
+  if (!getSoundsEnabled()) return;
+  
   const ctx = getAudioContext();
   const frequencies = [523, 659, 784, 1047]; // C5, E5, G5, C6
   
@@ -54,6 +59,8 @@ export const playWinSound = () => {
 
 // Bankrupt sound - descending tones
 export const playBankruptSound = () => {
+  if (!getSoundsEnabled()) return;
+  
   const ctx = getAudioContext();
   const frequencies = [400, 300, 200, 150]; // Descending
   
@@ -78,6 +85,8 @@ export const playBankruptSound = () => {
 
 // Nothing sound - single low tone
 export const playNothingSound = () => {
+  if (!getSoundsEnabled()) return;
+  
   const ctx = getAudioContext();
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();

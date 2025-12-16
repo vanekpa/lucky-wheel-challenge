@@ -10,7 +10,7 @@ interface SeasonColors {
   particle: string;
 }
 
-const seasonColors: Record<Season, Record<DayTime, SeasonColors>> = {
+export const seasonColors: Record<Season, Record<DayTime, SeasonColors>> = {
   winter: {
     day: {
       gradient: 'from-blue-200/40 via-slate-300/40 to-blue-400/40',

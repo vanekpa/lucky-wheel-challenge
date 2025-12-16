@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert, Upload, FileText, Snowflake, Flower2, Sun, Leaf, Moon, CloudSun, Settings2, Sparkles } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert, Upload, FileText, Snowflake, Flower2, Sun, Leaf, Moon, CloudSun, Settings2, Sparkles, Volume2, VolumeX, Eye } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useSeason, Season, DayTime } from '@/hooks/useSeason';
+import { useSeason, Season, DayTime, seasonColors } from '@/hooks/useSeason';
 import { useGameSettings } from '@/hooks/useGameSettings';
 
 interface Puzzle {
@@ -40,6 +40,11 @@ const Admin = () => {
   const [currentSeasonSetting, setCurrentSeasonSetting] = useState<string>('auto');
   const [currentDayTimeSetting, setCurrentDayTimeSetting] = useState<string>('auto');
   const [currentEffectsEnabled, setCurrentEffectsEnabled] = useState(true);
+  const [currentSoundsEnabled, setCurrentSoundsEnabled] = useState(true);
+  
+  // Preview state (separate from actual settings)
+  const [previewSeason, setPreviewSeason] = useState<Season | null>(null);
+  const [previewDayTime, setPreviewDayTime] = useState<DayTime | null>(null);
 
   // Fetch current settings
   useEffect(() => {
@@ -53,11 +58,23 @@ const Admin = () => {
           if (setting.setting_key === 'season') setCurrentSeasonSetting(setting.setting_value);
           else if (setting.setting_key === 'day_time') setCurrentDayTimeSetting(setting.setting_value);
           else if (setting.setting_key === 'effects_enabled') setCurrentEffectsEnabled(setting.setting_value === 'true');
+          else if (setting.setting_key === 'sounds_enabled') setCurrentSoundsEnabled(setting.setting_value === 'true');
         });
       }
     };
     fetchCurrentSettings();
   }, []);
+  
+  // Get preview colors
+  const getPreviewColors = () => {
+    const s = previewSeason || season;
+    const d = previewDayTime || dayTime;
+    return seasonColors[s][d];
+  };
+  
+  const previewColors = getPreviewColors();
+  const displaySeason = previewSeason || season;
+  const displayDayTime = previewDayTime || dayTime;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -321,9 +338,116 @@ const Admin = () => {
             Nastavení prostředí
           </h2>
           
+          {/* Preview Box */}
+          <div className="mb-6">
+            <label className="text-white/70 text-sm mb-2 block flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Náhled prostředí
+            </label>
+            <div 
+              className={`relative h-32 rounded-xl overflow-hidden border border-white/20 bg-gradient-to-br ${previewColors.gradient} transition-all duration-500`}
+            >
+              {/* Stars for night */}
+              {displayDayTime === 'night' && (
+                <div className="absolute inset-0">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 60}%`,
+                        animationDelay: `${Math.random() * 2}s`,
+                        opacity: 0.3 + Math.random() * 0.7,
+                      }}
+                    />
+                  ))}
+                  <div className="absolute top-4 right-8 w-8 h-8 bg-yellow-100 rounded-full shadow-[0_0_20px_10px_rgba(255,255,200,0.3)]" />
+                </div>
+              )}
+              
+              {/* Sun for day */}
+              {displayDayTime === 'day' && displaySeason === 'summer' && (
+                <div className="absolute top-4 right-8 w-10 h-10 bg-yellow-400 rounded-full shadow-[0_0_30px_15px_rgba(255,200,0,0.4)]" />
+              )}
+              
+              {/* Season particles */}
+              <div className="absolute inset-0 overflow-hidden">
+                {currentEffectsEnabled && Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute text-xl animate-bounce"
+                    style={{
+                      left: `${10 + i * 12}%`,
+                      top: `${20 + (i % 3) * 20}%`,
+                      animationDelay: `${i * 0.3}s`,
+                      animationDuration: '2s',
+                    }}
+                  >
+                    {displaySeason === 'winter' && '❄️'}
+                    {displaySeason === 'spring' && '🌸'}
+                    {displaySeason === 'summer' && '✨'}
+                    {displaySeason === 'autumn' && '🍂'}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Label */}
+              <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg text-white text-sm">
+                {displaySeason === 'winter' && '❄️ Zima'}
+                {displaySeason === 'spring' && '🌸 Jaro'}
+                {displaySeason === 'summer' && '☀️ Léto'}
+                {displaySeason === 'autumn' && '🍂 Podzim'}
+                {' + '}
+                {displayDayTime === 'day' ? '☀️ Den' : '🌙 Noc'}
+              </div>
+            </div>
+            
+            {/* Quick preview buttons */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="text-white/50 text-xs mr-2 self-center">Rychlý náhled:</span>
+              {(['winter', 'spring', 'summer', 'autumn'] as Season[]).map((s) => (
+                <Button
+                  key={s}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPreviewSeason(s)}
+                  className={`text-xs px-2 py-1 h-7 ${previewSeason === s ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                >
+                  {s === 'winter' && '❄️'}
+                  {s === 'spring' && '🌸'}
+                  {s === 'summer' && '☀️'}
+                  {s === 'autumn' && '🍂'}
+                </Button>
+              ))}
+              <div className="w-px h-6 bg-white/20 self-center mx-1" />
+              {(['day', 'night'] as DayTime[]).map((d) => (
+                <Button
+                  key={d}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPreviewDayTime(d)}
+                  className={`text-xs px-2 py-1 h-7 ${previewDayTime === d ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                >
+                  {d === 'day' ? '☀️' : '🌙'}
+                </Button>
+              ))}
+              {(previewSeason || previewDayTime) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setPreviewSeason(null); setPreviewDayTime(null); }}
+                  className="text-xs px-2 py-1 h-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
+          </div>
+          
           {/* Season selection */}
           <div className="mb-6">
-            <label className="text-white/70 text-sm mb-2 block">Sezóna</label>
+            <label className="text-white/70 text-sm mb-2 block">Sezóna (uložená)</label>
             <div className="flex flex-wrap gap-2">
               {[
                 { value: 'auto', label: 'Auto', icon: Sparkles },
@@ -356,7 +480,7 @@ const Admin = () => {
 
           {/* Day/Night selection */}
           <div className="mb-6">
-            <label className="text-white/70 text-sm mb-2 block">Denní doba</label>
+            <label className="text-white/70 text-sm mb-2 block">Denní doba (uložená)</label>
             <div className="flex flex-wrap gap-2">
               {[
                 { value: 'auto', label: 'Auto', icon: Sparkles },
@@ -387,7 +511,7 @@ const Admin = () => {
 
           {/* Effects toggle */}
           <div className="mb-4">
-            <label className="text-white/70 text-sm mb-2 block">Efekty</label>
+            <label className="text-white/70 text-sm mb-2 block">Vizuální efekty</label>
             <div className="flex gap-2">
               <Button
                 variant={currentEffectsEnabled ? 'default' : 'outline'}
@@ -426,6 +550,47 @@ const Admin = () => {
             </div>
           </div>
 
+          {/* Sounds toggle */}
+          <div className="mb-4">
+            <label className="text-white/70 text-sm mb-2 block">Zvuky</label>
+            <div className="flex gap-2">
+              <Button
+                variant={currentSoundsEnabled ? 'default' : 'outline'}
+                size="sm"
+                disabled={updating}
+                onClick={() => {
+                  setCurrentSoundsEnabled(true);
+                  updateSetting('sounds_enabled', 'true');
+                }}
+                className={`${
+                  currentSoundsEnabled
+                    ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0'
+                    : 'border-white/20 text-white/70 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Volume2 className="h-4 w-4 mr-1" />
+                Zapnuté
+              </Button>
+              <Button
+                variant={!currentSoundsEnabled ? 'default' : 'outline'}
+                size="sm"
+                disabled={updating}
+                onClick={() => {
+                  setCurrentSoundsEnabled(false);
+                  updateSetting('sounds_enabled', 'false');
+                }}
+                className={`${
+                  !currentSoundsEnabled
+                    ? 'bg-gradient-to-r from-gray-500 to-slate-500 text-white border-0'
+                    : 'border-white/20 text-white/70 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <VolumeX className="h-4 w-4 mr-1" />
+                Vypnuté
+              </Button>
+            </div>
+          </div>
+
           {/* Current state display */}
           <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
             <p className="text-white/50 text-sm">
@@ -438,6 +603,7 @@ const Admin = () => {
                 {' + '}
                 {dayTime === 'day' ? '☀️ Den' : '🌙 Noc'}
                 {!effectsEnabled && ' (efekty vypnuté)'}
+                {!currentSoundsEnabled && ' (zvuky vypnuté)'}
               </span>
             </p>
           </div>
