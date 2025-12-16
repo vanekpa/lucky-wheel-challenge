@@ -486,16 +486,13 @@ const Index = () => {
         </div>
         
         {isPlacingTokens && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
-            <div className="bg-background/95 backdrop-blur-md px-8 py-6 rounded-xl border-4 border-primary shadow-[0_0_50px_rgba(0,0,0,0.5)] text-center animate-in zoom-in duration-300">
-              <p className="text-3xl font-bold text-primary mb-2">
+          <div className="absolute top-32 right-4 pointer-events-none z-50">
+            <div className="bg-black/70 backdrop-blur-xl px-5 py-4 rounded-xl border border-primary/40 shadow-[0_0_30px_hsl(var(--primary)/0.3)] text-center animate-in slide-in-from-right duration-300">
+              <p className="text-xl font-bold mb-1" style={{ color: gameState.players[gameState.currentPlayer]?.color }}>
                 {gameState.players[gameState.currentPlayer]?.name || `HRÁČ ${gameState.currentPlayer + 1}`}
               </p>
-              <p className="text-lg text-foreground font-medium">
-                Umístěte svůj žeton na kolo
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                (Klikněte na libovolný barevný segment)
+              <p className="text-sm text-white/80 font-medium">
+                Umístěte žeton na kolo
               </p>
             </div>
           </div>
