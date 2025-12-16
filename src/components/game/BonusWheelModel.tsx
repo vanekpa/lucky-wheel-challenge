@@ -6,6 +6,8 @@ import { WheelSegment } from '@/types/game';
 import { WHEEL_RADIUS, WHEEL_DISK_HEIGHT, WHEEL_Y_POSITION } from '@/constants/wheel';
 import { getColorFromSegment, createWedgeGeometry } from '@/utils/wheelGeometry';
 
+// Animated segment with pulsing glow when revealed
+
 interface BonusWheelModelProps {
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
@@ -85,6 +87,9 @@ const BonusWheelSegment3D = ({
   blackoutMode: boolean;
   isRevealed: boolean;
 }) => {
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const glowRef = useRef<THREE.PointLight>(null);
+  
   const angleOffset = -Math.PI / 2;
   const angle = (index * Math.PI * 2) / totalSegments + angleOffset;
   const nextAngle = ((index + 1) * Math.PI * 2) / totalSegments + angleOffset;
@@ -99,11 +104,36 @@ const BonusWheelSegment3D = ({
   }, [angle, nextAngle, innerRadius, outerRadius]);
   
   const showBlackout = blackoutMode && !isRevealed;
-  const color = showBlackout ? '#111111' : getColorFromSegment(segment.color);
+  const baseColor = showBlackout ? '#111111' : getColorFromSegment(segment.color);
+  
+  // Pulsing animation for revealed segments
+  useFrame(({ clock }) => {
+    if (isRevealed && materialRef.current) {
+      const pulse = Math.sin(clock.elapsedTime * 4) * 0.5 + 0.5; // 0-1 pulsing
+      materialRef.current.emissiveIntensity = 0.3 + pulse * 0.5;
+      
+      // Gold glow color when revealed
+      materialRef.current.emissive.setHex(0xffd700);
+    }
+    
+    if (glowRef.current) {
+      if (isRevealed) {
+        const pulse = Math.sin(clock.elapsedTime * 4) * 0.5 + 0.5;
+        glowRef.current.intensity = 1.5 + pulse * 2;
+      } else {
+        glowRef.current.intensity = 0;
+      }
+    }
+  });
   
   const textRadius = 0.7 * radius;
   const textX = textRadius * Math.cos(midAngle);
   const textZ = textRadius * Math.sin(midAngle);
+  
+  // Position for the glow light
+  const glowRadius = 0.6 * radius;
+  const glowX = glowRadius * Math.cos(midAngle);
+  const glowZ = glowRadius * Math.sin(midAngle);
   
   return (
     <group>
@@ -114,17 +144,28 @@ const BonusWheelSegment3D = ({
       >
         <primitive object={wedgeGeometry} attach="geometry" />
         <meshStandardMaterial 
-          color={color}
-          roughness={0.4}
-          metalness={0.2}
+          ref={materialRef}
+          color={baseColor}
+          roughness={isRevealed ? 0.2 : 0.4}
+          metalness={isRevealed ? 0.6 : 0.2}
           side={THREE.DoubleSide}
           polygonOffset
           polygonOffsetFactor={-1}
           polygonOffsetUnits={-1}
-          emissive={isRevealed && !blackoutMode ? color : '#000000'}
-          emissiveIntensity={isRevealed && !blackoutMode ? 0.3 : 0}
+          emissive={isRevealed ? '#ffd700' : '#000000'}
+          emissiveIntensity={isRevealed ? 0.5 : 0}
         />
       </mesh>
+      
+      {/* Point light for glow effect on revealed segments */}
+      <pointLight
+        ref={glowRef}
+        position={[glowX, diskHeight/2 + segmentThickness + 0.3, glowZ]}
+        color="#ffd700"
+        intensity={0}
+        distance={1.5}
+        decay={2}
+      />
       
       <group 
         position={[textX, diskHeight/2 + segmentThickness/2 + 0.05, textZ]}
