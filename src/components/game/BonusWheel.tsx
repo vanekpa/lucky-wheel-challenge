@@ -91,12 +91,8 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     const segmentAngle = (Math.PI * 2) / 32;
     const currentRotation = wheelRotationRef.current;
 
-    const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2;
-    const pointerPos = 3 * Math.PI / 2;
-    const geometryOffset = -Math.PI / 2;
-    const targetRotationInCircle = pointerPos - segmentCenterAngle - geometryOffset;
-
-    const normalizedTarget = ((targetRotationInCircle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    // USE THE SAME FUNCTION as getSegmentIndexAtVisualOffset expects!
+    const normalizedTarget = getRotationForSegmentAtPointer(targetSegmentIndex, 32);
     const fullRotations = Math.floor(currentRotation / (Math.PI * 2)) * (Math.PI * 2);
     const newRotation = fullRotations + (Math.PI * 2 * extraSpins) + normalizedTarget;
 
