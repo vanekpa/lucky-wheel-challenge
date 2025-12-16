@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { wheelSegments } from '@/data/puzzles';
 import { WheelSegment, Player } from '@/types/game';
@@ -161,9 +161,9 @@ const PlayerToken3D = ({
   
   return (
     <group position={[x, y, z]}>
-      {/* Bílý podstavec - puk */}
+      {/* Bílý podstavec - puk se zaoblenou hranou */}
       <mesh castShadow>
-        <cylinderGeometry args={[0.2, 0.2, 0.08, 32]} />
+        <cylinderGeometry args={[0.2, 0.2, 0.06, 32]} />
         <meshStandardMaterial 
           color="#ffffff"
           metalness={0.6}
@@ -172,27 +172,41 @@ const PlayerToken3D = ({
           emissiveIntensity={0.15}
         />
       </mesh>
+      {/* Zaoblená hrana puku - torus */}
+      <mesh position={[0, 0.03, 0]} castShadow>
+        <torusGeometry args={[0.19, 0.02, 8, 32]} />
+        <meshStandardMaterial 
+          color="#ffffff"
+          metalness={0.6}
+          roughness={0.3}
+        />
+      </mesh>
       
-      {/* Hráč 0: Trojúhelník - trojboký hranol ležící na plocho */}
+      {/* Hráč 0: Trojúhelník - zaoblený */}
       {playerId === 0 && (
-        <mesh position={[0, 0.07, 0]} rotation={[0, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.12, 0.12, 0.05, 3]} />
+        <mesh position={[0, 0.06, 0]} rotation={[0, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.12, 0.12, 0.04, 3]} />
           <meshStandardMaterial color={player.color} metalness={0.3} roughness={0.5} />
         </mesh>
       )}
       
-      {/* Hráč 1: Čtverec - kvádr ležící na plocho */}
+      {/* Hráč 1: Čtverec - zaoblené rohy */}
       {playerId === 1 && (
-        <mesh position={[0, 0.07, 0]} castShadow>
-          <boxGeometry args={[0.17, 0.05, 0.17]} />
+        <RoundedBox 
+          position={[0, 0.06, 0]} 
+          args={[0.17, 0.04, 0.17]} 
+          radius={0.02} 
+          smoothness={4}
+          castShadow
+        >
           <meshStandardMaterial color={player.color} metalness={0.3} roughness={0.5} />
-        </mesh>
+        </RoundedBox>
       )}
       
-      {/* Hráč 2: Kruh - placatý válec (disk) */}
+      {/* Hráč 2: Kruh - placatý válec */}
       {playerId === 2 && (
-        <mesh position={[0, 0.07, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 0.05, 32]} />
+        <mesh position={[0, 0.06, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 0.04, 32]} />
           <meshStandardMaterial color={player.color} metalness={0.3} roughness={0.5} />
         </mesh>
       )}
