@@ -11,6 +11,7 @@ import { GuessPhraseDialog } from '@/components/game/GuessPhraseDialog';
 import { PlayerSettings } from '@/components/game/PlayerSettings';
 import BonusWheel from '@/components/game/BonusWheel';
 import VictoryScreen from '@/components/game/VictoryScreen';
+import EndGameDialog from '@/components/game/EndGameDialog';
 import { GameState, WheelSegment, Player } from '@/types/game';
 import { wheelSegments } from '@/data/puzzles';
 import { usePuzzles } from '@/hooks/usePuzzles';
@@ -22,6 +23,7 @@ import { SeasonalEffects } from '@/components/game/SeasonalEffects';
 import { useSeason } from '@/hooks/useSeason';
 import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
+import { X } from 'lucide-react';
 
 type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing' | 'bonus-wheel' | 'victory';
 
@@ -80,6 +82,7 @@ const Index = () => {
   // Effects toggle state
   const [effectsEnabled, setEffectsEnabled] = useState(true);
   const [showGuessDialog, setShowGuessDialog] = useState(false);
+  const [showEndGameDialog, setShowEndGameDialog] = useState(false);
 
   // Mode selection handlers
   const handleSelectRandom = () => {
@@ -498,6 +501,32 @@ const Index = () => {
     setCurrentPuzzleIndex(0);
   };
 
+  const handleEndGameBonusWheel = () => {
+    setShowEndGameDialog(false);
+    const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+    toast.success(`${winner.name} jde do BONUS KOLA!`);
+    setGamePhase('bonus-wheel');
+  };
+
+  const handleEndGameReturnToMenu = () => {
+    setShowEndGameDialog(false);
+    setGamePhase('intro');
+    setCustomPuzzles([]);
+    setCurrentPuzzleIndex(0);
+    setGameState(prev => ({
+      ...prev,
+      players: prev.players.map(p => ({ ...p, score: 0 })),
+      usedLetters: new Set(),
+      round: 1,
+      currentPlayer: 0,
+      isSpinning: false,
+    }));
+    setTokenPositions(new Map());
+    setTokensPlaced(new Set());
+    setIsPlacingTokens(true);
+    setShowLetterSelector(false);
+  };
+
   // Intro screen - mode selection
   if (gamePhase === 'intro') {
     return <GameModeSelect onSelectRandom={handleSelectRandom} onSelectTeacher={handleSelectTeacher} />;
@@ -628,6 +657,19 @@ const Index = () => {
             </Button>
           </div>
         )}
+
+        {/* End Game Button - only in random mode */}
+        {gameMode === 'random' && !gameState.isSpinning && !showResult && (
+          <Button
+            onClick={() => setShowEndGameDialog(true)}
+            variant="outline"
+            size="sm"
+            className="fixed top-4 right-4 z-50 bg-black/50 backdrop-blur-md border-destructive/30 text-destructive hover:bg-destructive/20 hover:border-destructive/50 transition-all"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Ukončit hru
+          </Button>
+        )}
       </div>
 
       <BottomDock
@@ -651,6 +693,14 @@ const Index = () => {
         category={gameState.puzzle.category}
         revealedLetters={gameState.puzzle.revealedLetters}
         phrase={gameState.puzzle.phrase}
+      />
+
+      <EndGameDialog
+        open={showEndGameDialog}
+        onOpenChange={setShowEndGameDialog}
+        onBonusWheel={handleEndGameBonusWheel}
+        onReturnToMenu={handleEndGameReturnToMenu}
+        players={gameState.players}
       />
     </div>
   );
