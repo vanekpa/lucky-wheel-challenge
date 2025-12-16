@@ -140,58 +140,108 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
 
   const handleConfirmChoice = () => {
     setPhase('reveal');
-    playRevealSound();
-
-    // Calculate final segment
-    const finalIndex = ((initialSegmentIndex + selectedOffset) % 32 + 32) % 32;
     
-    // Reveal segments one by one using VISUAL OFFSETS from pointer (0 = under pointer)
-    // Instead of array indices, we store offsets: 0, +1, +2, +3, -1, -2, -3
-    const revealOrder: number[] = [];
-    for (let i = 0; i <= Math.abs(selectedOffset); i++) {
-      const step = selectedOffset >= 0 ? i : -i;
-      revealOrder.push(step); // Visual offset from pointer position
-    }
-
-    revealOrder.forEach((visualOffset, i) => {
-      setTimeout(() => {
-        playRevealSound();
-        // Store visual offset, not array index
-        setRevealedSegments(prev => new Set([...prev, visualOffset]));
-        
-        if (i === revealOrder.length - 1) {
-          // Final reveal
-          setTimeout(() => {
-            setPhase('result');
-            const segment = shuffledSegments[finalIndex];
-            
-            if (segment.type === 'jackpot') {
-              playJackpotSound();
-            } else if (segment.type === 'bankrot') {
-              playBankruptSound();
-            } else if (segment.type === 'nic') {
-              playNothingSound();
-            } else {
-              playVictoryFanfare();
-            }
-          }, 800);
+    // Calculate rotation needed to bring target segment under pointer
+    const segmentAngle = (Math.PI * 2) / 32;
+    const rotationOffset = selectedOffset * segmentAngle; // How much to rotate
+    
+    const startRotation = wheelRotationRef.current;
+    // Rotate in the direction of offset - positive offset = rotate clockwise (negative rotation)
+    const targetRotation = startRotation - rotationOffset;
+    
+    const duration = 1500 + Math.abs(selectedOffset) * 300; // Longer for more steps
+    const startTime = Date.now();
+    let lastRevealedStep = -1;
+    const totalSteps = Math.abs(selectedOffset);
+    
+    // Reveal initial segment (under pointer)
+    setRevealedSegments(new Set([0]));
+    playRevealSound();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing - smooth deceleration
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const currentRot = startRotation + (targetRotation - startRotation) * ease;
+      
+      wheelRotationRef.current = currentRot;
+      setWheelRotation(currentRot);
+      
+      // Progressive segment reveal during rotation
+      if (totalSteps > 0) {
+        const currentStep = Math.floor(progress * totalSteps);
+        if (currentStep > lastRevealedStep && currentStep <= totalSteps) {
+          // Reveal segment at this step
+          const offsetToReveal = selectedOffset >= 0 ? currentStep : -currentStep;
+          setRevealedSegments(prev => new Set([...prev, offsetToReveal]));
+          playRevealSound();
+          lastRevealedStep = currentStep;
         }
-      }, i * 600);
-    });
+      }
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Animation complete - ensure final rotation is exact
+        wheelRotationRef.current = targetRotation;
+        setWheelRotation(targetRotation);
+        
+        // Reveal all segments in path (safety)
+        const finalRevealed = new Set<number>();
+        for (let i = 0; i <= totalSteps; i++) {
+          finalRevealed.add(selectedOffset >= 0 ? i : -i);
+        }
+        setRevealedSegments(finalRevealed);
+        
+        // Pointer bounce effect
+        setPointerBounce(1);
+        const bounceStart = Date.now();
+        const animateBounce = () => {
+          const bounceElapsed = Date.now() - bounceStart;
+          const bounceProgress = Math.min(bounceElapsed / 500, 1);
+          setPointerBounce(1 - bounceProgress);
+          if (bounceProgress < 1) {
+            requestAnimationFrame(animateBounce);
+          }
+        };
+        requestAnimationFrame(animateBounce);
+        
+        // Transition to result phase
+        setTimeout(() => {
+          setPhase('result');
+          
+          // Play appropriate sound based on final segment
+          const { segment } = getFinalResult();
+          if (segment.type === 'jackpot') {
+            playJackpotSound();
+          } else if (segment.type === 'bankrot') {
+            playBankruptSound();
+          } else if (segment.type === 'nic') {
+            playNothingSound();
+          } else {
+            playVictoryFanfare();
+          }
+        }, 600);
+      }
+    };
+    
+    requestAnimationFrame(animate);
   };
 
   const getFinalResult = () => {
-    // Find segment by visual offset from pointer (selectedOffset is the visual offset user chose)
+    // After rotation animation, the target segment is now at offset 0 (under pointer)
     const currentRot = wheelRotationRef.current;
     
-    // Find segment whose visual offset matches selectedOffset
+    // Find segment at offset 0 (directly under pointer after rotation)
     const targetSegment = shuffledSegments.find((_, index) => {
       const visualOffset = getVisualOffsetFromPointer(index, currentRot, shuffledSegments.length);
-      return visualOffset === selectedOffset;
+      return visualOffset === 0;
     });
     
     if (!targetSegment) {
-      console.error('No segment found for visual offset:', selectedOffset);
+      console.error('No segment found at offset 0');
       return { bonusPoints: 0, resultText: 'Chyba', segment: shuffledSegments[0] };
     }
     
