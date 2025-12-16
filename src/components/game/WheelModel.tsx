@@ -122,7 +122,7 @@ const WheelSegment3D = ({
       </mesh>
       
       <group 
-        position={[textX, diskHeight/2 + segmentThickness/2 + 0.01, textZ]}
+        position={[textX, diskHeight/2 + segmentThickness/2 + 0.05, textZ]}
         rotation={[0, -midAngle + Math.PI/2, 0]}
       >
         <Text
@@ -133,8 +133,6 @@ const WheelSegment3D = ({
           anchorY="middle"
           outlineWidth={0.02}
           outlineColor="#000000"
-          strokeWidth="3%"
-          strokeColor="#000000"
         >
           {segment.value}
         </Text>
