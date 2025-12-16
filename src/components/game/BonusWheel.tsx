@@ -195,6 +195,19 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
             const x2 = Math.cos(endAngle) * 100;
             const y2 = Math.sin(endAngle) * 100;
             
+            // Calculate text position and rotation
+            const midAngle = startAngle + angle / 2;
+            const midAngleDeg = midAngle * 180 / Math.PI;
+            // Normalize to 0-360 range
+            const normalizedAngle = ((midAngleDeg % 360) + 360) % 360;
+            // If in lower half (90° to 270°), flip text 180° so it's readable from outside
+            const textRotation = normalizedAngle > 90 && normalizedAngle < 270 
+              ? midAngleDeg - 90  // Text points outward, readable from outside
+              : midAngleDeg + 90; // Text points outward, readable from outside
+            
+            const textX = Math.cos(midAngle) * 65;
+            const textY = Math.sin(midAngle) * 65;
+            
             const isRevealed = revealedSegments.has(index);
             const showBlack = isBlackout && !isRevealed;
             
@@ -209,27 +222,28 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
                 />
                 {!showBlack && (
                   <text
-                    x={Math.cos(startAngle + angle / 2) * 65}
-                    y={Math.sin(startAngle + angle / 2) * 65}
+                    x={textX}
+                    y={textY}
                     fill="white"
                     fontSize="8"
                     fontWeight="bold"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    transform={`rotate(${(startAngle + angle / 2) * 180 / Math.PI + 90}, ${Math.cos(startAngle + angle / 2) * 65}, ${Math.sin(startAngle + angle / 2) * 65})`}
+                    transform={`rotate(${textRotation}, ${textX}, ${textY})`}
                   >
                     {typeof segment.value === 'number' ? (segment.value / 1000) + 'K' : segment.value}
                   </text>
                 )}
                 {showBlack && (
                   <text
-                    x={Math.cos(startAngle + angle / 2) * 65}
-                    y={Math.sin(startAngle + angle / 2) * 65}
+                    x={textX}
+                    y={textY}
                     fill="#444"
                     fontSize="16"
                     fontWeight="bold"
                     textAnchor="middle"
                     dominantBaseline="middle"
+                    transform={`rotate(${textRotation}, ${textX}, ${textY})`}
                   >
                     ?
                   </text>
