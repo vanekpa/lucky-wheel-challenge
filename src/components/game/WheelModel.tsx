@@ -161,24 +161,15 @@ const PlayerToken3D = ({
   
   return (
     <group position={[x, y, z]}>
-      {/* Bílý podstavec - puk se zaoblenou hranou */}
+      {/* Bílý podstavec - puk se zkosenou hranou */}
       <mesh castShadow>
-        <cylinderGeometry args={[0.2, 0.2, 0.06, 32]} />
+        <cylinderGeometry args={[0.18, 0.2, 0.06, 32]} />
         <meshStandardMaterial 
           color="#ffffff"
           metalness={0.6}
           roughness={0.3}
           emissive="#ffffff"
           emissiveIntensity={0.15}
-        />
-      </mesh>
-      {/* Zaoblená hrana puku - torus */}
-      <mesh position={[0, 0.03, 0]} castShadow>
-        <torusGeometry args={[0.19, 0.02, 8, 32]} />
-        <meshStandardMaterial 
-          color="#ffffff"
-          metalness={0.6}
-          roughness={0.3}
         />
       </mesh>
       
