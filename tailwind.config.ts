@@ -55,6 +55,7 @@ export default {
           purple: "hsl(var(--wheel-purple))",
           teal: "hsl(var(--wheel-teal))",
           orange: "hsl(var(--wheel-orange))",
+          gold: "hsl(var(--wheel-gold))",
         },
         bankrot: "hsl(var(--bankrot))",
         nic: "hsl(var(--nic))",

@@ -10,7 +10,15 @@ export interface WheelSegment {
   id: number;
   value: number | string;
   color: string;
-  type: 'points' | 'bankrot' | 'nic' | 'special';
+  type: 'points' | 'bankrot' | 'nic' | 'special' | 'jackpot';
+}
+
+export interface BonusWheelState {
+  phase: 'intro' | 'spin' | 'blackout' | 'choice' | 'reveal' | 'result';
+  initialSegmentIndex: number;
+  selectedOffset: number;
+  finalSegmentIndex: number;
+  revealed: boolean;
 }
 
 export interface Puzzle {
