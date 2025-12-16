@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Player, BonusWheelState } from '@/types/game';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Player, BonusWheelState, WheelSegment } from '@/types/game';
 import { bonusWheelSegments } from '@/data/puzzles';
 import { Button } from '@/components/ui/button';
 import { BonusWheel3D } from './BonusWheel3D';
@@ -11,6 +11,16 @@ interface BonusWheelProps {
   onComplete: (finalScores: Player[]) => void;
 }
 
+// Fisher-Yates shuffle
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   const [phase, setPhase] = useState<BonusWheelState['phase']>('intro');
   const [wheelRotation, setWheelRotation] = useState(0);
@@ -19,11 +29,21 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [revealedSegments, setRevealedSegments] = useState<Set<number>>(new Set());
   const [pointerBounce, setPointerBounce] = useState(0);
+  const [blackoutActive, setBlackoutActive] = useState(false);
   const wheelRotationRef = useRef(0);
+  
+  // Shuffle segments once when component mounts
+  const shuffledSegments = useMemo(() => {
+    return shuffleArray(bonusWheelSegments).map((seg, index) => ({
+      ...seg,
+      id: index // New ID based on shuffled position
+    }));
+  }, []);
 
   const handleStartSpin = () => {
     setPhase('spin');
     setIsSpinning(true);
+    setBlackoutActive(true); // Blackout immediately when spinning starts
     playBonusDrumroll();
 
     const targetSegmentIndex = Math.floor(Math.random() * 32);
@@ -84,12 +104,9 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
         };
         requestAnimationFrame(animateBounce);
         
-        // Transition to blackout after spin
+        // Transition to choice phase after spin
         setTimeout(() => {
-          setPhase('blackout');
-          setTimeout(() => {
-            setPhase('choice');
-          }, 1500);
+          setPhase('choice');
         }, 500);
       }
     };
@@ -125,7 +142,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
           // Final reveal
           setTimeout(() => {
             setPhase('result');
-            const segment = bonusWheelSegments[finalIndex];
+            const segment = shuffledSegments[finalIndex];
             
             if (segment.type === 'jackpot') {
               playJackpotSound();
@@ -144,7 +161,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
 
   const getFinalResult = () => {
     const finalIndex = ((initialSegmentIndex + selectedOffset) % 32 + 32) % 32;
-    const segment = bonusWheelSegments[finalIndex];
+    const segment = shuffledSegments[finalIndex];
     
     let bonusPoints = 0;
     let resultText = '';
@@ -179,7 +196,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   };
 
   const renderWheel = () => {
-    const isBlackout = phase === 'blackout' || phase === 'choice';
+    const isBlackout = blackoutActive && phase !== 'ready';
     
     return (
       <div className="w-80 h-80 md:w-[500px] md:h-[500px]">
@@ -189,6 +206,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
           blackoutMode={isBlackout}
           revealedSegments={revealedSegments}
           pointerBounce={pointerBounce}
+          segments={shuffledSegments}
         />
       </div>
     );
@@ -289,11 +307,10 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
       )}
 
       {/* Spin Phase */}
-      {(phase === 'spin' || phase === 'blackout' || phase === 'choice' || phase === 'reveal') && (
+      {(phase === 'spin' || phase === 'choice' || phase === 'reveal') && (
         <div className="text-center">
           <h2 className="text-3xl font-bold text-primary mb-6">
             {phase === 'spin' && 'Kolo se točí...'}
-            {phase === 'blackout' && 'Hodnoty se skrývají...'}
             {phase === 'choice' && 'Vyber svůj osud!'}
             {phase === 'reveal' && 'Odhalování...'}
           </h2>

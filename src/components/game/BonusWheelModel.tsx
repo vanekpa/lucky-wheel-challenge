@@ -2,7 +2,6 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { bonusWheelSegments } from '@/data/puzzles';
 import { WheelSegment } from '@/types/game';
 import { WHEEL_RADIUS, WHEEL_DISK_HEIGHT, WHEEL_Y_POSITION } from '@/constants/wheel';
 import { getColorFromSegment, createWedgeGeometry } from '@/utils/wheelGeometry';
@@ -12,6 +11,7 @@ interface BonusWheelModelProps {
   rotationRef?: React.MutableRefObject<number>;
   blackoutMode: boolean;
   revealedSegments: Set<number>;
+  segments: WheelSegment[];
 }
 
 const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; height: number }) => {
@@ -150,7 +150,8 @@ export const BonusWheelModel = ({
   rotation, 
   rotationRef: externalRotationRef,
   blackoutMode,
-  revealedSegments
+  revealedSegments,
+  segments
 }: BonusWheelModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   
@@ -171,23 +172,23 @@ export const BonusWheelModel = ({
         <meshStandardMaterial color="#2a2a2a" side={THREE.DoubleSide} />
       </mesh>
       
-      {bonusWheelSegments.map((segment) => (
+      {segments.map((segment, index) => (
         <BonusWheelSegment3D 
-          key={segment.id}
+          key={index}
           segment={segment}
-          index={segment.id}
-          totalSegments={bonusWheelSegments.length}
+          index={index}
+          totalSegments={segments.length}
           radius={WHEEL_RADIUS}
           diskHeight={WHEEL_DISK_HEIGHT}
           blackoutMode={blackoutMode}
-          isRevealed={revealedSegments.has(segment.id)}
+          isRevealed={revealedSegments.has(index)}
         />
       ))}
       
-      {bonusWheelSegments.map((segment) => (
+      {segments.map((_, index) => (
         <WheelPeg 
-          key={`peg-${segment.id}`}
-          angle={(segment.id * 360) / bonusWheelSegments.length - 90}
+          key={`peg-${index}`}
+          angle={(index * 360) / segments.length - 90}
           radius={0.9 * WHEEL_RADIUS}
           height={0.08 * WHEEL_RADIUS}
         />
