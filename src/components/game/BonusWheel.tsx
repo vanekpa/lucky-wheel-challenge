@@ -201,16 +201,14 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
             const textX = Math.cos(midAngle) * textRadius;
             const textY = Math.sin(midAngle) * textRadius;
             
-            // Text rotation: rotate so text reads from outside the wheel
-            // midAngle points from center outward, we want text perpendicular to radius
-            const midAngleDeg = midAngle * 180 / Math.PI;
-            // Text should be rotated to be tangent to the circle and readable
-            // For top half (text faces down), use midAngle + 90
-            // For bottom half (text would be upside down), flip by adding 180
-            const normalizedAngle = ((midAngleDeg + 90) % 360 + 360) % 360;
-            const textRotation = normalizedAngle > 90 && normalizedAngle < 270
-              ? midAngleDeg + 90 + 180
-              : midAngleDeg + 90;
+            // Text rotation (match main wheel logic): base = -midAngleDeg + 90
+            // Then flip 180° for the lower half so it's readable from outside.
+            const midAngleDeg = (midAngle * 180) / Math.PI;
+            const baseRotation = -midAngleDeg + 90;
+            const normalizedMidAngle = ((midAngleDeg % 360) + 360) % 360;
+            const textRotation = normalizedMidAngle > 90 && normalizedMidAngle < 270
+              ? baseRotation + 180
+              : baseRotation;
             
             const isRevealed = revealedSegments.has(index);
             const showBlack = isBlackout && !isRevealed;
