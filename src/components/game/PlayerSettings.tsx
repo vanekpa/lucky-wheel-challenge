@@ -64,12 +64,12 @@ export const PlayerSettings = ({ effectsEnabled, onEffectsChange }: PlayerSettin
         <Button 
           variant="ghost" 
           size="icon"
-          className="fixed bottom-4 left-4 z-50 w-10 h-10 rounded-full 
+          className="fixed bottom-28 md:bottom-4 left-4 z-50 w-14 h-14 md:w-12 md:h-12 rounded-full 
                      bg-black/30 backdrop-blur-md hover:bg-black/50 
                      border border-white/10 transition-all duration-200
-                     hover:scale-110 shadow-lg"
+                     hover:scale-105 active:scale-95 shadow-lg touch-target-lg"
         >
-          <Settings className="h-4 w-4 text-white/70" />
+          <Settings className="h-6 w-6 md:h-5 md:w-5 text-white/70" />
         </Button>
       </PopoverTrigger>
       <PopoverContent 

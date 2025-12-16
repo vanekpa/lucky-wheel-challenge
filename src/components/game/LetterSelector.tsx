@@ -44,15 +44,15 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="relative bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+      <div className="relative bg-white/5 backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
         {/* Glow effect behind */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         
-        <h3 className="relative text-center text-lg font-bold mb-4 text-primary tracking-wider uppercase">
+        <h3 className="relative text-center text-base md:text-lg font-bold mb-3 md:mb-4 text-primary tracking-wider uppercase">
           Vyberte písmeno
         </h3>
         
-        <div className="relative flex flex-wrap gap-2 justify-center">
+        <div className="relative flex flex-wrap gap-1.5 md:gap-2 justify-center">
           {BASE_ALPHABET.map((letter) => {
             const variants = getLetterVariants(letter);
             const isUsed = isGroupUsed(letter);
@@ -64,21 +64,21 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
                 onClick={() => handleSelect(letter)}
                 disabled={disabled || isUsed}
                 className={`
-                  relative w-11 h-11 text-lg font-bold rounded-xl
-                  transition-all duration-200 ease-out
+                  relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
+                  transition-all duration-150 ease-out touch-target-lg
                   ${isUsed 
                     ? 'bg-white/5 text-white/20 cursor-not-allowed' 
                     : `bg-white/10 text-white border border-white/20
                        hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground
                        hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)]
                        hover:scale-110 hover:-translate-y-1
-                       active:scale-95`
+                       active:scale-90 active:bg-primary/50`
                   }
                 `}
               >
                 {letter}
                 {hasVariants && !isUsed && (
-                  <span className="absolute -top-1.5 -right-1.5 text-[9px] bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center font-semibold shadow-lg">
+                  <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 text-[8px] md:text-[9px] bg-primary text-primary-foreground rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center font-semibold shadow-lg">
                     +{variants.length - 1}
                   </span>
                 )}
@@ -87,7 +87,7 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
           })}
         </div>
         
-        <p className="relative text-center text-xs text-white/40 mt-4 tracking-wide">
+        <p className="relative text-center text-[10px] md:text-xs text-white/40 mt-3 md:mt-4 tracking-wide">
           Písmena s háčky a čárkami jsou sloučena (A=Á, C=Č, atd.)
         </p>
       </div>
