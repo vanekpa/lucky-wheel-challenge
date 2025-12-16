@@ -153,7 +153,7 @@ const PlayerToken3D = ({
   const player = players[playerId];
   const angleOffset = -Math.PI / 2;
   const angle = (segmentId * Math.PI * 2) / 32 + angleOffset + (Math.PI / 32);
-  const radius = 2.7;
+  const radius = 2.0; // Closer to center to avoid pointer overlap
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);

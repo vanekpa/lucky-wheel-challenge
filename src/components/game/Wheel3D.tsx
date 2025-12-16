@@ -15,6 +15,7 @@ interface Wheel3DProps {
   placingTokensMode: boolean;
   players: Player[];
   currentPlayer: number;
+  pointerBounce?: number;
 }
 
 const CameraController = () => {
@@ -43,9 +44,15 @@ const Pedestal = () => {
   );
 };
 
-const Pointer3D = () => {
+const Pointer3D = ({ bounce = 0 }: { bounce?: number }) => {
+  // Bounce effect - oscillating rotation when wheel stops
+  const bounceRotation = Math.sin(bounce * Math.PI * 8) * 0.15 * Math.max(0, 1 - bounce);
+  
   return (
-    <group position={[0, POINTER_Y_POSITION, POINTER_Z_POSITION]} rotation={[0, Math.PI, 0]}>
+    <group 
+      position={[0, POINTER_Y_POSITION, POINTER_Z_POSITION]} 
+      rotation={[bounceRotation, Math.PI, 0]}
+    >
       <mesh rotation={[-Math.PI / 2, 0, 0]} castShadow>
         <coneGeometry args={[0.15, 0.25, 3]} />
         <meshStandardMaterial 
@@ -80,7 +87,8 @@ const Scene = ({
   tokenPositions,
   players,
   onSegmentClick,
-  isClickable
+  isClickable,
+  pointerBounce = 0
 }: { 
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
@@ -88,6 +96,7 @@ const Scene = ({
   players: Player[];
   onSegmentClick?: (segmentId: number) => void;
   isClickable?: boolean;
+  pointerBounce?: number;
 }) => {
   return (
     <>
@@ -125,7 +134,7 @@ const Scene = ({
       <pointLight position={[5, 3, 5]} intensity={0.8} color="#ffffff" />
       <pointLight position={[-5, 3, -5]} intensity={0.8} color="#ffffff" />
       
-      <Pointer3D />
+      <Pointer3D bounce={pointerBounce} />
       <Pedestal />
       <WheelModel 
         rotation={rotation}
@@ -148,7 +157,8 @@ export const Wheel3D = ({
   onSegmentClick,
   placingTokensMode,
   players,
-  currentPlayer
+  currentPlayer,
+  pointerBounce = 0
 }: Wheel3DProps) => {
   return (
     <div className="w-full h-full bg-gradient-to-br from-blue-950/40 via-purple-950/40 to-indigo-950/40">
@@ -169,6 +179,7 @@ export const Wheel3D = ({
           players={players}
           onSegmentClick={onSegmentClick}
           isClickable={placingTokensMode}
+          pointerBounce={pointerBounce}
         />
       </Canvas>
     </div>
