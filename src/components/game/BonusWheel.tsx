@@ -37,8 +37,8 @@ const getVisualOffsetFromPointer = (index: number, rotation: number, totalSegmen
   while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
   while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
   
-  // Convert to segment offset
-  return Math.round(angleDiff / segmentAngle);
+  // Convert to segment offset (inverted: positive = clockwise/right)
+  return -Math.round(angleDiff / segmentAngle);
 };
 
 const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {

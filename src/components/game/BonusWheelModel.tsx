@@ -206,10 +206,10 @@ const getVisualOffsetFromPointer = (index: number, rotation: number, totalSegmen
   while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
   while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
   
-  // Convert to segment offset (negative = clockwise from pointer perspective)
+  // Convert to segment offset (inverted: positive = clockwise/right)
   const offset = Math.round(angleDiff / segmentAngle);
   
-  return offset;
+  return -offset;
 };
 
 export const BonusWheelModel = ({
