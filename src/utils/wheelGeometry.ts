@@ -7,8 +7,9 @@ export const getColorFromSegment = (colorName: string): string => {
     'wheel-yellow': '#fed815',
     'wheel-green': '#409b7b',
     'wheel-purple': '#e741e8',
+    'wheel-gold': '#ffd700',
     'bankrot': '#000000',
-    'nic': '#000000',
+    'nic': '#333344',
   };
   return colorMap[colorName] || '#ffffff';
 };

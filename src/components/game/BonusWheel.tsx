@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { Player, WheelSegment, BonusWheelState } from '@/types/game';
+import { useState, useRef } from 'react';
+import { Player, BonusWheelState } from '@/types/game';
 import { bonusWheelSegments } from '@/data/puzzles';
 import { Button } from '@/components/ui/button';
+import { BonusWheel3D } from './BonusWheel3D';
 import { playTickSound, playBonusDrumroll, playJackpotSound, playRevealSound, playVictoryFanfare, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
 interface BonusWheelProps {
@@ -17,18 +18,8 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   const [selectedOffset, setSelectedOffset] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [revealedSegments, setRevealedSegments] = useState<Set<number>>(new Set());
+  const [pointerBounce, setPointerBounce] = useState(0);
   const wheelRotationRef = useRef(0);
-
-  const colorMap: Record<string, string> = {
-    'wheel-red': '#fe3d2f',
-    'wheel-blue': '#3b69ee',
-    'wheel-purple': '#e741e8',
-    'wheel-yellow': '#fed815',
-    'wheel-green': '#409b7b',
-    'wheel-gold': '#ffd700',
-    'bankrot': '#1a1a1a',
-    'nic': '#333344',
-  };
 
   const handleStartSpin = () => {
     setPhase('spin');
@@ -79,6 +70,19 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
         wheelRotationRef.current = newRotation;
         setWheelRotation(newRotation);
         setIsSpinning(false);
+        
+        // Trigger pointer bounce
+        setPointerBounce(1);
+        const bounceStart = Date.now();
+        const animateBounce = () => {
+          const bounceElapsed = Date.now() - bounceStart;
+          const bounceProgress = Math.min(bounceElapsed / 500, 1);
+          setPointerBounce(1 - bounceProgress);
+          if (bounceProgress < 1) {
+            requestAnimationFrame(animateBounce);
+          }
+        };
+        requestAnimationFrame(animateBounce);
         
         // Transition to blackout after spin
         setTimeout(() => {
@@ -178,88 +182,14 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     const isBlackout = phase === 'blackout' || phase === 'choice';
     
     return (
-      <div className="relative w-80 h-80 md:w-96 md:h-96">
-        {/* Wheel */}
-        <svg 
-          viewBox="-110 -110 220 220" 
-          className="w-full h-full"
-          style={{ transform: `rotate(${wheelRotation}rad)` }}
-        >
-          {bonusWheelSegments.map((segment, index) => {
-            const angle = (Math.PI * 2) / 32;
-            const startAngle = index * angle - Math.PI / 2;
-            const endAngle = startAngle + angle;
-            
-            const x1 = Math.cos(startAngle) * 100;
-            const y1 = Math.sin(startAngle) * 100;
-            const x2 = Math.cos(endAngle) * 100;
-            const y2 = Math.sin(endAngle) * 100;
-            
-            // Calculate text position - text sits on a radius line pointing outward
-            const midAngle = startAngle + angle / 2;
-            const textRadius = 65;
-            const textX = Math.cos(midAngle) * textRadius;
-            const textY = Math.sin(midAngle) * textRadius;
-            
-            // Text rotation (SVG): make text readable from outside without conditional flips
-            // Coordinate system note: our wheel starts at -90° (top), so we offset by -90°.
-            const midAngleDeg = (midAngle * 180) / Math.PI;
-            const textRotation = -midAngleDeg - 90;
-            
-            const isRevealed = revealedSegments.has(index);
-            const showBlack = isBlackout && !isRevealed;
-            
-            return (
-              <g key={segment.id}>
-                <path
-                  d={`M 0 0 L ${x1} ${y1} A 100 100 0 0 1 ${x2} ${y2} Z`}
-                  fill={showBlack ? '#111' : colorMap[segment.color]}
-                  stroke="#222"
-                  strokeWidth="1"
-                  className={isRevealed ? 'animate-reveal-pulse' : ''}
-                />
-                {!showBlack && (
-                  <text
-                    x={textX}
-                    y={textY}
-                    fill="white"
-                    fontSize="8"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    transform={`rotate(${textRotation}, ${textX}, ${textY})`}
-                  >
-                    {typeof segment.value === 'number' ? (segment.value / 1000) + 'K' : segment.value}
-                  </text>
-                )}
-                {showBlack && (
-                  <text
-                    x={textX}
-                    y={textY}
-                    fill="#555"
-                    fontSize="14"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                  >
-                    ?
-                  </text>
-                )}
-              </g>
-            );
-          })}
-          
-          {/* Center */}
-          <circle cx="0" cy="0" r="20" fill="#222" stroke="#ffd700" strokeWidth="3" />
-          <text x="0" y="0" fill="#ffd700" fontSize="8" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">
-            BONUS
-          </text>
-        </svg>
-        
-        {/* Pointer */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2">
-          <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-primary drop-shadow-lg" />
-        </div>
+      <div className="w-80 h-80 md:w-[500px] md:h-[500px]">
+        <BonusWheel3D
+          rotation={wheelRotation}
+          rotationRef={wheelRotationRef}
+          blackoutMode={isBlackout}
+          revealedSegments={revealedSegments}
+          pointerBounce={pointerBounce}
+        />
       </div>
     );
   };
