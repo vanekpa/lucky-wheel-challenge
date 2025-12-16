@@ -128,7 +128,7 @@ const WheelSegment3D = ({
         rotation={[0, -midAngle + Math.PI/2, 0]}
       >
         <Text
-          rotation={[-Math.PI/2, 0, 0]}
+          rotation={[-Math.PI/2, 0, Math.PI/2]}
           fontSize={0.18}
           color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
           anchorX="center"
