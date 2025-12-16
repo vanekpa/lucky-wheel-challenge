@@ -160,8 +160,8 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     const geometryOffset = -Math.PI / 2;
     const pointerPos = 3 * Math.PI / 2; // 270° = top
     
-    // Adjust pointer position by offset (positive offset = clockwise = subtract angle)
-    const adjustedPointerPos = pointerPos - offset * segmentAngle;
+    // Adjust pointer position by offset (positive offset = segment to the right = add angle)
+    const adjustedPointerPos = pointerPos + offset * segmentAngle;
     
     // INVERSE of getRotationForSegmentAtPointer:
     // In forward function: rotation = segmentCenterAngle - pointerPos
