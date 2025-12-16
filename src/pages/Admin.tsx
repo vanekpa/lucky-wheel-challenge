@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert, Upload, FileText } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -24,6 +25,9 @@ const Admin = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPhrase, setEditPhrase] = useState('');
   const [editCategory, setEditCategory] = useState('');
+  const [bulkText, setBulkText] = useState('');
+  const [bulkCategory, setBulkCategory] = useState('');
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
 
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin, signOut } = useAuth();
@@ -124,6 +128,75 @@ const Admin = () => {
     } else {
       fetchPuzzles();
     }
+  };
+
+  const bulkImport = async () => {
+    if (!bulkText.trim()) {
+      toast.error('Vložte text s tajenkami');
+      return;
+    }
+    if (!bulkCategory.trim()) {
+      toast.error('Zadejte kategorii pro import');
+      return;
+    }
+
+    setIsBulkImporting(true);
+
+    // Parse lines - each line is one puzzle
+    const lines = bulkText
+      .split('\n')
+      .map(line => line.trim().toUpperCase())
+      .filter(line => line.length > 0);
+
+    if (lines.length === 0) {
+      toast.error('Žádné platné tajenky k importu');
+      setIsBulkImporting(false);
+      return;
+    }
+
+    // Get existing phrases for duplicate detection
+    const existingPhrases = new Set(puzzles.map(p => p.phrase.toUpperCase()));
+    
+    const toImport: string[] = [];
+    const duplicates: string[] = [];
+
+    for (const phrase of lines) {
+      if (existingPhrases.has(phrase) || toImport.includes(phrase)) {
+        duplicates.push(phrase);
+      } else {
+        toImport.push(phrase);
+      }
+    }
+
+    if (toImport.length === 0) {
+      toast.error(`Všechny tajenky (${duplicates.length}) jsou duplicitní`);
+      setIsBulkImporting(false);
+      return;
+    }
+
+    // Insert all unique puzzles
+    const puzzlesToInsert = toImport.map(phrase => ({
+      phrase,
+      category: bulkCategory.trim(),
+      created_by: user?.email || 'Admin',
+    }));
+
+    const { error } = await supabase.from('puzzles').insert(puzzlesToInsert);
+
+    if (error) {
+      toast.error('Chyba při importu');
+      console.error(error);
+    } else {
+      const message = duplicates.length > 0
+        ? `Importováno ${toImport.length} tajenek (${duplicates.length} duplicit přeskočeno)`
+        : `Importováno ${toImport.length} tajenek`;
+      toast.success(message);
+      setBulkText('');
+      setBulkCategory('');
+      fetchPuzzles();
+    }
+
+    setIsBulkImporting(false);
   };
 
   const handleSignOut = async () => {
@@ -234,6 +307,45 @@ const Admin = () => {
               <Plus className="h-4 w-4 mr-2" />
               Přidat
             </Button>
+          </div>
+        </div>
+
+        {/* Bulk import */}
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-6">
+          <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Hromadný import
+          </h2>
+          <p className="text-white/50 text-sm mb-4">
+            Vložte tajenky - každou na nový řádek. Duplicity budou automaticky přeskočeny.
+          </p>
+          <div className="space-y-3">
+            <Textarea
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              placeholder={"PRVNÍ TAJENKA\nDRUHÁ TAJENKA\nTŘETÍ TAJENKA"}
+              className="min-h-[120px] uppercase bg-white/5 border-white/20 text-white placeholder:text-white/30 font-mono"
+            />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                value={bulkCategory}
+                onChange={(e) => setBulkCategory(e.target.value)}
+                placeholder="Kategorie pro všechny"
+                className="flex-1 bg-white/5 border-white/20 text-white placeholder:text-white/30"
+              />
+              <Button 
+                onClick={bulkImport} 
+                disabled={isBulkImporting}
+                className="shrink-0 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white"
+              >
+                {isBulkImporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                Importovat ({bulkText.split('\n').filter(l => l.trim()).length})
+              </Button>
+            </div>
           </div>
         </div>
 
