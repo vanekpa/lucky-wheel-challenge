@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { WHEEL_RADIUS, POINTER_Y_POSITION, POINTER_Z_POSITION } from '@/constants/wheel';
 import { BonusWheelModel } from './BonusWheelModel';
+import { WheelSegment } from '@/types/game';
 
 interface BonusWheel3DProps {
   rotation: number;
@@ -9,13 +10,14 @@ interface BonusWheel3DProps {
   blackoutMode: boolean;
   revealedSegments: Set<number>;
   pointerBounce?: number;
+  segments: WheelSegment[];
 }
 
 const CameraController = () => {
   const { camera } = useThree();
   
   useEffect(() => {
-    camera.lookAt(0, 2.7, 0);
+    camera.lookAt(0, 2.5, 0);
     camera.updateProjectionMatrix();
   }, [camera]);
   
@@ -129,12 +131,14 @@ const Scene = ({
   blackoutMode,
   revealedSegments,
   pointerBounce = 0,
+  segments,
 }: { 
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
   blackoutMode: boolean;
   revealedSegments: Set<number>;
   pointerBounce?: number;
+  segments: WheelSegment[];
 }) => {
   return (
     <>
@@ -192,6 +196,7 @@ const Scene = ({
         rotationRef={rotationRef}
         blackoutMode={blackoutMode}
         revealedSegments={revealedSegments}
+        segments={segments}
       />
     </>
   );
@@ -202,13 +207,14 @@ export const BonusWheel3D = ({
   rotationRef,
   blackoutMode,
   revealedSegments,
-  pointerBounce = 0
+  pointerBounce = 0,
+  segments
 }: BonusWheel3DProps) => {
   return (
     <div className="w-full h-full">
       <Canvas
         camera={{ 
-          position: [0, 6, 8],
+          position: [0, 10, 4],
           fov: 45,
           near: 0.1,
           far: 1000
@@ -223,6 +229,7 @@ export const BonusWheel3D = ({
           blackoutMode={blackoutMode}
           revealedSegments={revealedSegments}
           pointerBounce={pointerBounce}
+          segments={segments}
         />
       </Canvas>
     </div>
