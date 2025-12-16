@@ -9,13 +9,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('vanekpa@zs16.plzen-edu.cz');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const navigate = useNavigate();
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, signIn } = useAuth();
 
   useEffect(() => {
     if (user && !loading) {
@@ -26,42 +25,23 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Vyplňte všechna pole');
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error('Heslo musí mít alespoň 6 znaků');
+    if (!password) {
+      toast.error('Zadejte heslo');
       return;
     }
 
     setIsSubmitting(true);
 
-    if (isLogin) {
-      const { error } = await signIn(email, password);
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Nesprávný email nebo heslo');
-        } else {
-          toast.error(error.message);
-        }
+    const { error } = await signIn(email, password);
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Nesprávné heslo');
       } else {
-        toast.success('Přihlášení úspěšné!');
-        navigate('/admin');
+        toast.error(error.message);
       }
     } else {
-      const { error } = await signUp(email, password);
-      if (error) {
-        if (error.message.includes('already registered')) {
-          toast.error('Tento email je již registrován');
-        } else {
-          toast.error(error.message);
-        }
-      } else {
-        toast.success('Registrace úspěšná! Nyní se můžete přihlásit.');
-        setIsLogin(true);
-      }
+      toast.success('Přihlášení úspěšné!');
+      navigate('/admin');
     }
 
     setIsSubmitting(false);
@@ -98,10 +78,10 @@ const Auth = () => {
           </div>
 
           <h1 className="text-3xl font-bold text-center text-white mb-2">
-            {isLogin ? 'Přihlášení' : 'Registrace'}
+            Správa tajenek
           </h1>
           <p className="text-white/50 text-center mb-8">
-            Přístup do administrace
+            Přihlášení administrátora
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -113,9 +93,8 @@ const Auth = () => {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="vas@email.cz"
-                  className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:border-yellow-400/50"
+                  readOnly
+                  className="pl-10 bg-white/5 border-white/20 text-white/60 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -142,22 +121,11 @@ const Auth = () => {
             >
               {isSubmitting ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
-              ) : isLogin ? (
-                'Přihlásit se'
               ) : (
-                'Zaregistrovat se'
+                'Přihlásit se'
               )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-white/50 hover:text-white/80 transition-colors text-sm"
-            >
-              {isLogin ? 'Nemáte účet? Zaregistrujte se' : 'Již máte účet? Přihlaste se'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
