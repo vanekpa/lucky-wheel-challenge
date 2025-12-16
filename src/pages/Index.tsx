@@ -173,12 +173,16 @@ const Index = () => {
     
     const currentRotation = wheelRotationRef.current;
     
-    const targetAngle = targetSegmentIndex * segmentAngle;
-    const offset = Math.PI / 2;
+    // Vypočítat přesnou cílovou rotaci PŘEDEM (střed segmentu)
+    const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2;
+    const pointerPos = 3 * Math.PI / 2; // Pointer na 270°
+    const geometryOffset = -Math.PI / 2;
+    const targetRotationInCircle = pointerPos - segmentCenterAngle - geometryOffset;
     
-    const rotationNeeded = (2 * Math.PI) - targetAngle + (3 * Math.PI / 2) - offset;
-    
-    const newRotation = currentRotation + (Math.PI * 2 * extraSpins) + (rotationNeeded % (Math.PI * 2));
+    // Normalizovat a přidat plné otočky
+    const normalizedTarget = ((targetRotationInCircle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const fullRotations = Math.floor(currentRotation / (Math.PI * 2)) * (Math.PI * 2);
+    const newRotation = fullRotations + (Math.PI * 2 * extraSpins) + normalizedTarget;
     
     const duration = 4000;
     const startTime = Date.now();
@@ -189,7 +193,8 @@ const Index = () => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      const ease = 1 - Math.pow(1 - progress, 3);
+      // Plynulé zpomalení - easeOutQuint pro hladší zastavení
+      const ease = 1 - Math.pow(1 - progress, 5);
       const currentRot = startRotation + (newRotation - startRotation) * ease;
       
       wheelRotationRef.current = currentRot;
@@ -198,21 +203,14 @@ const Index = () => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        const finalSegment = wheelSegments[targetSegmentIndex];
+        // Přímo použít newRotation - žádný skok!
+        wheelRotationRef.current = newRotation;
+        setWheelRotation(newRotation);
         
-        const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2;
-        const pointerPos = 3 * Math.PI / 2;
-        const geometryOffset = -Math.PI / 2;
-        const snappedRotation = pointerPos - segmentCenterAngle - geometryOffset;
-        
-        const fullRotations = Math.floor(currentRot / (Math.PI * 2)) * (Math.PI * 2);
-        const finalRotation = fullRotations + ((snappedRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        
-        wheelRotationRef.current = finalRotation;
-        setWheelRotation(finalRotation);
-        
-        console.log('✅ Animation finished. Target:', targetSegmentIndex, 'Snapped to center');
-        handleSpinComplete(finalSegment);
+        console.log('✅ Animation finished. Target segment:', targetSegmentIndex);
+        setTimeout(() => {
+          handleSpinComplete(wheelSegments[targetSegmentIndex]);
+        }, 0);
       }
     };
     
