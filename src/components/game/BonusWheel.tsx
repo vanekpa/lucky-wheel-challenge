@@ -157,27 +157,29 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   };
 
   // Helper: Find segment physical index at a given visual offset
+  // PRECISE INVERSE of getRotationForSegmentAtPointer
   const getSegmentIndexAtVisualOffset = (offset: number, currentRotation: number): number => {
     const totalSegments = shuffledSegments.length;
     const segmentAngle = (Math.PI * 2) / totalSegments;
     const geometryOffset = -Math.PI / 2;
     const pointerPos = 3 * Math.PI / 2; // 270° = top
     
-    // Find segment that has this visual offset
-    for (let index = 0; index < totalSegments; index++) {
-      const segmentCenterAngle = index * segmentAngle + segmentAngle / 2 + geometryOffset;
-      const visualAngle = ((segmentCenterAngle - currentRotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-      
-      let angleDiff = visualAngle - pointerPos;
-      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-      
-      const visualOffset = -Math.round(angleDiff / segmentAngle);
-      if (visualOffset === offset) {
-        return index;
-      }
-    }
-    return 0; // Fallback
+    // Adjust pointer position by offset (positive offset = clockwise = subtract angle)
+    const adjustedPointerPos = pointerPos - offset * segmentAngle;
+    
+    // INVERSE of getRotationForSegmentAtPointer:
+    // In forward function: rotation = segmentCenterAngle - pointerPos
+    // Therefore: segmentCenterAngle = rotation + pointerPos
+    const segmentCenterAngle = currentRotation + adjustedPointerPos;
+    
+    // segmentCenterAngle = index * segmentAngle + segmentAngle/2 + geometryOffset
+    // Therefore: index = (segmentCenterAngle - geometryOffset - segmentAngle/2) / segmentAngle
+    const rawIndex = (segmentCenterAngle - geometryOffset - segmentAngle / 2) / segmentAngle;
+    
+    // Normalize to valid range [0, totalSegments)
+    const normalizedIndex = ((Math.round(rawIndex) % totalSegments) + totalSegments) % totalSegments;
+    
+    return normalizedIndex;
   };
 
   const handleConfirmChoice = () => {
