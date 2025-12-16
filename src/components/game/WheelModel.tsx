@@ -114,6 +114,7 @@ const WheelSegment3D = ({
           color={color}
           roughness={0.4}
           metalness={0.2}
+          side={THREE.DoubleSide}
           polygonOffset
           polygonOffsetFactor={-1}
           polygonOffsetUnits={-1}
@@ -219,7 +220,7 @@ export const WheelModel = ({
     >
       <mesh castShadow receiveShadow rotation={[0, 0, 0]}>
         <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_DISK_HEIGHT, 64]} />
-        <meshStandardMaterial color="#2a2a2a" />
+        <meshStandardMaterial color="#2a2a2a" side={THREE.DoubleSide} />
       </mesh>
       
       {wheelSegments.map((segment) => (
