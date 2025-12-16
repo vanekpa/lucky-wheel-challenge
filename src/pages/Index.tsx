@@ -58,6 +58,7 @@ const Index = () => {
   const [wheelRotation, setWheelRotation] = useState(0);
   const wheelRotationRef = useRef(0);
   const [pointerBounce, setPointerBounce] = useState(0);
+  const [currentDisplaySegment, setCurrentDisplaySegment] = useState<WheelSegment | null>(null);
   const [showGuessDialog, setShowGuessDialog] = useState(false);
 
   // Mode selection handlers
@@ -337,6 +338,14 @@ const Index = () => {
       const ease = 1 - Math.pow(1 - progress, 5);
       const currentRot = startRotation + (newRotation - startRotation) * ease;
       
+      // Calculate current segment for ticker display
+      const normalizedRotation = ((currentRot % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      const pointerAngle = 3 * Math.PI / 2;
+      const geometryOffsetCalc = -Math.PI / 2;
+      const targetAngle = (pointerAngle - normalizedRotation - geometryOffsetCalc + Math.PI * 2) % (Math.PI * 2);
+      const displaySegmentIdx = Math.floor(targetAngle / segmentAngle) % 32;
+      setCurrentDisplaySegment(wheelSegments[displaySegmentIdx]);
+      
       const currentSegmentIdx = Math.floor(((currentRot % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / segmentAngle) % 32;
       if (currentSegmentIdx !== lastSegmentIndex && progress < 0.95) {
         playTickSound();
@@ -351,6 +360,7 @@ const Index = () => {
       } else {
         wheelRotationRef.current = newRotation;
         setWheelRotation(newRotation);
+        setCurrentDisplaySegment(wheelSegments[targetSegmentIndex]);
         
         console.log('✅ Animation finished. Target segment:', targetSegmentIndex);
         setTimeout(() => {
@@ -450,6 +460,8 @@ const Index = () => {
           tokenPositions={tokenPositions}
           players={gameState.players}
           pointerBounce={pointerBounce}
+          currentSegment={currentDisplaySegment}
+          isSpinning={gameState.isSpinning}
         />
       </div>
       
