@@ -15,16 +15,19 @@ export const PuzzleBoard = ({ puzzle }: PuzzleBoardProps) => {
     // Empty space for actual spaces
     if (!isLetter && !isPunctuation) {
       return (
-        <div key={index} className="w-14 h-16 mx-0.5" />
+        <div key={index} className="w-8 h-10 mx-0.5" />
       );
     }
 
-    // Punctuation is always visible
+    // Punctuation is always visible - same style as revealed
     if (isPunctuation) {
       return (
         <div
           key={index}
-          className="w-12 h-14 mx-0.5 border-3 border-primary flex items-center justify-center text-2xl font-bold bg-card text-foreground"
+          className="w-8 h-10 mx-0.5 flex items-center justify-center text-lg font-bold
+            bg-white/15 backdrop-blur-sm rounded-lg
+            border border-primary/40 shadow-[0_0_8px_hsl(var(--primary)/0.25)]
+            text-primary-foreground"
         >
           {char}
         </div>
@@ -35,29 +38,29 @@ export const PuzzleBoard = ({ puzzle }: PuzzleBoardProps) => {
     return (
       <div
         key={index}
-        className={`w-12 h-14 mx-0.5 border-3 border-primary flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
+        className={`w-8 h-10 mx-0.5 flex items-center justify-center text-lg font-bold rounded-lg transition-all duration-300 ${
           isRevealed
-            ? 'bg-card text-foreground animate-flip-tile'
-            : 'bg-muted/30 text-transparent'
+            ? 'bg-white/15 backdrop-blur-sm border border-primary/40 shadow-[0_0_8px_hsl(var(--primary)/0.25)] text-primary-foreground animate-flip-tile'
+            : 'bg-gradient-to-br from-white/5 to-white/10 border border-white/10'
         }`}
       >
-        {isRevealed ? char.toUpperCase() : '?'}
+        {isRevealed ? char.toUpperCase() : ''}
       </div>
     );
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-secondary/20 rounded-lg p-4 border-2 border-primary/50">
-        <div className="text-center mb-3">
-          <h3 className="text-lg font-bold text-primary uppercase tracking-wider">
+    <div className="w-full max-w-3xl mx-auto">
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-3 border border-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.1)]">
+        <div className="text-center mb-2">
+          <span className="text-sm font-semibold text-primary/80 uppercase tracking-widest">
             {puzzle.category}
-          </h3>
+          </span>
         </div>
         
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-wrap justify-center gap-1">
           {words.map((word, wordIndex) => (
-            <div key={wordIndex} className="flex justify-center">
+            <div key={wordIndex} className="flex justify-center mr-2 last:mr-0">
               {word.split('').map((char, charIndex) =>
                 renderLetter(char, wordIndex * 100 + charIndex)
               )}

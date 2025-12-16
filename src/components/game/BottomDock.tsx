@@ -36,22 +36,27 @@ export const BottomDock = ({
   return (
     <div
       className={`fixed bottom-0 left-0 right-0 transition-all duration-500 ease-out z-30 ${
-        isExpanded ? 'translate-y-0' : 'translate-y-[calc(100%-140px)]'
+        isExpanded ? 'translate-y-0' : 'translate-y-[calc(100%-90px)]'
       }`}
-      style={{
-        background: 'linear-gradient(to top, hsl(var(--background)), hsl(var(--background) / 0.95))',
-        backdropFilter: 'blur(10px)',
-      }}
     >
+      {/* Gradient overlay for smooth blend */}
+      <div 
+        className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none"
+        style={{ backdropFilter: 'blur(12px)' }}
+      />
+
       {/* Toggle Handle */}
       <button
         onClick={() => setIsManuallyExpanded(!isManuallyExpanded)}
-        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-card/80 backdrop-blur-md rounded-t-lg px-6 py-2 border-t-2 border-x-2 border-primary/30 hover:border-primary/50 transition-colors"
+        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full 
+          bg-white/10 backdrop-blur-md rounded-t-xl px-5 py-1.5 
+          border-t border-x border-primary/30 hover:border-primary/50 
+          hover:bg-white/15 transition-all"
       >
         {isExpanded ? (
-          <ChevronDown className="w-6 h-6 text-primary" />
+          <ChevronDown className="w-5 h-5 text-primary" />
         ) : (
-          <ChevronUp className="w-6 h-6 text-primary" />
+          <ChevronUp className="w-5 h-5 text-primary" />
         )}
       </button>
 
@@ -61,9 +66,9 @@ export const BottomDock = ({
           variant="ghost"
           size="icon"
           onClick={handleClose}
-          className="absolute top-2 right-4"
+          className="absolute top-2 right-3 z-10 hover:bg-white/10"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </Button>
       )}
 
@@ -71,18 +76,16 @@ export const BottomDock = ({
       {canGuess && (
         <Button
           onClick={onGuessPhrase}
-          className="absolute top-2 left-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold shadow-lg animate-pulse"
+          className="absolute top-2 left-3 z-10 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold text-sm px-3 py-1.5 h-auto shadow-lg shadow-yellow-500/20 animate-pulse"
         >
-          <Sparkles className="mr-2 h-4 w-4" />
+          <Sparkles className="mr-1.5 h-3.5 w-3.5" />
           Hádat tajenku
         </Button>
       )}
 
-      <div className="container mx-auto px-4 py-4 space-y-4">
-        {/* Compact Puzzle Board */}
-        <div className="transform scale-90 origin-top">
-          <PuzzleBoard puzzle={puzzle} />
-        </div>
+      <div className="relative container mx-auto px-3 py-3 space-y-3">
+        {/* Puzzle Board */}
+        <PuzzleBoard puzzle={puzzle} />
 
         {/* Letter Selector - only when game requires it */}
         {showLetterSelector && (
