@@ -197,6 +197,42 @@ All colors MUST be HSL.
   }
 }
 
+/* Letter reveal animations */
+@keyframes flip-tile {
+  0% {
+    transform: scale(1) rotateY(0);
+  }
+  50% {
+    transform: scale(1.2) rotateY(90deg);
+    background: hsl(var(--primary) / 0.5);
+  }
+  100% {
+    transform: scale(1) rotateY(0);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
 @layer utilities {
   .animate-spotlight-left {
     animation: spotlight-left 8s ease-in-out infinite;
@@ -237,5 +273,17 @@ All colors MUST be HSL.
   
   .animate-sun-ray {
     animation: sun-ray 8s ease-in-out infinite;
+  }
+
+  .animate-flip-tile {
+    animation: flip-tile 0.6s ease-out;
+  }
+
+  .animate-pop-in {
+    animation: pop-in 0.4s ease-out;
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-out;
   }
 }
