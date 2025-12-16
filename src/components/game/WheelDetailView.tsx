@@ -9,6 +9,7 @@ interface WheelDetailViewProps {
   rotationRef?: React.MutableRefObject<number>;
   tokenPositions: Map<number, number>;
   players: Player[];
+  pointerBounce?: number;
 }
 
 const CameraController = () => {
@@ -22,9 +23,14 @@ const CameraController = () => {
   return null;
 };
 
-const Pointer3D = () => {
+const Pointer3D = ({ bounce = 0 }: { bounce?: number }) => {
+  const bounceRotation = Math.sin(bounce * Math.PI * 8) * 0.15 * Math.max(0, 1 - bounce);
+  
   return (
-    <group position={[0, POINTER_Y_POSITION, POINTER_Z_POSITION]} rotation={[0, Math.PI, 0]}>
+    <group 
+      position={[0, POINTER_Y_POSITION, POINTER_Z_POSITION]} 
+      rotation={[bounceRotation, Math.PI, 0]}
+    >
       {/* Dřevěná báze */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} castShadow>
         <coneGeometry args={[0.15, 0.25, 3]} />
@@ -62,12 +68,14 @@ const Scene = ({
   rotation,
   rotationRef,
   tokenPositions,
-  players
+  players,
+  pointerBounce = 0
 }: { 
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
   tokenPositions: Map<number, number>;
   players: Player[];
+  pointerBounce?: number;
 }) => {
   return (
     <>
@@ -83,12 +91,12 @@ const Scene = ({
         tokenPositions={tokenPositions}
         players={players}
       />
-      <Pointer3D />
+      <Pointer3D bounce={pointerBounce} />
     </>
   );
 };
 
-export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players }: WheelDetailViewProps) => {
+export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players, pointerBounce = 0 }: WheelDetailViewProps) => {
   return (
     <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50">
       <Canvas
@@ -107,6 +115,7 @@ export const WheelDetailView = ({ rotation, rotationRef, tokenPositions, players
           rotationRef={rotationRef}
           tokenPositions={tokenPositions}
           players={players}
+          pointerBounce={pointerBounce}
         />
       </Canvas>
     </div>

@@ -7,6 +7,7 @@ import { GameState, WheelSegment } from '@/types/game';
 import { puzzles, wheelSegments } from '@/data/puzzles';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -32,6 +33,7 @@ const Index = () => {
   const [tokensPlaced, setTokensPlaced] = useState<Set<number>>(new Set());
   const [wheelRotation, setWheelRotation] = useState(0);
   const wheelRotationRef = useRef(0);
+  const [pointerBounce, setPointerBounce] = useState(0);
 
   useEffect(() => {
     // Force re-render check when critical states change
@@ -61,8 +63,27 @@ const Index = () => {
     });
   };
 
+  const animatePointerBounce = () => {
+    const startTime = Date.now();
+    const duration = 600;
+    
+    const bounce = () => {
+      const progress = (Date.now() - startTime) / duration;
+      if (progress < 1) {
+        setPointerBounce(progress);
+        requestAnimationFrame(bounce);
+      } else {
+        setPointerBounce(0);
+      }
+    };
+    requestAnimationFrame(bounce);
+  };
+
   const handleSpinComplete = (segment: WheelSegment) => {
     console.log('🏁 Spin Completed. Landed on:', segment);
+    
+    // Animate pointer bounce
+    animatePointerBounce();
     
     setGameState((prev) => ({ ...prev, isSpinning: false, wheelResult: segment }));
 
@@ -88,6 +109,7 @@ const Index = () => {
     }
 
     if (segment.type === 'bankrot') {
+      playBankruptSound();
       toast.error('BANKROT! Ztrácíte všechny body!', {
         duration: 3000,
       });
@@ -101,6 +123,7 @@ const Index = () => {
       setShowLetterSelector(false);
       
     } else if (segment.type === 'nic') {
+      playNothingSound();
       toast.warning('NIČ! Tah přechází na dalšího hráče', {
         duration: 2000,
       });
@@ -111,6 +134,7 @@ const Index = () => {
       setShowLetterSelector(false);
       
     } else {
+      playWinSound();
       setCurrentWheelValue(segment.value as number);
       setShowLetterSelector(true);
       toast.success(`Vytočili jste ${segment.value} bodů!`, {
@@ -187,6 +211,7 @@ const Index = () => {
     const duration = 4000;
     const startTime = Date.now();
     const startRotation = currentRotation;
+    let lastSegmentIndex = -1;
     
     const animate = () => {
       const now = Date.now();
@@ -196,6 +221,13 @@ const Index = () => {
       // Plynulé zpomalení - easeOutQuint pro hladší zastavení
       const ease = 1 - Math.pow(1 - progress, 5);
       const currentRot = startRotation + (newRotation - startRotation) * ease;
+      
+      // Tick sound when passing segments
+      const currentSegmentIdx = Math.floor(((currentRot % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / segmentAngle) % 32;
+      if (currentSegmentIdx !== lastSegmentIndex && progress < 0.95) {
+        playTickSound();
+        lastSegmentIndex = currentSegmentIdx;
+      }
       
       wheelRotationRef.current = currentRot;
       setWheelRotation(currentRot);
@@ -249,6 +281,7 @@ const Index = () => {
           rotationRef={wheelRotationRef}
           tokenPositions={tokenPositions}
           players={gameState.players}
+          pointerBounce={pointerBounce}
         />
       </div>
       
@@ -273,6 +306,7 @@ const Index = () => {
             placingTokensMode={isPlacingTokens}
             players={gameState.players}
             currentPlayer={gameState.currentPlayer}
+            pointerBounce={pointerBounce}
           />
         </div>
         
