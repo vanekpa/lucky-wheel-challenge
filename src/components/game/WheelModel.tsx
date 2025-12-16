@@ -157,7 +157,7 @@ const PlayerToken3D = ({
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);
-  const y = 0.35;
+  const y = WHEEL_DISK_HEIGHT / 2 + 0.09; // Na povrchu segmentu
   
   return (
     <group position={[x, y, z]}>
