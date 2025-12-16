@@ -40,5 +40,10 @@ export const usePuzzles = () => {
     return puzzles[index];
   };
 
-  return { puzzles, loading, getRandomPuzzle };
+  const getRandomPuzzles = (count: number): PuzzleData[] => {
+    const shuffled = [...puzzles].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
+  };
+
+  return { puzzles, loading, getRandomPuzzle, getRandomPuzzles };
 };

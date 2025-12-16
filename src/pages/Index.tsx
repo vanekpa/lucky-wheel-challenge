@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Wheel3D } from '@/components/game/Wheel3D';
 import { WheelDetailView } from '@/components/game/WheelDetailView';
 import { PlayerScores } from '@/components/game/PlayerScores';
 import { BottomDock } from '@/components/game/BottomDock';
 import { PlayerSetup } from '@/components/game/PlayerSetup';
+import { GameModeSelect } from '@/components/game/GameModeSelect';
+import { TeacherPuzzleInput } from '@/components/game/TeacherPuzzleInput';
+import { DeviceHandover } from '@/components/game/DeviceHandover';
 import { GameState, WheelSegment, Player } from '@/types/game';
 import { wheelSegments } from '@/data/puzzles';
 import { usePuzzles } from '@/hooks/usePuzzles';
@@ -14,9 +17,19 @@ import { Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
+type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing';
+
+interface CustomPuzzle {
+  phrase: string;
+  category: string;
+}
+
 const Index = () => {
-  const { puzzles, loading, getRandomPuzzle } = usePuzzles();
-  const [gamePhase, setGamePhase] = useState<'setup' | 'playing'>('setup');
+  const { puzzles, loading, getRandomPuzzle, getRandomPuzzles } = usePuzzles();
+  const [gamePhase, setGamePhase] = useState<GamePhase>('intro');
+  const [gameMode, setGameMode] = useState<'random' | 'teacher'>('random');
+  const [customPuzzles, setCustomPuzzles] = useState<CustomPuzzle[]>([]);
+  const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
   
   const [gameState, setGameState] = useState<GameState>({
     currentPlayer: 0,
@@ -45,22 +58,41 @@ const Index = () => {
   const wheelRotationRef = useRef(0);
   const [pointerBounce, setPointerBounce] = useState(0);
 
-  // Initialize puzzle when puzzles are loaded
-  useEffect(() => {
-    if (!loading && puzzles.length > 0 && gamePhase === 'playing') {
-      const puzzle = getRandomPuzzle();
-      setGameState(prev => ({
-        ...prev,
-        puzzle: {
-          ...puzzle,
-          revealedLetters: new Set(),
-        },
-      }));
+  // Mode selection handlers
+  const handleSelectRandom = () => {
+    setGameMode('random');
+    setGamePhase('setup');
+  };
+
+  const handleSelectTeacher = () => {
+    setGameMode('teacher');
+    setGamePhase('teacher-input');
+  };
+
+  const handleTeacherPuzzlesComplete = (puzzles: CustomPuzzle[]) => {
+    setCustomPuzzles(puzzles);
+    setCurrentPuzzleIndex(0);
+    setGamePhase('handover');
+  };
+
+  const handleHandoverContinue = () => {
+    setGamePhase('setup');
+  };
+
+  const getNextPuzzle = () => {
+    if (gameMode === 'teacher' && customPuzzles.length > 0) {
+      const puzzle = customPuzzles[currentPuzzleIndex % customPuzzles.length];
+      return {
+        id: `custom-${currentPuzzleIndex}`,
+        phrase: puzzle.phrase,
+        category: puzzle.category,
+      };
     }
-  }, [loading, gamePhase]);
+    return getRandomPuzzle();
+  };
 
   const handleSetupComplete = (players: Player[]) => {
-    const puzzle = getRandomPuzzle();
+    const puzzle = getNextPuzzle();
     setGameState(prev => ({
       ...prev,
       players,
@@ -286,7 +318,25 @@ const Index = () => {
   };
 
   const newRound = () => {
-    const puzzle = getRandomPuzzle();
+    const nextIndex = currentPuzzleIndex + 1;
+    setCurrentPuzzleIndex(nextIndex);
+    
+    let puzzle;
+    if (gameMode === 'teacher' && customPuzzles.length > 0) {
+      if (nextIndex >= customPuzzles.length) {
+        toast.success('Všechny tajenky byly odehrány! Hra končí.');
+        setGamePhase('intro');
+        return;
+      }
+      puzzle = {
+        id: `custom-${nextIndex}`,
+        phrase: customPuzzles[nextIndex].phrase,
+        category: customPuzzles[nextIndex].category,
+      };
+    } else {
+      puzzle = getRandomPuzzle();
+    }
+    
     setGameState((prev) => ({
       ...prev,
       puzzle: {
@@ -302,21 +352,37 @@ const Index = () => {
     setTokensPlaced(new Set());
     setIsPlacingTokens(true);
     setShowLetterSelector(false);
-    toast.success('Nové kolo začíná! Umístěte žetony.');
+    toast.success(`Kolo ${gameState.round + 1}/${gameMode === 'teacher' ? customPuzzles.length : '∞'} začíná!`);
   };
 
-  // Show setup screen
-  if (gamePhase === 'setup') {
+  // Intro screen - mode selection
+  if (gamePhase === 'intro') {
+    return <GameModeSelect onSelectRandom={handleSelectRandom} onSelectTeacher={handleSelectTeacher} />;
+  }
+
+  // Teacher puzzle input
+  if (gamePhase === 'teacher-input') {
     return (
-      <>
-        <PlayerSetup onComplete={handleSetupComplete} />
-        <Link to="/admin" className="fixed bottom-4 right-4 z-50">
-          <Button variant="outline" size="icon" className="bg-card/80 backdrop-blur-md">
-            <Settings className="h-4 w-4" />
-          </Button>
-        </Link>
-      </>
+      <TeacherPuzzleInput 
+        onComplete={handleTeacherPuzzlesComplete} 
+        onBack={() => setGamePhase('intro')} 
+      />
     );
+  }
+
+  // Handover screen
+  if (gamePhase === 'handover') {
+    return (
+      <DeviceHandover 
+        puzzleCount={customPuzzles.length} 
+        onContinue={handleHandoverContinue} 
+      />
+    );
+  }
+
+  // Player setup screen
+  if (gamePhase === 'setup') {
+    return <PlayerSetup onComplete={handleSetupComplete} />;
   }
 
   return (
