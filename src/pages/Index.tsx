@@ -3,13 +3,21 @@ import { Wheel3D } from '@/components/game/Wheel3D';
 import { WheelDetailView } from '@/components/game/WheelDetailView';
 import { PlayerScores } from '@/components/game/PlayerScores';
 import { BottomDock } from '@/components/game/BottomDock';
-import { GameState, WheelSegment } from '@/types/game';
-import { puzzles, wheelSegments } from '@/data/puzzles';
+import { PlayerSetup } from '@/components/game/PlayerSetup';
+import { GameState, WheelSegment, Player } from '@/types/game';
+import { wheelSegments } from '@/data/puzzles';
+import { usePuzzles } from '@/hooks/usePuzzles';
+import { getLetterVariants } from '@/components/game/LetterSelector';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
 const Index = () => {
+  const { puzzles, loading, getRandomPuzzle } = usePuzzles();
+  const [gamePhase, setGamePhase] = useState<'setup' | 'playing'>('setup');
+  
   const [gameState, setGameState] = useState<GameState>({
     currentPlayer: 0,
     players: [
@@ -18,7 +26,9 @@ const Index = () => {
       { id: 2, name: 'HRÁČ 3', score: 0, color: '#ffd700' },
     ],
     puzzle: {
-      ...puzzles[0],
+      id: '1',
+      phrase: 'NAČÍTÁNÍ...',
+      category: '',
       revealedLetters: new Set(),
     },
     usedLetters: new Set(),
@@ -35,9 +45,33 @@ const Index = () => {
   const wheelRotationRef = useRef(0);
   const [pointerBounce, setPointerBounce] = useState(0);
 
+  // Initialize puzzle when puzzles are loaded
   useEffect(() => {
-    // Force re-render check when critical states change
-  }, [gameState.isSpinning, showLetterSelector, isPlacingTokens, gameState.currentPlayer]);
+    if (!loading && puzzles.length > 0 && gamePhase === 'playing') {
+      const puzzle = getRandomPuzzle();
+      setGameState(prev => ({
+        ...prev,
+        puzzle: {
+          ...puzzle,
+          revealedLetters: new Set(),
+        },
+      }));
+    }
+  }, [loading, gamePhase]);
+
+  const handleSetupComplete = (players: Player[]) => {
+    const puzzle = getRandomPuzzle();
+    setGameState(prev => ({
+      ...prev,
+      players,
+      puzzle: {
+        ...puzzle,
+        revealedLetters: new Set(),
+      },
+    }));
+    setGamePhase('playing');
+    toast.success('Hra začíná! Umístěte žetony na kolo.');
+  };
 
   const handleTokenPlace = (segmentId: number) => {
     if (tokensPlaced.has(gameState.currentPlayer)) return;
@@ -82,7 +116,6 @@ const Index = () => {
   const handleSpinComplete = (segment: WheelSegment) => {
     console.log('🏁 Spin Completed. Landed on:', segment);
     
-    // Animate pointer bounce
     animatePointerBounce();
     
     setGameState((prev) => ({ ...prev, isSpinning: false, wheelResult: segment }));
@@ -145,18 +178,26 @@ const Index = () => {
 
   const handleLetterSelect = (letter: string) => {
     const upperLetter = letter.toUpperCase();
+    const variants = getLetterVariants(upperLetter);
     
     const phrase = gameState.puzzle.phrase.toUpperCase();
-    const count = (phrase.match(new RegExp(upperLetter, 'g')) || []).length;
+    
+    // Count all variants in the phrase
+    let totalCount = 0;
+    variants.forEach(variant => {
+      totalCount += (phrase.match(new RegExp(variant, 'g')) || []).length;
+    });
 
+    // Mark all variants as used
     setGameState((prev) => ({
       ...prev,
-      usedLetters: new Set([...prev.usedLetters, upperLetter]),
+      usedLetters: new Set([...prev.usedLetters, ...variants]),
     }));
 
-    if (count > 0) {
-      const points = currentWheelValue * count;
-      toast.success(`Správně! Odhalili jste ${count}× "${letter}" za ${points} bodů!`, {
+    if (totalCount > 0) {
+      const points = currentWheelValue * totalCount;
+      const variantsFound = variants.filter(v => phrase.includes(v)).join(', ');
+      toast.success(`Správně! Odhalili jste ${totalCount}× "${variantsFound}" za ${points} bodů!`, {
         duration: 3000,
       });
 
@@ -164,7 +205,7 @@ const Index = () => {
         ...prev,
         puzzle: {
           ...prev.puzzle,
-          revealedLetters: new Set([...prev.puzzle.revealedLetters, upperLetter]),
+          revealedLetters: new Set([...prev.puzzle.revealedLetters, ...variants]),
         },
         players: prev.players.map((p) =>
           p.id === prev.currentPlayer ? { ...p, score: p.score + points } : p
@@ -197,13 +238,11 @@ const Index = () => {
     
     const currentRotation = wheelRotationRef.current;
     
-    // Vypočítat přesnou cílovou rotaci PŘEDEM (střed segmentu)
     const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2;
-    const pointerPos = 3 * Math.PI / 2; // Pointer na 270°
+    const pointerPos = 3 * Math.PI / 2;
     const geometryOffset = -Math.PI / 2;
     const targetRotationInCircle = pointerPos - segmentCenterAngle - geometryOffset;
     
-    // Normalizovat a přidat plné otočky
     const normalizedTarget = ((targetRotationInCircle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const fullRotations = Math.floor(currentRotation / (Math.PI * 2)) * (Math.PI * 2);
     const newRotation = fullRotations + (Math.PI * 2 * extraSpins) + normalizedTarget;
@@ -218,11 +257,9 @@ const Index = () => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Plynulé zpomalení - easeOutQuint pro hladší zastavení
       const ease = 1 - Math.pow(1 - progress, 5);
       const currentRot = startRotation + (newRotation - startRotation) * ease;
       
-      // Tick sound when passing segments
       const currentSegmentIdx = Math.floor(((currentRot % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / segmentAngle) % 32;
       if (currentSegmentIdx !== lastSegmentIndex && progress < 0.95) {
         playTickSound();
@@ -235,7 +272,6 @@ const Index = () => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Přímo použít newRotation - žádný skok!
         wheelRotationRef.current = newRotation;
         setWheelRotation(newRotation);
         
@@ -250,11 +286,11 @@ const Index = () => {
   };
 
   const newRound = () => {
-    const nextPuzzleIndex = gameState.round % puzzles.length;
+    const puzzle = getRandomPuzzle();
     setGameState((prev) => ({
       ...prev,
       puzzle: {
-        ...puzzles[nextPuzzleIndex],
+        ...puzzle,
         revealedLetters: new Set(),
       },
       usedLetters: new Set(),
@@ -269,8 +305,29 @@ const Index = () => {
     toast.success('Nové kolo začíná! Umístěte žetony.');
   };
 
+  // Show setup screen
+  if (gamePhase === 'setup') {
+    return (
+      <>
+        <PlayerSetup onComplete={handleSetupComplete} />
+        <Link to="/admin" className="fixed bottom-4 right-4 z-50">
+          <Button variant="outline" size="icon" className="bg-card/80 backdrop-blur-md">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </Link>
+      </>
+    );
+  }
+
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-400/30 via-purple-400/30 to-pink-400/30 text-foreground">
+      {/* Admin Link */}
+      <Link to="/admin" className="fixed top-4 right-4 z-[60]" style={{ right: '180px' }}>
+        <Button variant="outline" size="icon" className="bg-card/80 backdrop-blur-md">
+          <Settings className="h-4 w-4" />
+        </Button>
+      </Link>
+
       {/* Camera Detail View */}
       <div className="absolute top-4 left-4 z-40 w-80 h-60 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 animate-fade-in">
         <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wide shadow-md">
@@ -314,7 +371,7 @@ const Index = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
             <div className="bg-background/95 backdrop-blur-md px-8 py-6 rounded-xl border-4 border-primary shadow-[0_0_50px_rgba(0,0,0,0.5)] text-center animate-in zoom-in duration-300">
               <p className="text-3xl font-bold text-primary mb-2">
-                HRÁČ {gameState.currentPlayer + 1}
+                {gameState.players[gameState.currentPlayer]?.name || `HRÁČ ${gameState.currentPlayer + 1}`}
               </p>
               <p className="text-lg text-foreground font-medium">
                 Umístěte svůj žeton na kolo

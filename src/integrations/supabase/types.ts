@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      puzzles: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          phrase: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          phrase: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          phrase?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
