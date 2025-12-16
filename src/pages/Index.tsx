@@ -8,6 +8,7 @@ import { GameModeSelect } from '@/components/game/GameModeSelect';
 import { TeacherPuzzleInput } from '@/components/game/TeacherPuzzleInput';
 import { DeviceHandover } from '@/components/game/DeviceHandover';
 import { GuessPhraseDialog } from '@/components/game/GuessPhraseDialog';
+import { GameSettingsDialog } from '@/components/game/GameSettingsDialog';
 import { GameState, WheelSegment, Player } from '@/types/game';
 import { wheelSegments } from '@/data/puzzles';
 import { usePuzzles } from '@/hooks/usePuzzles';
@@ -68,6 +69,14 @@ const Index = () => {
   const wheelRotationRef = useRef(0);
   const [pointerBounce, setPointerBounce] = useState(0);
   const [currentDisplaySegment, setCurrentDisplaySegment] = useState<WheelSegment | null>(null);
+  
+  // Result display state
+  const [showResult, setShowResult] = useState(false);
+  const [resultMessage, setResultMessage] = useState('');
+  const [resultType, setResultType] = useState<'success' | 'error'>('success');
+  
+  // Effects toggle state
+  const [effectsEnabled, setEffectsEnabled] = useState(true);
   const [showGuessDialog, setShowGuessDialog] = useState(false);
 
   // Mode selection handlers
@@ -241,9 +250,12 @@ const Index = () => {
     if (totalCount > 0) {
       const points = currentWheelValue * totalCount;
       const variantsFound = variants.filter(v => phrase.includes(v)).join(', ');
-      toast.success(`Správně! Odhalili jste ${totalCount}× "${variantsFound}" za ${points} bodů!`, {
-        duration: 3000,
-      });
+      
+      // Show result with delay
+      setResultMessage(`Správně! ${totalCount}× "${variantsFound}" = +${points} bodů`);
+      setResultType('success');
+      setShowResult(true);
+      setShowLetterSelector(false);
 
       setGameState((prev) => ({
         ...prev,
@@ -256,16 +268,22 @@ const Index = () => {
         ),
       }));
     } else {
-      toast.error(`Písmeno "${letter}" v tajence není. Tah přechází dál.`, {
-        duration: 2000,
-      });
+      // Show error result with delay
+      setResultMessage(`Písmeno "${letter}" v tajence není. Tah přechází dál.`);
+      setResultType('error');
+      setShowResult(true);
+      setShowLetterSelector(false);
+      
       setGameState((prev) => ({
         ...prev,
         currentPlayer: (prev.currentPlayer + 1) % 3,
       }));
     }
+  };
 
-    setShowLetterSelector(false);
+  const handleResultDismiss = () => {
+    setShowResult(false);
+    setResultMessage('');
     setCurrentWheelValue(0);
   };
 
@@ -309,8 +327,8 @@ const Index = () => {
     }
   };
 
-  // Can player guess? Only when not spinning, not placing tokens, and game is active
-  const canGuessPhrase = !gameState.isSpinning && !isPlacingTokens && gamePhase === 'playing';
+  // Can player guess? Only when not spinning, not placing tokens, game is active, and not showing result
+  const canGuessPhrase = !gameState.isSpinning && !isPlacingTokens && gamePhase === 'playing' && !showResult;
 
   // Auto-detect puzzle completion
   useEffect(() => {
@@ -474,10 +492,13 @@ const Index = () => {
 
   return (
     <div className={`h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br ${colors.gradient} text-foreground transition-colors duration-1000`}>
+      {/* Game Settings Dialog */}
+      <GameSettingsDialog effectsEnabled={effectsEnabled} onEffectsChange={setEffectsEnabled} />
+
       {/* Seasonal Effects Background */}
-      <SeasonalEffects />
+      {effectsEnabled && <SeasonalEffects />}
       {/* Studio Effects Background */}
-      <StudioEffects />
+      {effectsEnabled && <StudioEffects />}
 
       {/* Camera Detail View */}
       <div className="absolute top-4 left-4 z-40 w-80 h-60 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 animate-fade-in">
@@ -534,7 +555,7 @@ const Index = () => {
         )}
 
         {/* Controls */}
-        {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && (
+        {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && !showResult && (
           <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-40 animate-in slide-in-from-right duration-500">
             <Button
               onClick={handleSpin}
@@ -556,6 +577,10 @@ const Index = () => {
         onGuessPhrase={() => setShowGuessDialog(true)}
         disabled={gameState.isSpinning}
         canGuess={canGuessPhrase}
+        showResult={showResult}
+        resultMessage={resultMessage}
+        resultType={resultType}
+        onResultDismiss={handleResultDismiss}
       />
 
       <GuessPhraseDialog
