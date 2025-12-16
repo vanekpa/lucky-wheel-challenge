@@ -128,7 +128,7 @@ const WheelSegment3D = ({
         <Text
           rotation={[-Math.PI/2, 0, Math.PI/2]}
           fontSize={0.28}
-          color={segment.color === 'wheel-yellow' ? '#000000' : '#ffffff'}
+          color="#ffffff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.02}
@@ -157,7 +157,7 @@ const PlayerToken3D = ({
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);
-  const y = 0.18;
+  const y = 0.35;
   
   return (
     <group position={[x, y, z]}>
