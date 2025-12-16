@@ -15,6 +15,8 @@ import { getLetterVariants } from '@/components/game/LetterSelector';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { StudioEffects } from '@/components/game/StudioEffects';
+import { SeasonalEffects } from '@/components/game/SeasonalEffects';
+import { useSeason } from '@/hooks/useSeason';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
 type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing';
@@ -26,6 +28,7 @@ interface CustomPuzzle {
 
 const Index = () => {
   const { puzzles, loading, getRandomPuzzle, getRandomPuzzles } = usePuzzles();
+  const { colors } = useSeason();
   const [gamePhase, setGamePhase] = useState<GamePhase>('intro');
   const [gameMode, setGameMode] = useState<'random' | 'teacher'>('random');
   const [customPuzzles, setCustomPuzzles] = useState<CustomPuzzle[]>([]);
@@ -440,7 +443,9 @@ const Index = () => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-blue-400/30 via-purple-400/30 to-pink-400/30 text-foreground">
+    <div className={`h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br ${colors.gradient} text-foreground transition-colors duration-1000`}>
+      {/* Seasonal Effects Background */}
+      <SeasonalEffects />
       {/* Studio Effects Background */}
       <StudioEffects />
 

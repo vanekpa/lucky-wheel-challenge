@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { useEffect, useMemo, useRef } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { OrbitControls, Points, PointMaterial } from '@react-three/drei';
 import { WheelSegment, Player } from '@/types/game';
 import { WHEEL_RADIUS, POINTER_Y_POSITION, POINTER_Z_POSITION } from '@/constants/wheel';
 import { WheelModel } from './WheelModel';
+import { useSeason, Season } from '@/hooks/useSeason';
+import * as THREE from 'three';
 
 interface Wheel3DProps {
   rotation: number;
@@ -136,6 +138,74 @@ const StudioElements3D = () => {
   );
 };
 
+// 3D Seasonal Particles
+const SeasonalParticles3D = ({ season, effectsEnabled }: { season: Season; effectsEnabled: boolean }) => {
+  const pointsRef = useRef<THREE.Points>(null);
+  const count = season === 'winter' ? 200 : season === 'autumn' ? 100 : 50;
+  
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 20;     // x
+      pos[i * 3 + 1] = Math.random() * 15;          // y
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 20;  // z
+    }
+    return pos;
+  }, [count]);
+
+  const velocities = useMemo(() => {
+    const vel = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      vel[i] = 0.01 + Math.random() * 0.02;
+    }
+    return vel;
+  }, [count]);
+
+  useFrame(() => {
+    if (!pointsRef.current || !effectsEnabled) return;
+    
+    const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    
+    for (let i = 0; i < count; i++) {
+      // Fall down
+      positions[i * 3 + 1] -= velocities[i];
+      
+      // Add slight horizontal drift
+      positions[i * 3] += Math.sin(Date.now() * 0.001 + i) * 0.005;
+      positions[i * 3 + 2] += Math.cos(Date.now() * 0.001 + i) * 0.005;
+      
+      // Reset when below ground
+      if (positions[i * 3 + 1] < -1) {
+        positions[i * 3] = (Math.random() - 0.5) * 20;
+        positions[i * 3 + 1] = 15;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      }
+    }
+    
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+  });
+
+  if (!effectsEnabled) return null;
+
+  const color = season === 'winter' ? '#ffffff' : 
+                season === 'autumn' ? '#d4621a' : 
+                season === 'spring' ? '#ffb6c1' : 
+                '#fffacd';
+
+  return (
+    <Points ref={pointsRef} positions={positions}>
+      <PointMaterial
+        transparent
+        color={color}
+        size={season === 'winter' ? 0.08 : 0.12}
+        sizeAttenuation={true}
+        depthWrite={false}
+        opacity={0.8}
+      />
+    </Points>
+  );
+};
+
 const Pointer3D = ({ bounce = 0 }: { bounce?: number }) => {
   const bounceRotation = Math.sin(bounce * Math.PI * 8) * 0.15 * Math.max(0, 1 - bounce);
   
@@ -192,7 +262,9 @@ const Scene = ({
   players,
   onSegmentClick,
   isClickable,
-  pointerBounce = 0
+  pointerBounce = 0,
+  season,
+  effectsEnabled
 }: { 
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
@@ -201,6 +273,8 @@ const Scene = ({
   onSegmentClick?: (segmentId: number) => void;
   isClickable?: boolean;
   pointerBounce?: number;
+  season: Season;
+  effectsEnabled: boolean;
 }) => {
   return (
     <>
@@ -239,6 +313,7 @@ const Scene = ({
       <pointLight position={[-5, 3, -5]} intensity={0.8} color="#ffffff" />
       
       <StudioElements3D />
+      <SeasonalParticles3D season={season} effectsEnabled={effectsEnabled} />
       <Pointer3D bounce={pointerBounce} />
       <Pedestal />
       <WheelModel
@@ -265,6 +340,8 @@ export const Wheel3D = ({
   currentPlayer,
   pointerBounce = 0
 }: Wheel3DProps) => {
+  const { season, effectsEnabled } = useSeason();
+  
   return (
     <div className="w-full h-full">
       <Canvas
@@ -286,6 +363,8 @@ export const Wheel3D = ({
           onSegmentClick={onSegmentClick}
           isClickable={placingTokensMode}
           pointerBounce={pointerBounce}
+          season={season}
+          effectsEnabled={effectsEnabled}
         />
       </Canvas>
     </div>

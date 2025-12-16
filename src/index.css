@@ -100,6 +100,103 @@ All colors MUST be HSL.
   50% { opacity: 0.6; }
 }
 
+/* Seasonal Effects Animations */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(var(--swing, 20px)) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-fall {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(25vh) translateX(30px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(-20px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(75vh) translateX(40px) rotate(270deg);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes petal-fall {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50vh) translateX(var(--swing, 15px)) rotate(180deg) scale(0.9);
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(110vh) translateX(calc(var(--swing, 15px) * -1)) rotate(360deg) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% { 
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  50% { 
+    opacity: 1;
+    transform: translateY(-20px) scale(1);
+  }
+}
+
+@keyframes sun-ray {
+  0%, 100% {
+    opacity: 0.3;
+    transform: rotate(-5deg);
+  }
+  50% {
+    opacity: 0.6;
+    transform: rotate(5deg);
+  }
+}
+
 @layer utilities {
   .animate-spotlight-left {
     animation: spotlight-left 8s ease-in-out infinite;
@@ -116,5 +213,29 @@ All colors MUST be HSL.
   
   .animate-pulse-slow {
     animation: pulse-slow 4s ease-in-out infinite;
+  }
+  
+  .animate-snowfall {
+    animation: snowfall linear infinite;
+  }
+  
+  .animate-leaf-fall {
+    animation: leaf-fall ease-in-out infinite;
+  }
+  
+  .animate-petal-fall {
+    animation: petal-fall ease-in-out infinite;
+  }
+  
+  .animate-twinkle {
+    animation: twinkle 2s ease-in-out infinite;
+  }
+  
+  .animate-sparkle {
+    animation: sparkle 3s ease-in-out infinite;
+  }
+  
+  .animate-sun-ray {
+    animation: sun-ray 8s ease-in-out infinite;
   }
 }
