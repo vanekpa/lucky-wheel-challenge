@@ -175,7 +175,7 @@ const PlayerToken3D = ({
       
       {/* Hráč 0: Trojúhelník - trojboký hranol ležící na plocho */}
       {playerId === 0 && (
-        <mesh position={[0, 0.07, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+        <mesh position={[0, 0.07, 0]} rotation={[0, 0, 0]} castShadow>
           <cylinderGeometry args={[0.12, 0.12, 0.05, 3]} />
           <meshStandardMaterial color={player.color} metalness={0.3} roughness={0.5} />
         </mesh>
