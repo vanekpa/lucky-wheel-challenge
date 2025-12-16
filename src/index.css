@@ -46,6 +46,7 @@ All colors MUST be HSL.
     --wheel-purple: 271 76% 53%;
     --wheel-teal: 174 72% 56%;
     --wheel-orange: 28 100% 52%;
+    --wheel-gold: 45 100% 51%;
     
     /* Special segments */
     --bankrot: 0 0% 10%;
@@ -342,5 +343,111 @@ All colors MUST be HSL.
 
   .animate-shake {
     animation: shake 0.5s ease-out;
+  }
+}
+
+/* Bonus Wheel Animations */
+@keyframes segment-blackout {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(0.1);
+  }
+}
+
+@keyframes reveal-pulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(0.1);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes bonus-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--wheel-gold)), 0 0 40px hsl(var(--wheel-gold) / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--wheel-gold)), 0 0 80px hsl(var(--wheel-gold) / 0.8);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes victory-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes trophy-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes step-indicator {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-segment-blackout {
+    animation: segment-blackout 0.5s ease-out forwards;
+  }
+  
+  .animate-reveal-pulse {
+    animation: reveal-pulse 0.8s ease-out forwards;
+  }
+  
+  .animate-bonus-glow {
+    animation: bonus-glow 1.5s ease-in-out infinite;
+  }
+  
+  .animate-confetti-fall {
+    animation: confetti-fall 3s linear forwards;
+  }
+  
+  .animate-victory-pulse {
+    animation: victory-pulse 2s ease-in-out infinite;
+  }
+  
+  .animate-trophy-bounce {
+    animation: trophy-bounce 1s ease-in-out infinite;
+  }
+  
+  .animate-step-indicator {
+    animation: step-indicator 1s ease-in-out infinite;
   }
 }

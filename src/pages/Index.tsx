@@ -9,6 +9,8 @@ import { TeacherPuzzleInput } from '@/components/game/TeacherPuzzleInput';
 import { DeviceHandover } from '@/components/game/DeviceHandover';
 import { GuessPhraseDialog } from '@/components/game/GuessPhraseDialog';
 import { PlayerSettings } from '@/components/game/PlayerSettings';
+import BonusWheel from '@/components/game/BonusWheel';
+import VictoryScreen from '@/components/game/VictoryScreen';
 import { GameState, WheelSegment, Player } from '@/types/game';
 import { wheelSegments } from '@/data/puzzles';
 import { usePuzzles } from '@/hooks/usePuzzles';
@@ -21,7 +23,7 @@ import { useSeason } from '@/hooks/useSeason';
 import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
 
-type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing';
+type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing' | 'bonus-wheel' | 'victory';
 
 interface CustomPuzzle {
   phrase: string;
@@ -429,8 +431,10 @@ const Index = () => {
     let puzzle;
     if (gameMode === 'teacher' && customPuzzles.length > 0) {
       if (nextIndex >= customPuzzles.length) {
-        toast.success('Všechny tajenky byly odehrány! Hra končí.');
-        setGamePhase('intro');
+        // Game finished - go to bonus wheel for the winner
+        const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+        toast.success(`Všechny tajenky odehrány! ${winner.name} jde do BONUS KOLA!`);
+        setGamePhase('bonus-wheel');
         return;
       }
       puzzle = {
@@ -458,6 +462,40 @@ const Index = () => {
     setIsPlacingTokens(true);
     setShowLetterSelector(false);
     toast.success(`Kolo ${gameState.round + 1}/${gameMode === 'teacher' ? customPuzzles.length : '∞'} začíná!`);
+  };
+
+  const handleBonusWheelComplete = (finalScores: Player[]) => {
+    setGameState(prev => ({ ...prev, players: finalScores }));
+    setGamePhase('victory');
+  };
+
+  const handlePlayAgain = () => {
+    // Reset with same puzzles
+    setCurrentPuzzleIndex(0);
+    const puzzle = gameMode === 'teacher' && customPuzzles.length > 0
+      ? { id: 'custom-0', phrase: customPuzzles[0].phrase, category: customPuzzles[0].category }
+      : getRandomPuzzle();
+    
+    setGameState(prev => ({
+      ...prev,
+      players: prev.players.map(p => ({ ...p, score: 0 })),
+      puzzle: { ...puzzle, revealedLetters: new Set() },
+      usedLetters: new Set(),
+      round: 1,
+      currentPlayer: 0,
+      isSpinning: false,
+    }));
+    setTokenPositions(new Map());
+    setTokensPlaced(new Set());
+    setIsPlacingTokens(true);
+    setShowLetterSelector(false);
+    setGamePhase('playing');
+  };
+
+  const handleNewGame = () => {
+    setGamePhase('intro');
+    setCustomPuzzles([]);
+    setCurrentPuzzleIndex(0);
   };
 
   // Intro screen - mode selection
@@ -488,6 +526,29 @@ const Index = () => {
   // Player setup screen
   if (gamePhase === 'setup') {
     return <PlayerSetup onComplete={handleSetupComplete} />;
+  }
+
+  // Bonus Wheel phase
+  if (gamePhase === 'bonus-wheel') {
+    const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+    return (
+      <BonusWheel
+        winner={winner}
+        players={gameState.players}
+        onComplete={handleBonusWheelComplete}
+      />
+    );
+  }
+
+  // Victory screen phase
+  if (gamePhase === 'victory') {
+    return (
+      <VictoryScreen
+        players={gameState.players}
+        onPlayAgain={handlePlayAgain}
+        onNewGame={handleNewGame}
+      />
+    );
   }
 
   return (
