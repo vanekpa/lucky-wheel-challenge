@@ -41,6 +41,24 @@ const getVisualOffsetFromPointer = (index: number, rotation: number, totalSegmen
   return -Math.round(angleDiff / segmentAngle);
 };
 
+// INVERSE FUNCTION: Calculate exact rotation needed for a segment to be at offset 0 (under pointer)
+const getRotationForSegmentAtPointer = (segmentIndex: number, totalSegments: number): number => {
+  const segmentAngle = (Math.PI * 2) / totalSegments;
+  const geometryOffset = -Math.PI / 2;
+  const pointerPos = 3 * Math.PI / 2; // 270° = top
+  
+  // Segment center angle in local coordinates
+  const segmentCenterAngle = segmentIndex * segmentAngle + segmentAngle / 2 + geometryOffset;
+  
+  // We want: visualAngle = pointerPos
+  // visualAngle = (segmentCenterAngle - rotation) mod 2π
+  // Therefore: rotation = segmentCenterAngle - pointerPos
+  const targetRotation = segmentCenterAngle - pointerPos;
+  
+  // Normalize to positive range [0, 2π)
+  return ((targetRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+};
+
 const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   const [phase, setPhase] = useState<BonusWheelState['phase']>('intro');
   const [wheelRotation, setWheelRotation] = useState(0);
@@ -165,15 +183,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   const handleConfirmChoice = () => {
     setPhase('reveal');
     
-    // Calculate rotation needed to bring target segment under pointer
-    const segmentAngle = (Math.PI * 2) / 32;
-    const rotationOffset = selectedOffset * segmentAngle;
-    
     const startRotation = wheelRotationRef.current;
-    const targetRotation = startRotation - rotationOffset;
-    
-    const duration = 1500 + Math.abs(selectedOffset) * 300;
-    const startTime = Date.now();
     const totalSteps = Math.abs(selectedOffset);
     
     // CRITICAL: Calculate physical segment indices BEFORE animation starts
@@ -185,6 +195,31 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
       segmentIndicesToReveal.push(physicalIndex);
     }
     
+    // Find the target segment (the one at selectedOffset) 
+    const targetSegmentIndex = getSegmentIndexAtVisualOffset(selectedOffset, startRotation);
+    
+    // Calculate EXACT rotation to bring this segment under pointer using inverse function
+    const baseTargetRotation = getRotationForSegmentAtPointer(targetSegmentIndex, 32);
+    
+    // Add full rotations to maintain continuity from current rotation
+    const fullRotations = Math.floor(startRotation / (Math.PI * 2)) * (Math.PI * 2);
+    let targetRotation = fullRotations + baseTargetRotation;
+    
+    // Ensure animation goes in the correct direction based on selectedOffset
+    if (selectedOffset > 0) {
+      // Positive offset = move clockwise (decrease rotation)
+      while (targetRotation > startRotation) {
+        targetRotation -= Math.PI * 2;
+      }
+    } else if (selectedOffset < 0) {
+      // Negative offset = move counter-clockwise (increase rotation)
+      while (targetRotation < startRotation) {
+        targetRotation += Math.PI * 2;
+      }
+    }
+    
+    const duration = 1500 + Math.abs(selectedOffset) * 300;
+    const startTime = Date.now();
     let lastRevealedStep = 0;
     
     // Reveal initial segment (first physical index)
