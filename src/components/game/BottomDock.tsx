@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { PuzzleBoard } from './PuzzleBoard';
 import { LetterSelector } from './LetterSelector';
 import { Puzzle } from '@/types/game';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface BottomDockProps {
   puzzle: Puzzle;
@@ -19,12 +20,19 @@ export const BottomDock = ({
   onLetterSelect,
   disabled,
 }: BottomDockProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
+  
+  // Can be expanded either manually or when letter selector is shown
+  const isExpanded = isManuallyExpanded || showLetterSelector;
+
+  const handleClose = () => {
+    setIsManuallyExpanded(false);
+  };
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 transition-all duration-500 ease-out ${
-        showLetterSelector || isExpanded ? 'translate-y-0' : 'translate-y-[calc(100%-180px)]'
+      className={`fixed bottom-0 left-0 right-0 transition-all duration-500 ease-out z-30 ${
+        isExpanded ? 'translate-y-0' : 'translate-y-[calc(100%-140px)]'
       }`}
       style={{
         background: 'linear-gradient(to top, hsl(var(--background)), hsl(var(--background) / 0.95))',
@@ -33,23 +41,35 @@ export const BottomDock = ({
     >
       {/* Toggle Handle */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => setIsManuallyExpanded(!isManuallyExpanded)}
         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-card/80 backdrop-blur-md rounded-t-lg px-6 py-2 border-t-2 border-x-2 border-primary/30 hover:border-primary/50 transition-colors"
       >
-        {isExpanded || showLetterSelector ? (
+        {isExpanded ? (
           <ChevronDown className="w-6 h-6 text-primary" />
         ) : (
           <ChevronUp className="w-6 h-6 text-primary" />
         )}
       </button>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Close button when expanded */}
+      {isExpanded && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClose}
+          className="absolute top-2 right-4"
+        >
+          <X className="w-5 h-5" />
+        </Button>
+      )}
+
+      <div className="container mx-auto px-4 py-4 space-y-4">
         {/* Compact Puzzle Board */}
-        <div className="transform scale-90">
+        <div className="transform scale-90 origin-top">
           <PuzzleBoard puzzle={puzzle} />
         </div>
 
-        {/* Letter Selector */}
+        {/* Letter Selector - only when game requires it */}
         {showLetterSelector && (
           <div className="animate-fade-in">
             <LetterSelector
