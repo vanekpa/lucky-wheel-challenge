@@ -3,7 +3,6 @@ import { Wheel3D } from '@/components/game/Wheel3D';
 import { WheelDetailView } from '@/components/game/WheelDetailView';
 import { PlayerScores } from '@/components/game/PlayerScores';
 import { BottomDock } from '@/components/game/BottomDock';
-import { TextDebugPanel } from '@/components/game/TextDebugPanel';
 import { GameState, WheelSegment } from '@/types/game';
 import { puzzles, wheelSegments } from '@/data/puzzles';
 import { toast } from 'sonner';
@@ -13,9 +12,9 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>({
     currentPlayer: 0,
     players: [
-      { id: 0, name: 'HRÁČ 1', score: 0, color: '#ff6b6b' }, // Červená
-      { id: 1, name: 'HRÁČ 2', score: 0, color: '#5b8def' }, // Modrá
-      { id: 2, name: 'HRÁČ 3', score: 0, color: '#ffd700' }, // Žlutá
+      { id: 0, name: 'HRÁČ 1', score: 0, color: '#ff6b6b' },
+      { id: 1, name: 'HRÁČ 2', score: 0, color: '#5b8def' },
+      { id: 2, name: 'HRÁČ 3', score: 0, color: '#ffd700' },
     ],
     puzzle: {
       ...puzzles[0],
@@ -33,24 +32,6 @@ const Index = () => {
   const [tokensPlaced, setTokensPlaced] = useState<Set<number>>(new Set());
   const [wheelRotation, setWheelRotation] = useState(0);
   const wheelRotationRef = useRef(0);
-  
-  // Debug state
-  const [debugInfo, setDebugInfo] = useState({
-    segmentIndex: -1,
-    segmentId: -1,
-    value: '',
-    color: '',
-    rotation: 0,
-    pointerAngle: 0,
-  });
-
-  // Debug rotation values
-  const [debugRotation, setDebugRotation] = useState({
-    x: -90,
-    y: -90,
-    z: 0,
-    yOffset: 0.01
-  });
 
   useEffect(() => {
     // Force re-render check when critical states change
@@ -83,10 +64,8 @@ const Index = () => {
   const handleSpinComplete = (segment: WheelSegment) => {
     console.log('🏁 Spin Completed. Landed on:', segment);
     
-    // 1. Reset spinning state immediately
     setGameState((prev) => ({ ...prev, isSpinning: false, wheelResult: segment }));
 
-    // 2. Check token bonus
     let tokenBonus = 0;
     let tokenOwner: number | undefined;
     tokenPositions.forEach((playerId, segmentId) => {
@@ -108,7 +87,6 @@ const Index = () => {
       }));
     }
 
-    // 3. Handle segment types
     if (segment.type === 'bankrot') {
       toast.error('BANKROT! Ztrácíte všechny body!', {
         duration: 3000,
@@ -133,9 +111,8 @@ const Index = () => {
       setShowLetterSelector(false);
       
     } else {
-      // Points logic
       setCurrentWheelValue(segment.value as number);
-      setShowLetterSelector(true); // This enables the UI for letter selection
+      setShowLetterSelector(true);
       toast.success(`Vytočili jste ${segment.value} bodů!`, {
         duration: 2000,
       });
@@ -145,7 +122,6 @@ const Index = () => {
   const handleLetterSelect = (letter: string) => {
     const upperLetter = letter.toUpperCase();
     
-    // Check if letter is in puzzle
     const phrase = gameState.puzzle.phrase.toUpperCase();
     const count = (phrase.match(new RegExp(upperLetter, 'g')) || []).length;
 
@@ -191,31 +167,19 @@ const Index = () => {
     setGameState((prev) => ({ ...prev, isSpinning: true }));
     setShowLetterSelector(false);
     
-    // Random spin setup
     const extraSpins = 5;
     const targetSegmentIndex = Math.floor(Math.random() * 32);
     const segmentAngle = (Math.PI * 2) / 32;
     
-    // Calculate rotation to land exactly on center of target segment
-    // Pointer is at -Z (270 deg or 3PI/2)
-    // Segment 0 is at -PI/2
-    // We need to account for these offsets
     const currentRotation = wheelRotationRef.current;
     
-    // Calculate target rotation
-    // Current visual offset is -PI/2 (from Wheel3D geometry)
-    // We want targetSegment to end up at Pointer (3PI/2)
     const targetAngle = targetSegmentIndex * segmentAngle;
-    const offset = Math.PI / 2; // Geometry offset
+    const offset = Math.PI / 2;
     
-    // How much more we need to rotate to align target with pointer
-    // This math ensures we land on the correct segment ID
     const rotationNeeded = (2 * Math.PI) - targetAngle + (3 * Math.PI / 2) - offset;
     
-    // Add multiple full spins and current rotation base
     const newRotation = currentRotation + (Math.PI * 2 * extraSpins) + (rotationNeeded % (Math.PI * 2));
     
-    // Animate
     const duration = 4000;
     const startTime = Date.now();
     const startRotation = currentRotation;
@@ -225,50 +189,22 @@ const Index = () => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Ease out cubic
       const ease = 1 - Math.pow(1 - progress, 3);
       const currentRot = startRotation + (newRotation - startRotation) * ease;
       
       wheelRotationRef.current = currentRot;
       setWheelRotation(currentRot);
-      
-      // Calculate debug info live
-      const normalizedRot = currentRot % (Math.PI * 2);
-      // Reverse engineer the segment index from rotation
-      // This formula must match the visual representation in Wheel3D
-      const visualOffset = -Math.PI / 2;
-      const pointerAngle = 3 * Math.PI / 2;
-      
-      // Calculate which segment is currently at the pointer
-      // angle + rotation = pointer
-      let angleAtPointer = (pointerAngle - visualOffset - normalizedRot) % (Math.PI * 2);
-      if (angleAtPointer < 0) angleAtPointer += Math.PI * 2;
-      
-      const detectedIndex = Math.floor(angleAtPointer / segmentAngle) % 32;
-      const currentSegment = wheelSegments[detectedIndex] || wheelSegments[0];
-
-      setDebugInfo({
-        segmentIndex: detectedIndex,
-        segmentId: currentSegment.id,
-        value: String(currentSegment.value),
-        color: currentSegment.color,
-        rotation: (normalizedRot * 180 / Math.PI),
-        pointerAngle: 270
-      });
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Animation complete - SNAP to exact segment center
         const finalSegment = wheelSegments[targetSegmentIndex];
         
-        // Calculate exact rotation for perfect center alignment
         const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2;
-        const pointerPos = 3 * Math.PI / 2; // 270°
+        const pointerPos = 3 * Math.PI / 2;
         const geometryOffset = -Math.PI / 2;
         const snappedRotation = pointerPos - segmentCenterAngle - geometryOffset;
         
-        // Keep full rotations, just snap the final position
         const fullRotations = Math.floor(currentRot / (Math.PI * 2)) * (Math.PI * 2);
         const finalRotation = fullRotations + ((snappedRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         
@@ -294,7 +230,7 @@ const Index = () => {
       usedLetters: new Set(),
       round: prev.round + 1,
       currentPlayer: 0,
-      isSpinning: false // Ensure spinning is reset
+      isSpinning: false
     }));
     setTokenPositions(new Map());
     setTokensPlaced(new Set());
@@ -315,21 +251,7 @@ const Index = () => {
           rotationRef={wheelRotationRef}
           tokenPositions={tokenPositions}
           players={gameState.players}
-          debugRotation={debugRotation}
         />
-      </div>
-
-      {/* Debug Panel (Optional - can be hidden) */}
-      <div className="absolute top-2 left-[22rem] bg-black/80 text-white p-4 rounded-lg z-50 font-mono text-xs space-y-1 border border-yellow-500/50 hidden xl:block">
-        <div className="text-yellow-400 font-bold mb-2">🔧 SYSTEM INFO</div>
-        <div>Segment: <span className="text-green-400">{debugInfo.segmentIndex}</span></div>
-        <div>Value: <span className="text-cyan-400 font-bold">{debugInfo.value}</span></div>
-        <div>State: <span className={gameState.isSpinning ? "text-red-400" : "text-green-400"}>
-          {gameState.isSpinning ? 'SPINNING' : 'IDLE'}
-        </span></div>
-        <div>Selector: <span className={showLetterSelector ? "text-green-400" : "text-gray-400"}>
-          {showLetterSelector ? 'VISIBLE' : 'HIDDEN'}
-        </span></div>
       </div>
       
       <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
@@ -347,13 +269,12 @@ const Index = () => {
             rotation={wheelRotation}
             rotationRef={wheelRotationRef}
             isSpinning={gameState.isSpinning}
-            onSpinComplete={() => {}} // Handled by parent animation loop
+            onSpinComplete={() => {}}
             tokenPositions={tokenPositions}
             onSegmentClick={handleTokenPlace}
             placingTokensMode={isPlacingTokens}
             players={gameState.players}
             currentPlayer={gameState.currentPlayer}
-            debugRotation={debugRotation}
           />
         </div>
         
@@ -402,18 +323,6 @@ const Index = () => {
         showLetterSelector={showLetterSelector}
         onLetterSelect={handleLetterSelect}
         disabled={gameState.isSpinning}
-      />
-
-      {/* Debug Panel */}
-      <TextDebugPanel
-        rotationX={debugRotation.x}
-        rotationY={debugRotation.y}
-        rotationZ={debugRotation.z}
-        yOffset={debugRotation.yOffset}
-        onRotationXChange={(x) => setDebugRotation({ ...debugRotation, x })}
-        onRotationYChange={(y) => setDebugRotation({ ...debugRotation, y })}
-        onRotationZChange={(z) => setDebugRotation({ ...debugRotation, z })}
-        onYOffsetChange={(yOffset) => setDebugRotation({ ...debugRotation, yOffset })}
       />
     </div>
   );
