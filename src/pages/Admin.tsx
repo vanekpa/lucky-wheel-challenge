@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert, Upload, FileText } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Pencil, Check, X, LogOut, Loader2, ShieldAlert, Upload, FileText, Snowflake, Flower2, Sun, Leaf, Moon, CloudSun, Settings2, Sparkles } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useSeason, Season, DayTime } from '@/hooks/useSeason';
+import { useGameSettings } from '@/hooks/useGameSettings';
 
 interface Puzzle {
   id: string;
@@ -31,6 +33,31 @@ const Admin = () => {
 
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin, signOut } = useAuth();
+  const { season, dayTime, effectsEnabled, isAutoSeason, isAutoDayTime } = useSeason();
+  const { updateSetting, updating } = useGameSettings();
+
+  // Current setting values for UI
+  const [currentSeasonSetting, setCurrentSeasonSetting] = useState<string>('auto');
+  const [currentDayTimeSetting, setCurrentDayTimeSetting] = useState<string>('auto');
+  const [currentEffectsEnabled, setCurrentEffectsEnabled] = useState(true);
+
+  // Fetch current settings
+  useEffect(() => {
+    const fetchCurrentSettings = async () => {
+      const { data } = await supabase
+        .from('game_settings')
+        .select('setting_key, setting_value');
+      
+      if (data) {
+        data.forEach((setting) => {
+          if (setting.setting_key === 'season') setCurrentSeasonSetting(setting.setting_value);
+          else if (setting.setting_key === 'day_time') setCurrentDayTimeSetting(setting.setting_value);
+          else if (setting.setting_key === 'effects_enabled') setCurrentEffectsEnabled(setting.setting_value === 'true');
+        });
+      }
+    };
+    fetchCurrentSettings();
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -284,6 +311,135 @@ const Admin = () => {
               <LogOut className="h-4 w-4 mr-2" />
               Odhlásit
             </Button>
+          </div>
+        </div>
+
+        {/* Environment Settings */}
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-6">
+          <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+            <Settings2 className="h-5 w-5" />
+            Nastavení prostředí
+          </h2>
+          
+          {/* Season selection */}
+          <div className="mb-6">
+            <label className="text-white/70 text-sm mb-2 block">Sezóna</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'auto', label: 'Auto', icon: Sparkles },
+                { value: 'winter', label: 'Zima', icon: Snowflake },
+                { value: 'spring', label: 'Jaro', icon: Flower2 },
+                { value: 'summer', label: 'Léto', icon: Sun },
+                { value: 'autumn', label: 'Podzim', icon: Leaf },
+              ].map(({ value, label, icon: Icon }) => (
+                <Button
+                  key={value}
+                  variant={currentSeasonSetting === value ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={updating}
+                  onClick={() => {
+                    setCurrentSeasonSetting(value);
+                    updateSetting('season', value);
+                  }}
+                  className={`${
+                    currentSeasonSetting === value
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0'
+                      : 'border-white/20 text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 mr-1" />
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Day/Night selection */}
+          <div className="mb-6">
+            <label className="text-white/70 text-sm mb-2 block">Denní doba</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'auto', label: 'Auto', icon: Sparkles },
+                { value: 'day', label: 'Den', icon: CloudSun },
+                { value: 'night', label: 'Noc', icon: Moon },
+              ].map(({ value, label, icon: Icon }) => (
+                <Button
+                  key={value}
+                  variant={currentDayTimeSetting === value ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={updating}
+                  onClick={() => {
+                    setCurrentDayTimeSetting(value);
+                    updateSetting('day_time', value);
+                  }}
+                  className={`${
+                    currentDayTimeSetting === value
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0'
+                      : 'border-white/20 text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 mr-1" />
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Effects toggle */}
+          <div className="mb-4">
+            <label className="text-white/70 text-sm mb-2 block">Efekty</label>
+            <div className="flex gap-2">
+              <Button
+                variant={currentEffectsEnabled ? 'default' : 'outline'}
+                size="sm"
+                disabled={updating}
+                onClick={() => {
+                  setCurrentEffectsEnabled(true);
+                  updateSetting('effects_enabled', 'true');
+                }}
+                className={`${
+                  currentEffectsEnabled
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0'
+                    : 'border-white/20 text-white/70 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Check className="h-4 w-4 mr-1" />
+                Zapnuté
+              </Button>
+              <Button
+                variant={!currentEffectsEnabled ? 'default' : 'outline'}
+                size="sm"
+                disabled={updating}
+                onClick={() => {
+                  setCurrentEffectsEnabled(false);
+                  updateSetting('effects_enabled', 'false');
+                }}
+                className={`${
+                  !currentEffectsEnabled
+                    ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-0'
+                    : 'border-white/20 text-white/70 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Vypnuté
+              </Button>
+            </div>
+          </div>
+
+          {/* Current state display */}
+          <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
+            <p className="text-white/50 text-sm">
+              Aktuální stav: 
+              <span className="text-white ml-2">
+                {season === 'winter' && '❄️ Zima'}
+                {season === 'spring' && '🌸 Jaro'}
+                {season === 'summer' && '☀️ Léto'}
+                {season === 'autumn' && '🍂 Podzim'}
+                {' + '}
+                {dayTime === 'day' ? '☀️ Den' : '🌙 Noc'}
+                {!effectsEnabled && ' (efekty vypnuté)'}
+              </span>
+            </p>
           </div>
         </div>
 
