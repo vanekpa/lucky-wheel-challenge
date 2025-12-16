@@ -230,13 +230,6 @@ export const BonusWheelModel = ({
     }
   });
   
-  // Calculate which segments are revealed based on visual offset
-  const getIsRevealed = (index: number) => {
-    const currentRot = externalRotationRef?.current ?? rotation;
-    const visualOffset = getVisualOffsetFromPointer(index, currentRot, segments.length);
-    return revealedSegments.has(visualOffset);
-  };
-  
   return (
     <group 
       ref={groupRef}
@@ -251,6 +244,7 @@ export const BonusWheelModel = ({
         const currentRot = externalRotationRef?.current ?? rotation;
         const visualOffset = getVisualOffsetFromPointer(index, currentRot, segments.length);
         
+        // Now revealedSegments contains physical indices, so check directly by index
         return (
           <BonusWheelSegment3D 
             key={index}
@@ -260,7 +254,7 @@ export const BonusWheelModel = ({
             radius={WHEEL_RADIUS}
             diskHeight={WHEEL_DISK_HEIGHT}
             blackoutMode={blackoutMode}
-            isRevealed={revealedSegments.has(visualOffset)}
+            isRevealed={revealedSegments.has(index)}
             visualOffset={visualOffset}
           />
         );

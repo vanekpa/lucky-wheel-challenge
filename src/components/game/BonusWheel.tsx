@@ -138,44 +138,75 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     setSelectedOffset(offset);
   };
 
+  // Helper: Find segment physical index at a given visual offset
+  const getSegmentIndexAtVisualOffset = (offset: number, currentRotation: number): number => {
+    const totalSegments = shuffledSegments.length;
+    const segmentAngle = (Math.PI * 2) / totalSegments;
+    const geometryOffset = -Math.PI / 2;
+    const pointerPos = 3 * Math.PI / 2; // 270° = top
+    
+    // Find segment that has this visual offset
+    for (let index = 0; index < totalSegments; index++) {
+      const segmentCenterAngle = index * segmentAngle + segmentAngle / 2 + geometryOffset;
+      const visualAngle = ((segmentCenterAngle - currentRotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      
+      let angleDiff = visualAngle - pointerPos;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      
+      const visualOffset = -Math.round(angleDiff / segmentAngle);
+      if (visualOffset === offset) {
+        return index;
+      }
+    }
+    return 0; // Fallback
+  };
+
   const handleConfirmChoice = () => {
     setPhase('reveal');
     
     // Calculate rotation needed to bring target segment under pointer
     const segmentAngle = (Math.PI * 2) / 32;
-    const rotationOffset = selectedOffset * segmentAngle; // How much to rotate
+    const rotationOffset = selectedOffset * segmentAngle;
     
     const startRotation = wheelRotationRef.current;
-    // Rotate in the direction of offset - positive offset = rotate clockwise (negative rotation)
     const targetRotation = startRotation - rotationOffset;
     
-    const duration = 1500 + Math.abs(selectedOffset) * 300; // Longer for more steps
+    const duration = 1500 + Math.abs(selectedOffset) * 300;
     const startTime = Date.now();
-    let lastRevealedStep = -1;
     const totalSteps = Math.abs(selectedOffset);
     
-    // Reveal initial segment (under pointer)
-    setRevealedSegments(new Set([0]));
+    // CRITICAL: Calculate physical segment indices BEFORE animation starts
+    // These indices won't change as wheel rotates
+    const segmentIndicesToReveal: number[] = [];
+    for (let i = 0; i <= totalSteps; i++) {
+      const offsetToCheck = selectedOffset >= 0 ? i : -i;
+      const physicalIndex = getSegmentIndexAtVisualOffset(offsetToCheck, startRotation);
+      segmentIndicesToReveal.push(physicalIndex);
+    }
+    
+    let lastRevealedStep = 0;
+    
+    // Reveal initial segment (first physical index)
+    setRevealedSegments(new Set([segmentIndicesToReveal[0]]));
     playRevealSound();
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing - smooth deceleration
       const ease = 1 - Math.pow(1 - progress, 3);
       const currentRot = startRotation + (targetRotation - startRotation) * ease;
       
       wheelRotationRef.current = currentRot;
       setWheelRotation(currentRot);
       
-      // Progressive segment reveal during rotation
+      // Progressive reveal using pre-calculated physical indices
       if (totalSteps > 0) {
-        const currentStep = Math.floor(progress * totalSteps);
+        const currentStep = Math.floor(progress * (totalSteps + 0.99));
         if (currentStep > lastRevealedStep && currentStep <= totalSteps) {
-          // Reveal segment at this step
-          const offsetToReveal = selectedOffset >= 0 ? currentStep : -currentStep;
-          setRevealedSegments(prev => new Set([...prev, offsetToReveal]));
+          const indicesToReveal = segmentIndicesToReveal.slice(0, currentStep + 1);
+          setRevealedSegments(new Set(indicesToReveal));
           playRevealSound();
           lastRevealedStep = currentStep;
         }
@@ -184,16 +215,11 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Animation complete - ensure final rotation is exact
         wheelRotationRef.current = targetRotation;
         setWheelRotation(targetRotation);
         
-        // Reveal all segments in path (safety)
-        const finalRevealed = new Set<number>();
-        for (let i = 0; i <= totalSteps; i++) {
-          finalRevealed.add(selectedOffset >= 0 ? i : -i);
-        }
-        setRevealedSegments(finalRevealed);
+        // Final: reveal all physical indices
+        setRevealedSegments(new Set(segmentIndicesToReveal));
         
         // Pointer bounce effect
         setPointerBounce(1);
@@ -208,11 +234,9 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
         };
         requestAnimationFrame(animateBounce);
         
-        // Transition to result phase
         setTimeout(() => {
           setPhase('result');
           
-          // Play appropriate sound based on final segment
           const { segment } = getFinalResult();
           if (segment.type === 'jackpot') {
             playJackpotSound();
