@@ -470,7 +470,7 @@ const Index = () => {
           <p className="text-xl text-muted-foreground font-semibold">Kolo {gameState.round}</p>
         </div>
 
-        <div className="relative w-full max-w-3xl h-[500px] flex items-center justify-center">
+        <div className="relative w-full h-[600px] flex items-center justify-center">
           <Wheel3D
             rotation={wheelRotation}
             rotationRef={wheelRotationRef}
