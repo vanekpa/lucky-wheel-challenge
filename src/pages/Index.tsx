@@ -92,17 +92,17 @@ const Index = () => {
 
   const handleSelectTeacher = () => {
     setGameMode('teacher');
-    setGamePhase('teacher-input');
+    setGamePhase('handover'); // Show handover BEFORE puzzle input
+  };
+
+  const handleHandoverContinue = () => {
+    setGamePhase('teacher-input'); // Then go to puzzle input
   };
 
   const handleTeacherPuzzlesComplete = (puzzles: CustomPuzzle[]) => {
     setCustomPuzzles(puzzles);
     setCurrentPuzzleIndex(0);
-    setGamePhase('handover');
-  };
-
-  const handleHandoverContinue = () => {
-    setGamePhase('setup');
+    setGamePhase('setup'); // Go directly to player setup
   };
 
   const getNextPuzzle = () => {
@@ -143,6 +143,7 @@ const Index = () => {
     setTokensPlaced((prev) => {
       const newSet = new Set(prev).add(gameState.currentPlayer);
       
+      // Check if all 3 players have placed their token for this round
       if (newSet.size === 3) {
         setIsPlacingTokens(false);
         setGameState((prevState) => ({ ...prevState, currentPlayer: 0 }));
@@ -449,6 +450,12 @@ const Index = () => {
       puzzle = getRandomPuzzle();
     }
     
+    const nextRound = gameState.round + 1;
+    
+    // Tokens persist! Only reset tokensPlaced for rounds 1-3 (each player adds 1 token per round)
+    // Round 4+ = no new tokens
+    const shouldPlaceTokens = nextRound <= 3;
+    
     setGameState((prev) => ({
       ...prev,
       puzzle: {
@@ -456,15 +463,22 @@ const Index = () => {
         revealedLetters: new Set(),
       },
       usedLetters: new Set(),
-      round: prev.round + 1,
+      round: nextRound,
       currentPlayer: 0,
       isSpinning: false
     }));
-    setTokenPositions(new Map());
+    
+    // Don't clear tokenPositions - tokens stay on the wheel!
+    // Only reset which players have placed THIS round's token
     setTokensPlaced(new Set());
-    setIsPlacingTokens(true);
+    setIsPlacingTokens(shouldPlaceTokens);
     setShowLetterSelector(false);
-    toast.success(`Kolo ${gameState.round + 1}/${gameMode === 'teacher' ? customPuzzles.length : '∞'} začíná!`);
+    
+    if (shouldPlaceTokens) {
+      toast.success(`Kolo ${nextRound}/${gameMode === 'teacher' ? customPuzzles.length : '∞'} - Umístěte další žeton!`);
+    } else {
+      toast.success(`Kolo ${nextRound}/${gameMode === 'teacher' ? customPuzzles.length : '∞'} začíná!`);
+    }
   };
 
   const handleBonusWheelComplete = (finalScores: Player[]) => {

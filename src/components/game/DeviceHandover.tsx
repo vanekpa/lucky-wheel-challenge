@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
-import { Users, Eye, EyeOff } from 'lucide-react';
+import { EyeOff, Eye } from 'lucide-react';
 import { useState } from 'react';
 
 interface DeviceHandoverProps {
-  puzzleCount: number;
+  puzzleCount?: number;
   onContinue: () => void;
 }
 
-export const DeviceHandover = ({ puzzleCount, onContinue }: DeviceHandoverProps) => {
+export const DeviceHandover = ({ onContinue }: DeviceHandoverProps) => {
   const [confirmed, setConfirmed] = useState(false);
 
   return (
@@ -16,28 +16,27 @@ export const DeviceHandover = ({ puzzleCount, onContinue }: DeviceHandoverProps)
         {/* Icon */}
         <div className="mb-8">
           <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 shadow-2xl shadow-orange-500/50 animate-pulse">
-            <Users className="h-16 w-16 text-white" />
+            <EyeOff className="h-16 w-16 text-white" />
           </div>
         </div>
 
         {/* Title */}
         <h1 className="text-5xl font-black text-white mb-4">
-          Předejte zařízení
+          Pozor!
         </h1>
         <h2 className="text-3xl font-bold text-yellow-400 mb-6">
-          HRÁČŮM
+          UČITELSKÝ MÓD
         </h2>
 
         {/* Info */}
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-white/20">
-          <div className="flex items-center justify-center gap-3 text-white/80 mb-4">
-            <EyeOff className="h-6 w-6" />
-            <span className="text-lg">Tajenky jsou skryté</span>
-          </div>
+          <p className="text-white/80 text-lg mb-4">
+            V dalším kroku budete zadávat tajenky.
+          </p>
           <p className="text-white/60">
-            Připraveno {puzzleCount} {puzzleCount === 1 ? 'tajenka' : puzzleCount < 5 ? 'tajenky' : 'tajenek'} pro hru.
+            Ujistěte se, že hráči nevidí obrazovku,
             <br />
-            Hráči je neuvidí, dokud je neodhalí.
+            aby neprozradili tajná hesla.
           </p>
         </div>
 
@@ -65,7 +64,7 @@ export const DeviceHandover = ({ puzzleCount, onContinue }: DeviceHandoverProps)
           size="lg"
           className="text-2xl px-16 py-8 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white shadow-2xl shadow-green-500/30 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:scale-95"
         >
-          Pokračovat k nastavení hráčů
+          Pokračovat k zadání tajenek
         </Button>
       </div>
     </div>
