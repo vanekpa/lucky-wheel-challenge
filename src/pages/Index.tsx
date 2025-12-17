@@ -80,6 +80,20 @@ const Index = () => {
     setSoundsEnabledGlobal(soundsEnabled);
   }, [soundsEnabled]);
 
+  // Cleanup session on browser close
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (activeSessionCode) {
+        // Use sendBeacon for reliable delivery during page unload
+        const url = `https://konrlmeglqbbybyvwiuc.supabase.co/functions/v1/cleanup-sessions`;
+        navigator.sendBeacon(url, JSON.stringify({ session_code: activeSessionCode }));
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [activeSessionCode]);
+
   const [gameState, setGameState] = useState<GameState>({
     currentPlayer: 0,
     players: [

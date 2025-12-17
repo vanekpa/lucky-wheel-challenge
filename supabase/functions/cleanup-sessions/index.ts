@@ -17,7 +17,40 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // Delete sessions older than 60 minutes
+    // Check if specific session code was provided (for immediate cleanup on browser close)
+    let sessionCode: string | null = null
+    try {
+      const body = await req.json()
+      sessionCode = body.session_code || null
+    } catch {
+      // No body or invalid JSON - proceed with scheduled cleanup
+    }
+
+    if (sessionCode) {
+      // Delete specific session immediately
+      console.log(`Deleting session: ${sessionCode}`)
+      
+      const { error } = await supabase
+        .from('game_sessions')
+        .delete()
+        .eq('session_code', sessionCode)
+
+      if (error) {
+        console.error('Delete session error:', error)
+        return new Response(
+          JSON.stringify({ success: false, error: error.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log(`Session ${sessionCode} deleted`)
+      return new Response(
+        JSON.stringify({ success: true, deleted: sessionCode }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Scheduled cleanup: Delete sessions older than 60 minutes
     const cutoffTime = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     
     console.log(`Cleaning up sessions older than: ${cutoffTime}`)
