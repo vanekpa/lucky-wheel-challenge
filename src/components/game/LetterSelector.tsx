@@ -72,11 +72,6 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
                   bg-white/10 text-white border-white/20 hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:scale-110 hover:-translate-y-1 active:scale-90 active:bg-primary/50"
               >
                 {letter}
-                {hasVariants && !isUsed && (
-                  <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 text-[8px] md:text-[9px] bg-primary text-primary-foreground rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center font-semibold shadow-lg">
-                    +{variants.length - 1}
-                  </span>
-                )}
               </button>
             );
           })}
