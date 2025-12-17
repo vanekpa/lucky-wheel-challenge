@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Settings, Volume2, VolumeX, Sparkles, X, Undo2, GraduationCap } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Settings, Volume2, VolumeX, Sparkles, X, Undo2, GraduationCap, Maximize, Minimize } from 'lucide-react';
+import { useIsTablet } from '@/hooks/use-tablet';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -36,11 +37,35 @@ export const PlayerSettings = ({
 }: PlayerSettingsProps) => {
   const { soundsEnabled } = useSounds();
   const { isAdmin } = useAuth();
+  const { isTablet } = useIsTablet();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(soundsEnabled);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     setLocalSoundsEnabled(soundsEnabled);
   }, [soundsEnabled]);
+
+  // Track fullscreen state
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.log('Fullscreen not supported');
+    }
+  }, []);
 
   const handleSoundsToggle = async (checked: boolean) => {
     setLocalSoundsEnabled(checked);
@@ -144,6 +169,25 @@ export const PlayerSettings = ({
               className="data-[state=checked]:bg-primary"
             />
           </div>
+
+          {/* Fullscreen toggle - show on tablets/touch devices */}
+          {(isTablet || 'ontouchstart' in window) && (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-white/70">
+                {isFullscreen ? (
+                  <Minimize className="h-4 w-4" />
+                ) : (
+                  <Maximize className="h-4 w-4" />
+                )}
+                <span className="text-sm">Celá obrazovka</span>
+              </div>
+              <Switch
+                checked={isFullscreen}
+                onCheckedChange={toggleFullscreen}
+                className="data-[state=checked]:bg-primary"
+              />
+            </div>
+          )}
 
           {/* Teacher Controls Section */}
           {showTeacherControls && (
