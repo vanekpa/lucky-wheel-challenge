@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Keyboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { wheelSegments } from '@/data/puzzles';
 
 const LETTERS = 'AÁBCČDĎEÉĚFGHIÍJKLMNŇOÓPQRŘSŠTŤUÚŮVWXYÝZŽ'.split('');
 
@@ -135,14 +136,36 @@ const RemoteController = () => {
           </div>
         )}
 
-        {/* Token placement mode */}
+        {/* Token placement mode - with segment picker */}
         {isPlacingTokens && (
-          <div className="bg-primary/10 border border-primary/30 rounded-xl p-6 text-center mb-4">
-            <Target className="w-12 h-12 mx-auto mb-3 text-primary" />
-            <p className="text-lg font-semibold mb-2">Umístěte žeton</p>
-            <p className="text-sm text-muted-foreground">
-              Klepněte na segment na hlavní obrazovce
-            </p>
+          <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Target className="w-8 h-8 text-primary" />
+              <div>
+                <p className="font-semibold">Umístěte žeton</p>
+                <p className="text-xs text-muted-foreground">Vyberte segment nebo klepněte na hlavní obrazovce</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-8 gap-1.5">
+              {wheelSegments.map((segment, idx) => (
+                <Button
+                  key={idx}
+                  onClick={() => {
+                    handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: idx });
+                    toast.success(`Žeton umístěn na segment ${idx + 1}`);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="aspect-square text-xs font-bold p-0"
+                  style={{ 
+                    borderColor: segment.color,
+                    backgroundColor: `${segment.color}20`
+                  }}
+                >
+                  {idx + 1}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -165,17 +188,29 @@ const RemoteController = () => {
               {isSpinning ? 'Točí se...' : 'ZATOČIT'}
             </Button>
 
-            {/* Guess phrase button */}
-            <Button
-              onClick={() => setShowGuessInput(true)}
-              variant="secondary"
-              size="lg"
-              className="w-full text-lg py-6"
-              disabled={isSpinning || isPlacingTokens}
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              Hádat tajenku
-            </Button>
+            {/* Letter and phrase guess buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={() => setShowKeyboard(true)}
+                variant="secondary"
+                size="lg"
+                className="text-base py-6"
+                disabled={isSpinning || isPlacingTokens}
+              >
+                <Keyboard className="w-5 h-5 mr-2" />
+                Hádat písmenko
+              </Button>
+              <Button
+                onClick={() => setShowGuessInput(true)}
+                variant="secondary"
+                size="lg"
+                className="text-base py-6"
+                disabled={isSpinning || isPlacingTokens}
+              >
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Hádat tajenku
+              </Button>
+            </div>
 
             {/* Secondary actions */}
             <div className="grid grid-cols-2 gap-3">

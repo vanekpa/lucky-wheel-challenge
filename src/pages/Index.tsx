@@ -43,7 +43,7 @@ const Index = () => {
   const { turnTimer } = useTurnTimer();
   
   // Session management for remote control
-  const { session, isHost, updateGameState, createSession } = useGameSession(sessionCode);
+  const { session, isHost, updateGameState, createSession, endSession } = useGameSession(sessionCode);
   const lastCommandTimestamp = useRef<number>(0);
   const [localSessionCode, setLocalSessionCode] = useState<string | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -683,7 +683,12 @@ const Index = () => {
     setGamePhase("victory");
   };
 
-  const handlePlayAgain = () => {
+  const handlePlayAgain = async () => {
+    // End old session and reset
+    await endSession();
+    setLocalSessionCode(null);
+    window.history.replaceState(null, '', '/');
+    
     // Reset with same puzzles
     setCurrentPuzzleIndex(0);
     const puzzle =
@@ -707,7 +712,12 @@ const Index = () => {
     setGamePhase("playing");
   };
 
-  const handleNewGame = () => {
+  const handleNewGame = async () => {
+    // Cleanup session from database
+    await endSession();
+    setLocalSessionCode(null);
+    window.history.replaceState(null, '', '/');
+    
     setGamePhase("intro");
     setCustomPuzzles([]);
     setCurrentPuzzleIndex(0);
@@ -720,8 +730,14 @@ const Index = () => {
     setGamePhase("bonus-wheel");
   };
 
-  const handleEndGameReturnToMenu = () => {
+  const handleEndGameReturnToMenu = async () => {
     setShowEndGameDialog(false);
+    
+    // Cleanup session from database
+    await endSession();
+    setLocalSessionCode(null);
+    window.history.replaceState(null, '', '/');
+    
     setGamePhase("intro");
     setCustomPuzzles([]);
     setCurrentPuzzleIndex(0);
@@ -782,6 +798,11 @@ const Index = () => {
       case 'SET_PLAYER':
         if ('playerId' in command) {
           handleSwitchPlayer(command.playerId);
+        }
+        break;
+      case 'PLACE_TOKEN':
+        if ('segmentIndex' in command && isPlacingTokens) {
+          handleTokenPlace(command.segmentIndex);
         }
         break;
     }
