@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import Host from "./pages/Host";
+import JoinSession from "./pages/JoinSession";
+import RemoteController from "./pages/RemoteController";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,6 +21,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/play/:sessionCode" element={<Index />} />
+          <Route path="/host" element={<Host />} />
+          <Route path="/join" element={<JoinSession />} />
+          <Route path="/control/:code" element={<RemoteController />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

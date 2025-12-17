@@ -7,7 +7,12 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 export interface GameSessionState {
   currentPlayer: number;
   players: Player[];
-  puzzle: Puzzle | null;
+  puzzle: {
+    id: string;
+    phrase: string;
+    category: string;
+    revealedLetters: string[];
+  } | null;
   usedLetters: string[];
   round: number;
   isSpinning: boolean;
@@ -18,6 +23,8 @@ export interface GameSessionState {
   gameHistory: any[];
   gameMode: 'random' | 'teacher';
   teacherPuzzles: { phrase: string; category: string }[];
+  _pendingCommand?: GameCommand;
+  _commandTimestamp?: number;
 }
 
 export interface GameSession {
