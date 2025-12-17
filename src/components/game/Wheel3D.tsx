@@ -367,52 +367,6 @@ export const Wheel3D = ({
           effectsEnabled={effectsEnabled}
         />
       </Canvas>
-      
-      {/* 2D HTML overlay badge - reliabilní text rendering */}
-      <div 
-        className="absolute pointer-events-none select-none"
-        style={{
-          top: '52%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      >
-        <div 
-          className="flex flex-col items-center justify-center px-6 py-2 rounded-full"
-          style={{
-            background: 'linear-gradient(145deg, #d4af37, #b8962e)',
-            boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
-            border: '2px solid #ffd700',
-          }}
-        >
-          <div 
-            className="flex flex-col items-center px-4 py-1 rounded-full"
-            style={{
-              background: 'linear-gradient(180deg, #1a1a2e, #0a0a1a)',
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
-            }}
-          >
-            <span 
-              className="font-black text-lg tracking-wider"
-              style={{
-                color: '#ff3333',
-                textShadow: '0 0 10px rgba(255,51,51,0.8), 2px 2px 0 #000, -1px -1px 0 #000',
-              }}
-            >
-              PEKLO
-            </span>
-            <span 
-              className="font-bold text-xs tracking-widest -mt-1"
-              style={{
-                color: '#ffd700',
-                textShadow: '0 0 8px rgba(255,215,0,0.6), 1px 1px 0 #000',
-              }}
-            >
-              EDU.CZ
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
