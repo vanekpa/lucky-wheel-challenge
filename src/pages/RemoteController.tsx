@@ -2,18 +2,17 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Keyboard } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
 
-const LETTERS = 'AÁBCČDĎEÉĚFGHIÍJKLMNŇOÓPQRŘSŠTŤUÚŮVWXYÝZŽ'.split('');
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 const RemoteController = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { session, isLoading, error, sendCommand, joinSession } = useGameSession();
-  const [showKeyboard, setShowKeyboard] = useState(false);
   const [guessInput, setGuessInput] = useState('');
   const [showGuessInput, setShowGuessInput] = useState(false);
 
@@ -23,15 +22,6 @@ const RemoteController = () => {
     }
   }, [code]);
 
-  // Show keyboard based on game state
-  useEffect(() => {
-    if (session?.game_state?.showLetterSelector) {
-      setShowKeyboard(true);
-    } else {
-      setShowKeyboard(false);
-    }
-  }, [session?.game_state?.showLetterSelector]);
-
   const handleCommand = async (command: GameCommand) => {
     await sendCommand(command);
     toast.success('Příkaz odeslán');
@@ -39,7 +29,6 @@ const RemoteController = () => {
 
   const handleLetterSelect = async (letter: string) => {
     await sendCommand({ type: 'SELECT_LETTER', letter });
-    setShowKeyboard(false);
     toast.success(`Písmeno "${letter}" odesláno`);
   };
 
@@ -81,7 +70,7 @@ const RemoteController = () => {
   const currentPlayer = gameState?.players?.[gameState?.currentPlayer];
   const isPlacingTokens = gameState?.isPlacingTokens;
   const isSpinning = gameState?.isSpinning;
-  const canSpin = !isSpinning && !showKeyboard && !isPlacingTokens;
+  const canSpin = !isSpinning && !isPlacingTokens;
 
   // Get revealed puzzle hint
   const getPuzzleHint = () => {
@@ -123,7 +112,7 @@ const RemoteController = () => {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 p-4 max-w-lg mx-auto w-full">
+      <main className="flex-1 p-4 max-w-lg mx-auto w-full overflow-y-auto">
         {/* Puzzle hint */}
         {gameState?.puzzle && (
           <div className="bg-card/60 backdrop-blur-lg rounded-xl p-4 mb-4 border border-border/30">
@@ -169,8 +158,8 @@ const RemoteController = () => {
           </div>
         )}
 
-        {/* Main action buttons */}
-        {!showKeyboard && !showGuessInput && (
+        {/* Main action buttons - always visible unless guessing phrase */}
+        {!showGuessInput && (
           <div className="space-y-4">
             {/* Spin button */}
             <Button
@@ -178,7 +167,7 @@ const RemoteController = () => {
               disabled={!canSpin}
               size="lg"
               className={cn(
-                "w-full text-xl py-8 transition-all",
+                "w-full text-xl py-6 transition-all",
                 canSpin 
                   ? "bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl hover:scale-[1.02]" 
                   : "opacity-50"
@@ -188,79 +177,58 @@ const RemoteController = () => {
               {isSpinning ? 'Točí se...' : 'ZATOČIT'}
             </Button>
 
-            {/* Letter and phrase guess buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                onClick={() => setShowKeyboard(true)}
-                variant="secondary"
-                size="lg"
-                className="text-base py-6"
-                disabled={isSpinning || isPlacingTokens}
-              >
-                <Keyboard className="w-5 h-5 mr-2" />
-                Hádat písmenko
-              </Button>
+            {/* Secondary actions */}
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 onClick={() => setShowGuessInput(true)}
                 variant="secondary"
-                size="lg"
-                className="text-base py-6"
+                size="sm"
+                className="text-xs py-3"
                 disabled={isSpinning || isPlacingTokens}
               >
-                <MessageSquare className="w-5 h-5 mr-2" />
-                Hádat tajenku
+                <MessageSquare className="w-4 h-4 mr-1" />
+                Tajenka
               </Button>
-            </div>
-
-            {/* Secondary actions */}
-            <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => handleCommand({ type: 'NEXT_PLAYER' })}
                 variant="outline"
-                className="py-4"
+                size="sm"
+                className="text-xs py-3"
                 disabled={isSpinning}
               >
-                <SkipForward className="w-4 h-4 mr-2" />
-                Další hráč
+                <SkipForward className="w-4 h-4 mr-1" />
+                Další
               </Button>
               <Button
                 onClick={() => handleCommand({ type: 'UNDO' })}
                 variant="outline"
-                className="py-4"
+                size="sm"
+                className="text-xs py-3"
                 disabled={isSpinning}
               >
-                <Undo2 className="w-4 h-4 mr-2" />
+                <Undo2 className="w-4 h-4 mr-1" />
                 Zpět
               </Button>
             </div>
-          </div>
-        )}
 
-        {/* Letter keyboard */}
-        {showKeyboard && (
-          <div className="space-y-4">
-            <div className="text-center mb-4">
-              <p className="text-lg font-semibold text-primary">Vyberte písmeno</p>
+            {/* Letter keyboard - always visible */}
+            <div className="bg-card/40 rounded-xl p-3 border border-border/30">
+              <p className="text-xs text-muted-foreground text-center mb-2">Vyberte písmeno</p>
+              <div className="grid grid-cols-9 gap-1.5">
+                {LETTERS.map(letter => (
+                  <Button
+                    key={letter}
+                    onClick={() => handleLetterSelect(letter)}
+                    variant="outline"
+                    size="sm"
+                    className="aspect-square text-sm font-bold p-0 hover:bg-primary hover:text-primary-foreground transition-all active:scale-95"
+                    disabled={isSpinning || isPlacingTokens}
+                  >
+                    {letter}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-7 gap-2">
-              {LETTERS.map(letter => (
-                <Button
-                  key={letter}
-                  onClick={() => handleLetterSelect(letter)}
-                  variant="outline"
-                  className="aspect-square text-lg font-bold hover:bg-primary hover:text-primary-foreground transition-all active:scale-95"
-                >
-                  {letter}
-                </Button>
-              ))}
-            </div>
-            <Button
-              onClick={() => setShowKeyboard(false)}
-              variant="ghost"
-              className="w-full mt-4"
-            >
-              Zrušit
-            </Button>
           </div>
         )}
 
