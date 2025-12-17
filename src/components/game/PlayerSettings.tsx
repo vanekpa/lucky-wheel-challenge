@@ -118,141 +118,146 @@ export const PlayerSettings = ({
 
   const showTeacherControls = isPlaying && players && onSwitchPlayer;
 
+  const showFullscreenButton = isTablet || 'ontouchstart' in window;
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <div className="fixed bottom-28 md:bottom-4 left-4 z-50 flex items-center gap-2">
+      {/* Settings Popover */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="w-14 h-14 md:w-12 md:h-12 rounded-full 
+                       bg-black/30 backdrop-blur-md hover:bg-black/50 
+                       border border-white/10 transition-all duration-200
+                       hover:scale-105 active:scale-95 shadow-lg touch-target-lg"
+          >
+            <Settings className="h-6 w-6 md:h-5 md:w-5 text-white/70" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-64 p-3 bg-black/80 backdrop-blur-xl border-white/20"
+          side="top"
+          align="start"
+        >
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-white/90 mb-3">Nastavení</h4>
+            
+            {/* Sound toggle */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-white/70">
+                {localSoundsEnabled ? (
+                  <Volume2 className="h-4 w-4" />
+                ) : (
+                  <VolumeX className="h-4 w-4" />
+                )}
+                <span className="text-sm">Zvuk</span>
+              </div>
+              <Switch
+                checked={localSoundsEnabled}
+                onCheckedChange={handleSoundsToggle}
+                className="data-[state=checked]:bg-primary"
+              />
+            </div>
+            
+            {/* Effects toggle */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-white/70">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm">Efekty</span>
+              </div>
+              <Switch
+                checked={effectsEnabled}
+                onCheckedChange={handleEffectsToggle}
+                className="data-[state=checked]:bg-primary"
+              />
+            </div>
+
+            {/* Teacher Controls Section */}
+            {showTeacherControls && (
+              <div className="pt-3 mt-3 border-t border-white/10 space-y-3">
+                <div className="flex items-center gap-2 text-white/70">
+                  <GraduationCap className="h-4 w-4" />
+                  <span className="text-sm font-medium">Učitelské ovládání</span>
+                </div>
+                
+                {/* Undo button */}
+                {onUndo && (
+                  <Button
+                    onClick={onUndo}
+                    variant="outline"
+                    size="sm"
+                    disabled={!canUndo}
+                    className="w-full bg-white/5 border-white/20 text-white/80 hover:bg-white/10 disabled:opacity-40"
+                  >
+                    <Undo2 className="mr-2 h-4 w-4" />
+                    Vrátit krok
+                  </Button>
+                )}
+                
+                {/* Switch player buttons */}
+                <div className="space-y-2">
+                  <span className="text-xs text-white/50">Přepnout na hráče:</span>
+                  <div className="flex gap-2">
+                    {players.map((player) => (
+                      <Button
+                        key={player.id}
+                        onClick={() => onSwitchPlayer(player.id)}
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPlayer === player.id}
+                        className="flex-1 text-xs px-2 py-1 border-2 disabled:opacity-40"
+                        style={{ 
+                          borderColor: player.color,
+                          backgroundColor: currentPlayer === player.id ? player.color + '40' : 'transparent',
+                          color: player.color
+                        }}
+                      >
+                        {player.name.substring(0, 6)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* End Game button - conditionally shown */}
+            {showEndGame && onEndGame && (
+              <div className="pt-2 mt-2 border-t border-white/10">
+                <Button
+                  onClick={onEndGame}
+                  variant="destructive"
+                  size="sm"
+                  className="w-full"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Ukončit hru
+                </Button>
+              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* Fullscreen button - separate, next to settings */}
+      {showFullscreenButton && (
         <Button 
           variant="ghost" 
           size="icon"
-          className="fixed bottom-28 md:bottom-4 left-4 z-50 w-14 h-14 md:w-12 md:h-12 rounded-full 
+          onClick={toggleFullscreen}
+          className="w-14 h-14 md:w-12 md:h-12 rounded-full 
                      bg-black/30 backdrop-blur-md hover:bg-black/50 
                      border border-white/10 transition-all duration-200
                      hover:scale-105 active:scale-95 shadow-lg touch-target-lg"
         >
-          <Settings className="h-6 w-6 md:h-5 md:w-5 text-white/70" />
+          {isFullscreen ? (
+            <Minimize className="h-6 w-6 md:h-5 md:w-5 text-white/70" />
+          ) : (
+            <Maximize className="h-6 w-6 md:h-5 md:w-5 text-white/70" />
+          )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-64 p-3 bg-black/80 backdrop-blur-xl border-white/20"
-        side="top"
-        align="start"
-      >
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-white/90 mb-3">Nastavení</h4>
-          
-          {/* Sound toggle */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-white/70">
-              {localSoundsEnabled ? (
-                <Volume2 className="h-4 w-4" />
-              ) : (
-                <VolumeX className="h-4 w-4" />
-              )}
-              <span className="text-sm">Zvuk</span>
-            </div>
-            <Switch
-              checked={localSoundsEnabled}
-              onCheckedChange={handleSoundsToggle}
-              className="data-[state=checked]:bg-primary"
-            />
-          </div>
-          
-          {/* Effects toggle */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-white/70">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm">Efekty</span>
-            </div>
-            <Switch
-              checked={effectsEnabled}
-              onCheckedChange={handleEffectsToggle}
-              className="data-[state=checked]:bg-primary"
-            />
-          </div>
-
-          {/* Fullscreen toggle - show on tablets/touch devices */}
-          {(isTablet || 'ontouchstart' in window) && (
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-white/70">
-                {isFullscreen ? (
-                  <Minimize className="h-4 w-4" />
-                ) : (
-                  <Maximize className="h-4 w-4" />
-                )}
-                <span className="text-sm">Celá obrazovka</span>
-              </div>
-              <Switch
-                checked={isFullscreen}
-                onCheckedChange={toggleFullscreen}
-                className="data-[state=checked]:bg-primary"
-              />
-            </div>
-          )}
-
-          {/* Teacher Controls Section */}
-          {showTeacherControls && (
-            <div className="pt-3 mt-3 border-t border-white/10 space-y-3">
-              <div className="flex items-center gap-2 text-white/70">
-                <GraduationCap className="h-4 w-4" />
-                <span className="text-sm font-medium">Učitelské ovládání</span>
-              </div>
-              
-              {/* Undo button */}
-              {onUndo && (
-                <Button
-                  onClick={onUndo}
-                  variant="outline"
-                  size="sm"
-                  disabled={!canUndo}
-                  className="w-full bg-white/5 border-white/20 text-white/80 hover:bg-white/10 disabled:opacity-40"
-                >
-                  <Undo2 className="mr-2 h-4 w-4" />
-                  Vrátit krok
-                </Button>
-              )}
-              
-              {/* Switch player buttons */}
-              <div className="space-y-2">
-                <span className="text-xs text-white/50">Přepnout na hráče:</span>
-                <div className="flex gap-2">
-                  {players.map((player) => (
-                    <Button
-                      key={player.id}
-                      onClick={() => onSwitchPlayer(player.id)}
-                      variant="outline"
-                      size="sm"
-                      disabled={currentPlayer === player.id}
-                      className="flex-1 text-xs px-2 py-1 border-2 disabled:opacity-40"
-                      style={{ 
-                        borderColor: player.color,
-                        backgroundColor: currentPlayer === player.id ? player.color + '40' : 'transparent',
-                        color: player.color
-                      }}
-                    >
-                      {player.name.substring(0, 6)}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* End Game button - conditionally shown */}
-          {showEndGame && onEndGame && (
-            <div className="pt-2 mt-2 border-t border-white/10">
-              <Button
-                onClick={onEndGame}
-                variant="destructive"
-                size="sm"
-                className="w-full"
-              >
-                <X className="mr-2 h-4 w-4" />
-                Ukončit hru
-              </Button>
-            </div>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+      )}
+    </div>
   );
 };
