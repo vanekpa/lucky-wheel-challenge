@@ -288,18 +288,18 @@ const RemoteController = () => {
             </div>
 
             {/* Letter keyboard */}
-            <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/30">
-              <p className="text-xs text-slate-400 text-center mb-3 font-medium">
+            <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-3 border border-slate-700/30">
+              <p className="text-xs text-slate-400 text-center mb-2 font-medium">
                 Vyberte písmeno
               </p>
-              <div className="grid grid-cols-9 gap-2">
+              <div className="grid grid-cols-7 gap-1.5">
                 {LETTERS.map(letter => (
                   <button
                     key={letter}
                     onClick={() => handleLetterSelect(letter)}
                     disabled={isSpinning || isPlacingTokens}
                     className={cn(
-                      "aspect-square rounded-xl text-sm font-bold transition-all flex items-center justify-center",
+                      "aspect-square rounded-xl text-lg font-bold transition-all flex items-center justify-center min-h-[48px]",
                       "bg-slate-700/50 border border-slate-600/50 text-white",
                       "hover:bg-primary hover:border-primary hover:shadow-lg hover:shadow-primary/30",
                       "active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
