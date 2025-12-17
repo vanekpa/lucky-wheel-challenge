@@ -907,13 +907,17 @@ const Index = () => {
         break;
     }
     
-    // Send command result feedback to controller
-    if (commandResult && activeSessionCode && session) {
+    // Send command result feedback to controller and CLEAR the pending command
+    if (activeSessionCode && session) {
       updateGameState({
-        _lastCommandResult: {
-          ...commandResult,
-          timestamp: Date.now()
-        }
+        _pendingCommand: null,
+        _commandTimestamp: null,
+        ...(commandResult ? {
+          _lastCommandResult: {
+            ...commandResult,
+            timestamp: Date.now()
+          }
+        } : {})
       });
     }
   }, [session?.game_state?._commandTimestamp]);
