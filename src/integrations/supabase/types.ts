@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_sessions: {
+        Row: {
+          created_at: string | null
+          game_mode: string | null
+          game_state: Json | null
+          host_id: string | null
+          id: string
+          is_active: boolean | null
+          session_code: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          game_mode?: string | null
+          game_state?: Json | null
+          host_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          session_code: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          game_mode?: string | null
+          game_state?: Json | null
+          host_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          session_code?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       game_settings: {
         Row: {
           id: string
