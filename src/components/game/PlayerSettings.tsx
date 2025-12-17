@@ -1,20 +1,39 @@
 import { useState, useEffect } from 'react';
-import { Settings, Volume2, VolumeX, Sparkles, X } from 'lucide-react';
+import { Settings, Volume2, VolumeX, Sparkles, X, Undo2, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { useAuth } from '@/hooks/useAuth';
+import { Player } from '@/types/game';
 
 interface PlayerSettingsProps {
   effectsEnabled: boolean;
   onEffectsChange: (enabled: boolean) => void;
   showEndGame?: boolean;
   onEndGame?: () => void;
+  // Teacher controls
+  players?: Player[];
+  currentPlayer?: number;
+  onSwitchPlayer?: (playerId: number) => void;
+  canUndo?: boolean;
+  onUndo?: () => void;
+  isPlaying?: boolean;
 }
 
-export const PlayerSettings = ({ effectsEnabled, onEffectsChange, showEndGame, onEndGame }: PlayerSettingsProps) => {
+export const PlayerSettings = ({ 
+  effectsEnabled, 
+  onEffectsChange, 
+  showEndGame, 
+  onEndGame,
+  players,
+  currentPlayer,
+  onSwitchPlayer,
+  canUndo,
+  onUndo,
+  isPlaying
+}: PlayerSettingsProps) => {
   const { soundsEnabled } = useSounds();
   const { isAdmin } = useAuth();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(soundsEnabled);
@@ -72,6 +91,8 @@ export const PlayerSettings = ({ effectsEnabled, onEffectsChange, showEndGame, o
     }
   };
 
+  const showTeacherControls = isPlaying && players && onSwitchPlayer;
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -87,7 +108,7 @@ export const PlayerSettings = ({ effectsEnabled, onEffectsChange, showEndGame, o
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-52 p-3 bg-black/80 backdrop-blur-xl border-white/20"
+        className="w-64 p-3 bg-black/80 backdrop-blur-xl border-white/20"
         side="top"
         align="start"
       >
@@ -123,6 +144,54 @@ export const PlayerSettings = ({ effectsEnabled, onEffectsChange, showEndGame, o
               className="data-[state=checked]:bg-primary"
             />
           </div>
+
+          {/* Teacher Controls Section */}
+          {showTeacherControls && (
+            <div className="pt-3 mt-3 border-t border-white/10 space-y-3">
+              <div className="flex items-center gap-2 text-white/70">
+                <GraduationCap className="h-4 w-4" />
+                <span className="text-sm font-medium">Učitelské ovládání</span>
+              </div>
+              
+              {/* Undo button */}
+              {onUndo && (
+                <Button
+                  onClick={onUndo}
+                  variant="outline"
+                  size="sm"
+                  disabled={!canUndo}
+                  className="w-full bg-white/5 border-white/20 text-white/80 hover:bg-white/10 disabled:opacity-40"
+                >
+                  <Undo2 className="mr-2 h-4 w-4" />
+                  Vrátit krok
+                </Button>
+              )}
+              
+              {/* Switch player buttons */}
+              <div className="space-y-2">
+                <span className="text-xs text-white/50">Přepnout na hráče:</span>
+                <div className="flex gap-2">
+                  {players.map((player) => (
+                    <Button
+                      key={player.id}
+                      onClick={() => onSwitchPlayer(player.id)}
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPlayer === player.id}
+                      className="flex-1 text-xs px-2 py-1 border-2 disabled:opacity-40"
+                      style={{ 
+                        borderColor: player.color,
+                        backgroundColor: currentPlayer === player.id ? player.color + '40' : 'transparent',
+                        color: player.color
+                      }}
+                    >
+                      {player.name.substring(0, 6)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* End Game button - conditionally shown */}
           {showEndGame && onEndGame && (

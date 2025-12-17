@@ -80,10 +80,6 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
                 `}
               >
                 {letter}
-                {/* Show dot indicator for used letters */}
-                {isUsed && (
-                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full" />
-                )}
                 {hasVariants && !isUsed && (
                   <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 text-[8px] md:text-[9px] bg-primary text-primary-foreground rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center font-semibold shadow-lg">
                     +{variants.length - 1}
@@ -95,7 +91,7 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
         </div>
         
         <p className="relative text-center text-[10px] md:text-xs text-white/40 mt-3 md:mt-4 tracking-wide">
-          Písmena s háčky a čárkami jsou sloučena • <span className="text-red-400">●</span> = už řečeno (ztráta tahu!)
+          Písmena s háčky a čárkami jsou sloučena
         </p>
       </div>
     </div>

@@ -83,6 +83,61 @@ const Index = () => {
   const [effectsEnabled, setEffectsEnabled] = useState(true);
   const [showGuessDialog, setShowGuessDialog] = useState(false);
   const [showEndGameDialog, setShowEndGameDialog] = useState(false);
+  
+  // Game history for undo functionality (max 10 states)
+  const [gameHistory, setGameHistory] = useState<Array<{
+    gameState: GameState;
+    showLetterSelector: boolean;
+    currentWheelValue: number;
+  }>>([]);
+
+  // Save current state to history before making changes
+  const saveStateToHistory = () => {
+    setGameHistory(prev => {
+      const newHistory = [...prev, {
+        gameState: {
+          ...gameState,
+          puzzle: {
+            ...gameState.puzzle,
+            revealedLetters: new Set(gameState.puzzle.revealedLetters),
+          },
+          usedLetters: new Set(gameState.usedLetters),
+          players: gameState.players.map(p => ({ ...p })),
+        },
+        showLetterSelector,
+        currentWheelValue,
+      }];
+      // Keep only last 10 states
+      return newHistory.slice(-10);
+    });
+  };
+
+  // Undo to previous state
+  const handleUndo = () => {
+    if (gameHistory.length === 0) return;
+    
+    const lastState = gameHistory[gameHistory.length - 1];
+    setGameState({
+      ...lastState.gameState,
+      puzzle: {
+        ...lastState.gameState.puzzle,
+        revealedLetters: new Set(lastState.gameState.puzzle.revealedLetters),
+      },
+      usedLetters: new Set(lastState.gameState.usedLetters),
+    });
+    setShowLetterSelector(lastState.showLetterSelector);
+    setCurrentWheelValue(lastState.currentWheelValue);
+    setShowResult(false);
+    setGameHistory(prev => prev.slice(0, -1));
+  };
+
+  // Switch to specific player
+  const handleSwitchPlayer = (playerId: number) => {
+    saveStateToHistory();
+    setGameState(prev => ({ ...prev, currentPlayer: playerId }));
+    setShowLetterSelector(false);
+    setShowResult(false);
+  };
 
   // Mode selection handlers
   const handleSelectRandom = () => {
@@ -236,6 +291,8 @@ const Index = () => {
   };
 
   const handleLetterSelect = (letter: string) => {
+    saveStateToHistory();
+    
     const upperLetter = letter.toUpperCase();
     const variants = getLetterVariants(upperLetter);
     
@@ -310,14 +367,21 @@ const Index = () => {
   };
 
   const handleGuessPhrase = (guess: string) => {
+    saveStateToHistory();
+    
     const correctPhrase = gameState.puzzle.phrase.toUpperCase().trim();
     const playerGuess = guess.toUpperCase().trim();
 
     if (playerGuess === correctPhrase) {
-      // Correct guess - bonus points!
-      const bonusPoints = 5000;
+      // Calculate bonus: 1000 points per unique unrevealed letter
+      const allLetters = correctPhrase.split('').filter(char => /[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/.test(char));
+      const uniqueUnrevealedLetters = new Set(
+        allLetters.filter(letter => !gameState.puzzle.revealedLetters.has(letter))
+      );
+      const bonusPoints = uniqueUnrevealedLetters.size * 1000;
+      
       playWinSound();
-      toast.success(`🎉 SPRÁVNĚ! "${correctPhrase}" - Bonus ${bonusPoints} bodů!`, {
+      toast.success(`🎉 SPRÁVNĚ! Bonus 1000 × ${uniqueUnrevealedLetters.size} = ${bonusPoints} bodů!`, {
         duration: 5000,
       });
 
@@ -618,6 +682,12 @@ const Index = () => {
         onEffectsChange={setEffectsEnabled}
         showEndGame={gameMode === 'random' && !gameState.isSpinning && !showResult}
         onEndGame={() => setShowEndGameDialog(true)}
+        players={gameState.players}
+        currentPlayer={gameState.currentPlayer}
+        onSwitchPlayer={handleSwitchPlayer}
+        canUndo={gameHistory.length > 0}
+        onUndo={handleUndo}
+        isPlaying={gamePhase === 'playing'}
       />
 
       {/* Seasonal Effects Background */}
