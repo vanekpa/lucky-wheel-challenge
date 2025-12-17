@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Sparkles, Trophy, Wifi, WifiOff } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Sparkles, Trophy, Wifi, WifiOff, Shuffle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
@@ -222,20 +222,36 @@ const RemoteController = () => {
         {/* Token placement mode */}
         {isPlacingTokens && (
           <div className="bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 rounded-2xl p-4 mb-4 shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                <Target className="w-6 h-6 text-primary" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                  <Target className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-white text-lg">Umístěte žeton</p>
+                  <p className="text-sm text-slate-400">Vyberte segment nebo náhodně</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-white text-lg">Umístěte žeton</p>
-                <p className="text-sm text-slate-400">Vyberte segment na kole</p>
-              </div>
+              {/* Random placement button */}
+              <button
+                onClick={() => {
+                  vibrate.success();
+                  const randomIdx = Math.floor(Math.random() * 32);
+                  handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: randomIdx });
+                  toast.success(`Žeton umístěn na segment ${randomIdx + 1}`, { duration: 1500 });
+                }}
+                className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-amber-500/30 active:scale-95 transition-all"
+              >
+                <Shuffle className="w-4 h-4" />
+                Náhodně
+              </button>
             </div>
             <div className="grid grid-cols-8 gap-1.5">
               {wheelSegments.map((segment, idx) => (
                 <Button
                   key={idx}
                   onClick={() => {
+                    vibrate.tap();
                     handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: idx });
                   }}
                   variant="outline"
