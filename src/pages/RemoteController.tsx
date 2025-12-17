@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
+import { useGameSession, type GameCommand, type ConnectionStatus } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, Shuffle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, WifiOff, Shuffle, RefreshCw, AlertTriangle, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
@@ -12,6 +12,8 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
 const MIN_SCORE_FOR_VOWELS = 1000;
 const POLL_INTERVAL_MS = 3000;
+const HOST_TIMEOUT_MS = 10000; // Host is considered offline after 10s
+const SESSION_WARNING_MS = 55 * 60 * 1000; // Warn 5min before 60min expiry
 
 // Vibration patterns
 const vibrate = {
@@ -19,17 +21,33 @@ const vibrate = {
   error: () => navigator.vibrate?.([100, 50, 100, 50, 100]),
   spin: () => navigator.vibrate?.([100]),
   letter: () => navigator.vibrate?.([30]),
-  tap: () => navigator.vibrate?.([20])
+  tap: () => navigator.vibrate?.([20]),
+  bankrot: () => navigator.vibrate?.([200, 100, 200, 100, 200]),
+  nic: () => navigator.vibrate?.([150, 50, 150])
 };
 
 const RemoteController = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { session, isLoading, error, sendCommand, joinSession } = useGameSession();
+  const { session, isLoading, error, sendCommand, joinSession, connectionStatus, lastSyncTime } = useGameSession();
+  
+  // UI State
   const [guessInput, setGuessInput] = useState('');
   const [showGuessInput, setShowGuessInput] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Optimistic UI state
+  const [pendingCommand, setPendingCommand] = useState<string | null>(null);
+  const [commandFeedback, setCommandFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  
+  // Host status
+  const [hostOnline, setHostOnline] = useState(true);
+  
+  // Session expiry warning
+  const [sessionWarning, setSessionWarning] = useState(false);
+  
+  // Track last command result
+  const lastResultTimestampRef = useRef<number>(0);
 
   useEffect(() => {
     if (code && !session) {
@@ -37,14 +55,59 @@ const RemoteController = () => {
     }
   }, [code]);
 
-  // Update lastUpdate when session changes
+  // Check host heartbeat
   useEffect(() => {
-    if (session) {
-      setLastUpdate(new Date());
-    }
-  }, [session?.game_state]);
+    if (!session?.game_state?._hostHeartbeat) return;
+    
+    const checkHostStatus = () => {
+      const lastHeartbeat = session.game_state._hostHeartbeat || 0;
+      const now = Date.now();
+      setHostOnline(now - lastHeartbeat < HOST_TIMEOUT_MS);
+    };
+    
+    checkHostStatus();
+    const interval = setInterval(checkHostStatus, 2000);
+    return () => clearInterval(interval);
+  }, [session?.game_state?._hostHeartbeat]);
 
-  // Polling fallback - refetch session every 3 seconds
+  // Check session expiry
+  useEffect(() => {
+    if (!session?.created_at) return;
+    
+    const checkExpiry = () => {
+      const createdAt = new Date(session.created_at).getTime();
+      const now = Date.now();
+      const elapsed = now - createdAt;
+      
+      if (elapsed > SESSION_WARNING_MS && !sessionWarning) {
+        setSessionWarning(true);
+        toast.warning('Session vyprší za 5 minut!', { duration: 10000 });
+      }
+    };
+    
+    checkExpiry();
+    const interval = setInterval(checkExpiry, 30000);
+    return () => clearInterval(interval);
+  }, [session?.created_at, sessionWarning]);
+
+  // Handle command result feedback from host
+  useEffect(() => {
+    const result = session?.game_state?._lastCommandResult;
+    if (!result || result.timestamp <= lastResultTimestampRef.current) return;
+    
+    lastResultTimestampRef.current = result.timestamp;
+    
+    if (result.type === 'success') {
+      vibrate.success();
+    } else {
+      vibrate.error();
+    }
+    
+    setCommandFeedback({ type: result.type, message: result.message });
+    setTimeout(() => setCommandFeedback(null), 2000);
+  }, [session?.game_state?._lastCommandResult]);
+
+  // Polling fallback
   useEffect(() => {
     if (!session?.id) return;
 
@@ -57,7 +120,7 @@ const RemoteController = () => {
           .single();
         
         if (data && !fetchError) {
-          setLastUpdate(new Date());
+          // Data is synced via realtime, but this ensures we have latest
         }
       } catch (err) {
         console.error('Polling error:', err);
@@ -75,7 +138,6 @@ const RemoteController = () => {
     
     try {
       await joinSession(code);
-      setLastUpdate(new Date());
       toast.success('Synchronizováno', { duration: 1000 });
     } catch (err) {
       toast.error('Chyba synchronizace');
@@ -86,36 +148,93 @@ const RemoteController = () => {
 
   // Format last update time
   const formatLastUpdate = () => {
+    if (!lastSyncTime) return 'neznámý';
     const now = new Date();
-    const diff = Math.floor((now.getTime() - lastUpdate.getTime()) / 1000);
+    const diff = Math.floor((now.getTime() - lastSyncTime.getTime()) / 1000);
     if (diff < 5) return 'právě teď';
     if (diff < 60) return `před ${diff}s`;
     return `před ${Math.floor(diff / 60)}m`;
   };
 
-  const handleCommand = async (command: GameCommand) => {
+  // Get connection status indicator
+  const getConnectionIndicator = (): { color: string; icon: typeof Wifi; pulse: boolean } => {
+    switch (connectionStatus) {
+      case 'connected':
+        return { color: 'text-emerald-400', icon: Wifi, pulse: false };
+      case 'connecting':
+        return { color: 'text-amber-400', icon: Wifi, pulse: true };
+      case 'error':
+        return { color: 'text-red-400', icon: WifiOff, pulse: true };
+      default:
+        return { color: 'text-slate-400', icon: WifiOff, pulse: false };
+    }
+  };
+
+  // Command handlers with optimistic UI
+  const handleCommand = async (command: GameCommand, feedbackText?: string) => {
     vibrate.tap();
-    await sendCommand(command);
+    setPendingCommand(feedbackText || command.type);
+    
+    const result = await sendCommand(command);
+    
+    if (!result.success) {
+      vibrate.error();
+      setCommandFeedback({ type: 'error', message: result.error || 'Chyba příkazu' });
+      setTimeout(() => setCommandFeedback(null), 2000);
+    }
+    
+    setTimeout(() => setPendingCommand(null), 500);
   };
 
   const handleSpinCommand = async () => {
     vibrate.spin();
-    await sendCommand({ type: 'SPIN_WHEEL' });
+    setPendingCommand('SPIN');
+    
+    const result = await sendCommand({ type: 'SPIN_WHEEL' });
+    
+    if (!result.success) {
+      vibrate.error();
+      setCommandFeedback({ type: 'error', message: 'Nepodařilo se zatočit' });
+      setTimeout(() => setCommandFeedback(null), 2000);
+    }
+    
+    setTimeout(() => setPendingCommand(null), 500);
   };
 
   const handleLetterSelect = async (letter: string) => {
     vibrate.letter();
-    await sendCommand({ type: 'SELECT_LETTER', letter });
-    toast.success(`"${letter}"`, { duration: 1000 });
+    setPendingCommand(`LETTER_${letter}`);
+    
+    const result = await sendCommand({ type: 'SELECT_LETTER', letter });
+    
+    if (result.success) {
+      toast.success(`"${letter}"`, { duration: 1000 });
+    } else {
+      vibrate.error();
+      setCommandFeedback({ type: 'error', message: 'Chyba odeslání' });
+      setTimeout(() => setCommandFeedback(null), 2000);
+    }
+    
+    setTimeout(() => setPendingCommand(null), 500);
   };
 
   const handleGuessSubmit = async () => {
     if (guessInput.trim()) {
       vibrate.success();
-      await sendCommand({ type: 'GUESS_PHRASE', phrase: guessInput.trim() });
-      setGuessInput('');
-      setShowGuessInput(false);
-      toast.success('Odesláno');
+      setPendingCommand('GUESS');
+      
+      const result = await sendCommand({ type: 'GUESS_PHRASE', phrase: guessInput.trim() });
+      
+      if (result.success) {
+        setGuessInput('');
+        setShowGuessInput(false);
+        toast.success('Odesláno');
+      } else {
+        vibrate.error();
+        toast.error('Chyba odeslání');
+      }
+      
+      setTimeout(() => setPendingCommand(null), 500);
     }
   };
 
@@ -144,18 +263,29 @@ const RemoteController = () => {
   const gameState = session.game_state;
   const currentPlayer = gameState?.players?.[gameState?.currentPlayer];
   const isPlacingTokens = gameState?.isPlacingTokens;
-  const isSpinning = gameState?.isSpinning;
+  const isSpinning = gameState?.isSpinning || pendingCommand === 'SPIN';
   const showLetterSelector = gameState?.showLetterSelector;
   const isGuessingPhrase = gameState?.isGuessingPhrase || false;
-  // Cannot spin when guessing phrase - player committed to guessing
-  const canSpin = !isSpinning && !isPlacingTokens && !showLetterSelector && !isGuessingPhrase;
+  const canSpin = !isSpinning && !isPlacingTokens && !showLetterSelector && !isGuessingPhrase && !pendingCommand;
   const playerColor = currentPlayer?.color || '#6366f1';
   const playerScore = currentPlayer?.score || 0;
   const vowelsForceUnlocked = gameState?.vowelsForceUnlocked || false;
   const vowelsUnlocked = vowelsForceUnlocked || playerScore >= MIN_SCORE_FOR_VOWELS;
+  
+  // Puzzle preview
+  const puzzle = gameState?.puzzle;
+  const puzzlePreview = puzzle ? {
+    phrase: puzzle.phrase,
+    revealed: new Set(puzzle.revealedLetters || []),
+    category: puzzle.category
+  } : null;
+
+  const connectionIndicator = getConnectionIndicator();
+  const ConnectionIcon = connectionIndicator.icon;
 
   // Determine current action state
   const getActionState = () => {
+    if (pendingCommand) return { text: '⏳ Odesílám...', color: 'bg-slate-500/20 text-slate-400 border-slate-500/40' };
     if (isPlacingTokens) return { text: '🎯 Umístěte žeton', color: 'bg-primary/20 text-primary border-primary/40' };
     if (isSpinning) return { text: '🎡 Kolo se točí...', color: 'bg-amber-500/20 text-amber-400 border-amber-500/40' };
     if (isGuessingPhrase) return { text: '💭 Hádání tajenky...', color: 'bg-purple-500/20 text-purple-400 border-purple-500/40' };
@@ -179,6 +309,20 @@ const RemoteController = () => {
           <span className="text-white font-medium">Hádat tajenku</span>
         </div>
         
+        {/* Mini puzzle hint */}
+        {puzzlePreview && (
+          <div className="bg-slate-800/60 rounded-lg p-3 mb-4">
+            <p className="text-[10px] text-slate-500 mb-1">Nápověda ({puzzlePreview.category}):</p>
+            <p className="text-white font-mono text-sm tracking-wider">
+              {puzzlePreview.phrase.split('').map((char, i) => {
+                if (char === ' ') return ' ';
+                if (!/[A-ZÁ-Ža-zá-ž]/i.test(char)) return char;
+                return puzzlePreview.revealed.has(char.toUpperCase()) ? char : '_';
+              }).join('')}
+            </p>
+          </div>
+        )}
+        
         <div className="flex-1 flex flex-col justify-center gap-4 max-w-sm mx-auto w-full">
           <input
             type="text"
@@ -188,8 +332,13 @@ const RemoteController = () => {
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-4 text-white text-lg"
             autoFocus
           />
-          <Button onClick={handleGuessSubmit} className="py-6 text-lg" style={{ backgroundColor: playerColor }}>
-            Odeslat tip
+          <Button 
+            onClick={handleGuessSubmit} 
+            className="py-6 text-lg" 
+            style={{ backgroundColor: playerColor }}
+            disabled={!!pendingCommand}
+          >
+            {pendingCommand === 'GUESS' ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Odeslat tip'}
           </Button>
         </div>
       </div>
@@ -201,6 +350,25 @@ const RemoteController = () => {
       className="h-screen flex flex-col overflow-hidden"
       style={{ background: `linear-gradient(180deg, ${playerColor}15 0%, #0f172a 50%)` }}
     >
+      {/* Command feedback overlay */}
+      {commandFeedback && (
+        <div className={cn(
+          "absolute inset-0 z-50 flex items-center justify-center pointer-events-none",
+          commandFeedback.type === 'success' ? "bg-emerald-500/10" : "bg-red-500/10"
+        )}>
+          <div className={cn(
+            "rounded-full p-4",
+            commandFeedback.type === 'success' ? "bg-emerald-500" : "bg-red-500"
+          )}>
+            {commandFeedback.type === 'success' ? (
+              <Check className="w-8 h-8 text-white" />
+            ) : (
+              <X className="w-8 h-8 text-white" />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Compact Header */}
       <header className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50" style={{ backgroundColor: `${playerColor}10` }}>
         <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => navigate('/')}>
@@ -208,9 +376,17 @@ const RemoteController = () => {
         </Button>
         
         <div className="flex items-center gap-2">
-          {/* Sync indicator */}
+          {/* Host status */}
+          {!hostOnline && (
+            <div className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+              <AlertTriangle className="w-3 h-3" />
+              <span>Host offline</span>
+            </div>
+          )}
+          
+          {/* Connection indicator */}
           <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-            <Wifi className="w-3 h-3 text-emerald-400" />
+            <ConnectionIcon className={cn("w-3 h-3", connectionIndicator.color, connectionIndicator.pulse && "animate-pulse")} />
             <span>{formatLastUpdate()}</span>
           </div>
           
@@ -235,10 +411,31 @@ const RemoteController = () => {
         <div className="font-bold text-lg text-white">{playerScore}</div>
       </header>
 
+      {/* Session expiry warning */}
+      {sessionWarning && (
+        <div className="bg-amber-500/20 border-b border-amber-500/40 px-3 py-1.5 text-center">
+          <span className="text-[11px] text-amber-400 font-medium">⚠️ Session vyprší brzy!</span>
+        </div>
+      )}
+
       {/* Action State Banner */}
       <div className={cn("px-3 py-2 text-center text-sm font-medium border-b", actionState.color)}>
         {actionState.text}
       </div>
+
+      {/* Mini Puzzle Preview */}
+      {puzzlePreview && !isPlacingTokens && (
+        <div className="px-3 py-2 bg-slate-800/40 border-b border-slate-700/30">
+          <p className="text-[9px] text-slate-500 text-center mb-0.5">{puzzlePreview.category}</p>
+          <p className="text-white font-mono text-[11px] text-center tracking-wide truncate">
+            {puzzlePreview.phrase.split('').map((char, i) => {
+              if (char === ' ') return '  ';
+              if (!/[A-ZÁ-Ža-zá-ž]/i.test(char)) return char;
+              return puzzlePreview.revealed.has(char.toUpperCase()) ? char : '·';
+            }).join('')}
+          </p>
+        </div>
+      )}
 
       {/* Main Content - No scroll */}
       <main className="flex-1 flex flex-col p-3 gap-2 overflow-hidden">
@@ -259,9 +456,10 @@ const RemoteController = () => {
                     .map((seg, idx) => ({ seg, idx }))
                     .filter(({ seg }) => seg.value !== 'BANKROT' && seg.value !== 'NIČ');
                   const randomPick = validSegments[Math.floor(Math.random() * validSegments.length)];
-                  handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: randomPick.idx });
+                  handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: randomPick.idx }, 'TOKEN');
                 }}
-                className="flex items-center gap-1.5 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold"
+                disabled={!!pendingCommand}
+                className="flex items-center gap-1.5 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
               >
                 <Shuffle className="w-3 h-3" />
                 Náhodně
@@ -271,8 +469,9 @@ const RemoteController = () => {
               {wheelSegments.map((segment, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: idx })}
-                  className="aspect-square text-[10px] font-bold rounded transition-all active:scale-90"
+                  onClick={() => handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: idx }, 'TOKEN')}
+                  disabled={!!pendingCommand}
+                  className="aspect-square text-[10px] font-bold rounded transition-all active:scale-90 disabled:opacity-50"
                   style={{ backgroundColor: `${segment.color}40`, border: `1px solid ${segment.color}`, color: '#fff' }}
                 >
                   {idx + 1}
@@ -287,7 +486,7 @@ const RemoteController = () => {
           onClick={handleSpinCommand}
           disabled={!canSpin}
           className={cn(
-            "rounded-2xl py-5 flex flex-col items-center justify-center gap-1 transition-all active:scale-95",
+            "rounded-2xl py-5 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 relative overflow-hidden",
             !canSpin && "opacity-50"
           )}
           style={{ 
@@ -295,6 +494,9 @@ const RemoteController = () => {
             boxShadow: canSpin ? `0 8px 30px ${playerColor}40` : undefined
           }}
         >
+          {pendingCommand === 'SPIN' && (
+            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+          )}
           <RotateCcw className={cn("w-8 h-8 text-white", isSpinning && "animate-spin")} />
           <span className="text-2xl font-black text-white">{isSpinning ? 'TOČÍ SE...' : 'ZATOČIT'}</span>
           <span className="text-sm text-white/70">{currentPlayer?.name}</span>
@@ -305,23 +507,23 @@ const RemoteController = () => {
         <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => setShowGuessInput(true)}
-            disabled={isSpinning || isPlacingTokens}
+            disabled={isSpinning || isPlacingTokens || !!pendingCommand}
             className="bg-slate-800/60 border border-slate-700/50 rounded-xl py-3 flex flex-col items-center gap-1 active:scale-95 disabled:opacity-40"
           >
             <MessageSquare className="w-5 h-5 text-primary" />
             <span className="text-[10px] font-medium text-white">Tajenka</span>
           </button>
           <button
-            onClick={() => handleCommand({ type: 'NEXT_PLAYER' })}
-            disabled={isSpinning}
+            onClick={() => handleCommand({ type: 'NEXT_PLAYER' }, 'NEXT')}
+            disabled={isSpinning || !!pendingCommand}
             className="bg-slate-800/60 border border-slate-700/50 rounded-xl py-3 flex flex-col items-center gap-1 active:scale-95 disabled:opacity-40"
           >
             <SkipForward className="w-5 h-5 text-orange-400" />
             <span className="text-[10px] font-medium text-white">Přeskočit</span>
           </button>
           <button
-            onClick={() => handleCommand({ type: 'UNDO' })}
-            disabled={isSpinning}
+            onClick={() => handleCommand({ type: 'UNDO' }, 'UNDO')}
+            disabled={isSpinning || !!pendingCommand}
             className="bg-slate-800/60 border border-slate-700/50 rounded-xl py-3 flex flex-col items-center gap-1 active:scale-95 disabled:opacity-40"
           >
             <Undo2 className="w-5 h-5 text-slate-400" />
@@ -334,16 +536,18 @@ const RemoteController = () => {
           <p className="text-[10px] text-slate-500 text-center mb-1">Vyberte písmeno</p>
           <div className="flex-1 grid grid-cols-7 gap-1 content-center">
             {LETTERS.map(letter => {
+              const isPending = pendingCommand === `LETTER_${letter}`;
               return (
                 <button
                   key={letter}
                   onClick={() => handleLetterSelect(letter)}
-                  disabled={isSpinning || isPlacingTokens || !showLetterSelector}
+                  disabled={isSpinning || isPlacingTokens || !showLetterSelector || !!pendingCommand}
                   className={cn(
-                    "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center",
+                    "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center relative",
                     "border text-white bg-slate-700/60 border-slate-600/40",
-                    showLetterSelector && "active:scale-90 active:bg-primary",
-                    !showLetterSelector && "opacity-30"
+                    showLetterSelector && !pendingCommand && "active:scale-90 active:bg-primary",
+                    !showLetterSelector && "opacity-30",
+                    isPending && "bg-primary animate-pulse"
                   )}
                 >
                   {letter}

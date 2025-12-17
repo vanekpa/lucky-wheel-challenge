@@ -27,6 +27,8 @@ export interface GameSessionState {
   isGuessingPhrase?: boolean;
   _pendingCommand?: GameCommand;
   _commandTimestamp?: number;
+  _hostHeartbeat?: number;
+  _lastCommandResult?: { type: 'success' | 'error'; message: string; timestamp: number };
 }
 
 export interface GameSession {
@@ -40,15 +42,19 @@ export interface GameSession {
   updated_at: string;
 }
 
+export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
+
 interface UseGameSessionReturn {
   session: GameSession | null;
   isHost: boolean;
   isLoading: boolean;
   error: string | null;
+  connectionStatus: ConnectionStatus;
+  lastSyncTime: Date | null;
   createSession: (initialState?: Partial<GameSessionState>) => Promise<string | null>;
   joinSession: (code: string) => Promise<boolean>;
   updateGameState: (state: Partial<GameSessionState>) => Promise<void>;
-  sendCommand: (command: GameCommand) => Promise<void>;
+  sendCommand: (command: GameCommand) => Promise<{ success: boolean; error?: string }>;
   endSession: () => Promise<void>;
 }
 
@@ -79,13 +85,22 @@ const defaultGameState: GameSessionState = {
   teacherPuzzles: []
 };
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 500;
+const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
+
 export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
   const [session, setSession] = useState<GameSession | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  
   const channelRef = useRef<RealtimeChannel | null>(null);
   const hostIdRef = useRef<string | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate a unique host ID for this browser session - synchronously
   const getHostId = useCallback(() => {
@@ -100,11 +115,36 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
     return hostId;
   }, []);
 
-  // Subscribe to realtime updates
+  // Retry wrapper for commands
+  const withRetry = useCallback(async <T>(
+    operation: () => Promise<T>,
+    maxRetries: number = MAX_RETRIES
+  ): Promise<{ success: boolean; data?: T; error?: string }> => {
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const data = await operation();
+        return { success: true, data };
+      } catch (err) {
+        lastError = err as Error;
+        console.warn(`Attempt ${attempt + 1} failed:`, err);
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (attempt + 1)));
+        }
+      }
+    }
+    
+    return { success: false, error: lastError?.message || 'Unknown error' };
+  }, []);
+
+  // Subscribe to realtime updates with auto-reconnect
   const subscribeToSession = useCallback((sessionId: string) => {
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
     }
+
+    setConnectionStatus('connecting');
 
     const channel = supabase
       .channel(`session-${sessionId}`)
@@ -123,9 +163,37 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
             ...newSession,
             game_state: newSession.game_state as GameSessionState
           });
+          setLastSyncTime(new Date());
+          setConnectionStatus('connected');
+          reconnectAttemptRef.current = 0;
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('connected');
+          reconnectAttemptRef.current = 0;
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setConnectionStatus('error');
+          // Auto-reconnect with exponential backoff
+          const attemptReconnect = () => {
+            if (reconnectAttemptRef.current < RECONNECT_DELAYS.length) {
+              const delay = RECONNECT_DELAYS[reconnectAttemptRef.current];
+              console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptRef.current + 1})`);
+              reconnectTimeoutRef.current = setTimeout(() => {
+                reconnectAttemptRef.current++;
+                subscribeToSession(sessionId);
+              }, delay);
+            } else {
+              setConnectionStatus('disconnected');
+              setError('Spojení bylo ztraceno. Obnovte stránku.');
+            }
+          };
+          attemptReconnect();
+        } else if (status === 'CLOSED') {
+          setConnectionStatus('disconnected');
+        }
+      });
 
     channelRef.current = channel;
   }, []);
@@ -135,6 +203,9 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
       }
     };
   }, []);
@@ -187,6 +258,7 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
 
       setSession(newSession as GameSession);
       setIsHost(true);
+      setLastSyncTime(new Date());
       subscribeToSession(data.id);
 
       console.log('Session created:', code);
@@ -226,6 +298,7 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
 
       setSession(joinedSession as GameSession);
       setIsHost(data.host_id === getHostId());
+      setLastSyncTime(new Date());
       subscribeToSession(data.id);
 
       console.log('Joined session:', normalizedCode);
@@ -260,20 +333,19 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
 
       // Optimistic update
       setSession(prev => prev ? { ...prev, game_state: newState } : null);
+      setLastSyncTime(new Date());
     } catch (err) {
       console.error('Error updating game state:', err);
     }
   }, [session]);
 
-  const sendCommand = useCallback(async (command: GameCommand): Promise<void> => {
+  const sendCommand = useCallback(async (command: GameCommand): Promise<{ success: boolean; error?: string }> => {
     if (!session) {
       console.error('No active session');
-      return;
+      return { success: false, error: 'Žádná aktivní session' };
     }
 
-    // Commands are processed by updating ONLY the command fields
-    // This prevents overwriting the host's game state with stale data
-    try {
+    const result = await withRetry(async () => {
       // First fetch the current state to avoid race conditions
       const { data: currentSession, error: fetchError } = await supabase
         .from('game_sessions')
@@ -299,10 +371,15 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
 
       if (updateError) throw updateError;
       console.log('Command sent:', command);
-    } catch (err) {
-      console.error('Error sending command:', err);
+      return true;
+    });
+
+    if (result.success) {
+      setLastSyncTime(new Date());
     }
-  }, [session]);
+
+    return { success: result.success, error: result.error };
+  }, [session, withRetry]);
 
   const endSession = useCallback(async (): Promise<void> => {
     if (!session) return;
@@ -321,6 +398,7 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
 
       setSession(null);
       setIsHost(false);
+      setConnectionStatus('disconnected');
     } catch (err) {
       console.error('Error ending session:', err);
     }
@@ -331,6 +409,8 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
     isHost,
     isLoading,
     error,
+    connectionStatus,
+    lastSyncTime,
     createSession,
     joinSession,
     updateGameState,
