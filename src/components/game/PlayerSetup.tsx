@@ -49,7 +49,7 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
     else setLocalSoundsEnabled(soundsEnabled);
     
     if (savedEffects !== null) setEffectsEnabled(savedEffects === 'true');
-    if (savedTimer !== null) setTurnTimer(parseInt(savedTimer) || 0);
+    if (savedTimer !== null) setTurnTimer(parseInt(savedTimer) || 10);
   }, [soundsEnabled]);
 
   // Sync sounds globally
@@ -211,6 +211,7 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">Vypnuto</SelectItem>
+                  <SelectItem value="10">10 sekund</SelectItem>
                   <SelectItem value="15">15 sekund</SelectItem>
                   <SelectItem value="20">20 sekund</SelectItem>
                   <SelectItem value="30">30 sekund</SelectItem>
