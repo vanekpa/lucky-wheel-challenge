@@ -170,6 +170,10 @@ const Index = () => {
   useEffect(() => {
     if (!activeSessionCode || !session) return;
     
+    // Get existing pending command from session to preserve it during sync
+    const existingPendingCommand = session.game_state?._pendingCommand;
+    const existingCommandTimestamp = session.game_state?._commandTimestamp;
+    
     // Convert Sets to Arrays for JSON serialization
     const serializableState = {
       currentPlayer: gameState.currentPlayer,
@@ -187,7 +191,12 @@ const Index = () => {
       gameMode,
       vowelsForceUnlocked,
       isGuessingPhrase: showGuessDialog,
-      _hostHeartbeat: Date.now()
+      _hostHeartbeat: Date.now(),
+      // Preserve pending command to prevent race condition
+      ...(existingPendingCommand && existingCommandTimestamp && !processedCommandsRef.current.has(existingCommandTimestamp) ? {
+        _pendingCommand: existingPendingCommand,
+        _commandTimestamp: existingCommandTimestamp
+      } : {})
     };
     
     updateGameState(serializableState);
@@ -849,40 +858,65 @@ const Index = () => {
     
     console.log('Processing remote command:', command);
     
+    let commandResult: { type: 'success' | 'error'; message: string } | null = null;
+    
     switch (command.type) {
       case 'SPIN_WHEEL':
         if (!gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
           handleSpin();
+          commandResult = { type: 'success', message: 'Kolo se točí!' };
+        } else {
+          commandResult = { type: 'error', message: 'Nelze točit' };
         }
         break;
       case 'SELECT_LETTER':
         if (showLetterSelector && 'letter' in command) {
           handleLetterSelect(command.letter);
+          commandResult = { type: 'success', message: `Písmeno ${command.letter}` };
+        } else {
+          commandResult = { type: 'error', message: 'Nelze vybrat písmeno' };
         }
         break;
       case 'GUESS_PHRASE':
         if ('phrase' in command) {
           handleGuessPhrase(command.phrase);
+          commandResult = { type: 'success', message: 'Hádání odesláno' };
         }
         break;
       case 'NEXT_PLAYER':
         handleSwitchPlayer((gameState.currentPlayer + 1) % 3);
+        commandResult = { type: 'success', message: 'Další hráč' };
         break;
       case 'UNDO':
         handleUndo();
+        commandResult = { type: 'success', message: 'Krok vrácen' };
         break;
       case 'SET_PLAYER':
         if ('playerId' in command) {
           handleSwitchPlayer(command.playerId);
+          commandResult = { type: 'success', message: 'Hráč změněn' };
         }
         break;
       case 'PLACE_TOKEN':
         if ('segmentIndex' in command && isPlacingTokens) {
           handleTokenPlace(command.segmentIndex);
+          commandResult = { type: 'success', message: 'Žeton umístěn' };
+        } else {
+          commandResult = { type: 'error', message: 'Nelze umístit žeton' };
         }
         break;
     }
-  });
+    
+    // Send command result feedback to controller
+    if (commandResult && activeSessionCode && session) {
+      updateGameState({
+        _lastCommandResult: {
+          ...commandResult,
+          timestamp: Date.now()
+        }
+      });
+    }
+  }, [session?.game_state?._commandTimestamp]);
 
   // Keyboard shortcuts for desktop users
   useEffect(() => {

@@ -107,9 +107,9 @@ const RemoteController = () => {
     setTimeout(() => setCommandFeedback(null), 2000);
   }, [session?.game_state?._lastCommandResult]);
 
-  // Polling fallback
+  // Polling fallback - update local state when realtime fails
   useEffect(() => {
-    if (!session?.id) return;
+    if (!session?.id || !code) return;
 
     const pollInterval = setInterval(async () => {
       try {
@@ -119,8 +119,15 @@ const RemoteController = () => {
           .eq('id', session.id)
           .single();
         
-        if (data && !fetchError) {
-          // Data is synced via realtime, but this ensures we have latest
+        if (data && !fetchError && data.game_state) {
+          // Check if data is newer than what we have
+          const remoteHeartbeat = (data.game_state as any)?._hostHeartbeat || 0;
+          const localHeartbeat = (session.game_state as any)?._hostHeartbeat || 0;
+          
+          if (remoteHeartbeat > localHeartbeat) {
+            // Re-join to refresh the entire session state
+            await joinSession(code);
+          }
         }
       } catch (err) {
         console.error('Polling error:', err);
@@ -128,7 +135,7 @@ const RemoteController = () => {
     }, POLL_INTERVAL_MS);
 
     return () => clearInterval(pollInterval);
-  }, [session?.id]);
+  }, [session?.id, code, joinSession]);
 
   // Manual refresh
   const handleRefresh = useCallback(async () => {
