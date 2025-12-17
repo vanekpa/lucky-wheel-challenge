@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, Shuffle } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, Shuffle, Lock, Unlock } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const VOWELS = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
+const MIN_SCORE_FOR_VOWELS = 1000;
 
 // Vibration patterns
 const vibrate = {
@@ -83,8 +85,21 @@ const RemoteController = () => {
   const currentPlayer = gameState?.players?.[gameState?.currentPlayer];
   const isPlacingTokens = gameState?.isPlacingTokens;
   const isSpinning = gameState?.isSpinning;
-  const canSpin = !isSpinning && !isPlacingTokens;
+  const showLetterSelector = gameState?.showLetterSelector;
+  const canSpin = !isSpinning && !isPlacingTokens && !showLetterSelector;
   const playerColor = currentPlayer?.color || '#6366f1';
+  const playerScore = currentPlayer?.score || 0;
+  const vowelsUnlocked = playerScore >= MIN_SCORE_FOR_VOWELS;
+
+  // Determine current action state
+  const getActionState = () => {
+    if (isPlacingTokens) return { text: '🎯 Umístěte žeton', color: 'bg-primary/20 text-primary border-primary/40' };
+    if (isSpinning) return { text: '🎡 Kolo se točí...', color: 'bg-amber-500/20 text-amber-400 border-amber-500/40' };
+    if (showLetterSelector) return { text: '🔤 Vyberte písmeno!', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' };
+    return { text: '▶️ Můžete zatočit', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40' };
+  };
+
+  const actionState = getActionState();
 
   // Guess input view
   if (showGuessInput) {
@@ -139,8 +154,13 @@ const RemoteController = () => {
           </div>
         </div>
 
-        <div className="font-bold text-lg text-white">{currentPlayer?.score || 0}</div>
+        <div className="font-bold text-lg text-white">{playerScore}</div>
       </header>
+
+      {/* Action State Banner */}
+      <div className={cn("px-3 py-2 text-center text-sm font-medium border-b", actionState.color)}>
+        {actionState.text}
+      </div>
 
       {/* Main Content - No scroll */}
       <main className="flex-1 flex flex-col p-3 gap-2 overflow-hidden">
@@ -198,6 +218,26 @@ const RemoteController = () => {
           <span className="text-sm text-white/70">{currentPlayer?.name}</span>
         </button>
 
+        {/* Vowel status indicator */}
+        <div className={cn(
+          "flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium",
+          vowelsUnlocked 
+            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+            : "bg-red-500/20 text-red-400 border border-red-500/30"
+        )}>
+          {vowelsUnlocked ? (
+            <>
+              <Unlock className="w-3.5 h-3.5" />
+              <span>Samohlásky odemčeny</span>
+            </>
+          ) : (
+            <>
+              <Lock className="w-3.5 h-3.5" />
+              <span>Samohlásky: ještě {MIN_SCORE_FOR_VOWELS - playerScore} bodů</span>
+            </>
+          )}
+        </div>
+
         {/* Quick actions row */}
         <div className="grid grid-cols-3 gap-2">
           <button
@@ -230,20 +270,31 @@ const RemoteController = () => {
         <div className="flex-1 bg-slate-800/30 rounded-xl p-2 flex flex-col min-h-0">
           <p className="text-[10px] text-slate-500 text-center mb-1">Vyberte písmeno</p>
           <div className="flex-1 grid grid-cols-7 gap-1 content-center">
-            {LETTERS.map(letter => (
-              <button
-                key={letter}
-                onClick={() => handleLetterSelect(letter)}
-                disabled={isSpinning || isPlacingTokens}
-                className={cn(
-                  "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center",
-                  "bg-slate-700/60 border border-slate-600/40 text-white",
-                  "active:scale-90 active:bg-primary disabled:opacity-30"
-                )}
-              >
-                {letter}
-              </button>
-            ))}
+            {LETTERS.map(letter => {
+              const isVowel = VOWELS.has(letter);
+              const isLocked = isVowel && !vowelsUnlocked;
+              return (
+                <button
+                  key={letter}
+                  onClick={() => handleLetterSelect(letter)}
+                  disabled={isSpinning || isPlacingTokens || !showLetterSelector}
+                  className={cn(
+                    "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center relative",
+                    "border text-white",
+                    isLocked 
+                      ? "bg-red-900/40 border-red-700/50 opacity-60" 
+                      : "bg-slate-700/60 border-slate-600/40",
+                    showLetterSelector && !isLocked && "active:scale-90 active:bg-primary",
+                    !showLetterSelector && "opacity-30"
+                  )}
+                >
+                  {letter}
+                  {isLocked && (
+                    <Lock className="w-2.5 h-2.5 absolute top-0.5 right-0.5 text-red-400" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </main>
