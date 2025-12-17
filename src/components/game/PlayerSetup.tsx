@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@/types/game';
-import { Sparkles, Users, Play } from 'lucide-react';
+import { Play, Volume2, VolumeX, Sparkles, Settings, Timer } from 'lucide-react';
+import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
+import { useTurnTimer } from '@/hooks/useTurnTimer';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PlayerSetupProps {
   onComplete: (players: Player[]) => void;
@@ -17,8 +23,6 @@ const PRESET_COLORS = [
   { hex: '#a55eea', name: 'Fialová' },
   { hex: '#26de81', name: 'Zelená' },
   { hex: '#fd79a8', name: 'Růžová' },
-  { hex: '#00cec9', name: 'Azurová' },
-  { hex: '#fdcb6e', name: 'Meruňková' },
 ];
 
 export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
@@ -29,8 +33,48 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
   ]);
   const [focusedPlayer, setFocusedPlayer] = useState<number | null>(null);
 
+  // Settings state
+  const { soundsEnabled } = useSounds();
+  const { turnTimer, setTurnTimer } = useTurnTimer();
+  const [localSoundsEnabled, setLocalSoundsEnabled] = useState(true);
+  const [effectsEnabled, setEffectsEnabled] = useState(true);
+
+  // Load settings from localStorage
+  useEffect(() => {
+    const savedSounds = localStorage.getItem('sounds_enabled');
+    const savedEffects = localStorage.getItem('effects_enabled');
+    const savedTimer = localStorage.getItem('turn_timer');
+    
+    if (savedSounds !== null) setLocalSoundsEnabled(savedSounds === 'true');
+    else setLocalSoundsEnabled(soundsEnabled);
+    
+    if (savedEffects !== null) setEffectsEnabled(savedEffects === 'true');
+    if (savedTimer !== null) setTurnTimer(parseInt(savedTimer) || 0);
+  }, [soundsEnabled]);
+
+  // Sync sounds globally
+  useEffect(() => {
+    setSoundsEnabledGlobal(localSoundsEnabled);
+  }, [localSoundsEnabled]);
+
   const updatePlayer = (index: number, field: 'name' | 'color', value: string) => {
     setPlayers(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  };
+
+  const handleSoundsToggle = (enabled: boolean) => {
+    setLocalSoundsEnabled(enabled);
+    localStorage.setItem('sounds_enabled', enabled.toString());
+  };
+
+  const handleEffectsToggle = (enabled: boolean) => {
+    setEffectsEnabled(enabled);
+    localStorage.setItem('effects_enabled', enabled.toString());
+  };
+
+  const handleTimerChange = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    setTurnTimer(numValue);
+    localStorage.setItem('turn_timer', numValue.toString());
   };
 
   const handleStart = () => {
@@ -44,80 +88,46 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Animated background */}
+    <div className="min-h-screen flex items-center justify-center p-3 overflow-hidden">
+      {/* Simplified background */}
       <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-background">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(var(--secondary)/0.1),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--accent)/0.1),transparent_50%)]" />
-        
-        {/* Floating orbs */}
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full blur-3xl opacity-20 animate-pulse"
-            style={{
-              width: `${100 + i * 50}px`,
-              height: `${100 + i * 50}px`,
-              background: `hsl(${i * 60}, 70%, 50%)`,
-              left: `${10 + i * 15}%`,
-              top: `${20 + (i % 3) * 25}%`,
-              animationDelay: `${i * 0.5}s`,
-              animationDuration: `${3 + i}s`,
-            }}
-          />
-        ))}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.1),transparent_50%)]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-xl animate-fade-in">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
-            <h1 className="text-5xl md:text-6xl font-black tracking-tight">
-              <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]">
-                KOLOTOČ
-              </span>
-            </h1>
-            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
-          </div>
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Users className="w-5 h-5" />
-            <p className="text-lg font-medium">Nastavte hráče před hrou</p>
-          </div>
+      <div className="relative z-10 w-full max-w-md animate-fade-in">
+        {/* Compact Header */}
+        <div className="text-center mb-4">
+          <h1 className="text-3xl font-black tracking-tight">
+            <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent">
+              KOLOTOČ
+            </span>
+          </h1>
+          <p className="text-sm text-muted-foreground">Nastavte hráče a hru</p>
         </div>
 
-        {/* Player cards container */}
-        <div className="bg-card/40 backdrop-blur-2xl rounded-3xl p-6 md:p-8 border border-white/10 shadow-[0_0_60px_hsl(var(--primary)/0.1)]">
-          <div className="space-y-4">
+        {/* Main card */}
+        <div className="bg-card/40 backdrop-blur-xl rounded-2xl p-4 border border-white/10 shadow-lg">
+          {/* Player inputs - compact */}
+          <div className="space-y-3 mb-4">
             {players.map((player, index) => (
               <div
                 key={index}
-                className={`group relative bg-gradient-to-br from-white/5 to-white/[0.02] rounded-2xl p-5 border transition-all duration-300 ${
+                className={`relative bg-white/5 rounded-xl p-3 border transition-all duration-200 ${
                   focusedPlayer === index
-                    ? 'border-primary/50 shadow-[0_0_30px_hsl(var(--primary)/0.2)] scale-[1.02]'
-                    : 'border-white/10 hover:border-white/20'
+                    ? 'border-primary/50 shadow-[0_0_20px_hsl(var(--primary)/0.15)]'
+                    : 'border-white/10'
                 }`}
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                }}
               >
-                {/* Player number badge */}
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  {/* Player number badge - smaller */}
                   <div
-                    className="relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg transition-transform group-hover:scale-105"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shadow-md shrink-0"
                     style={{
                       backgroundColor: player.color,
-                      boxShadow: `0 8px 32px ${player.color}50`,
+                      boxShadow: `0 4px 16px ${player.color}40`,
                     }}
                   >
-                    <span className="text-white drop-shadow-md">{index + 1}</span>
-                    <div
-                      className="absolute inset-0 rounded-2xl opacity-50"
-                      style={{
-                        background: `linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%)`,
-                      }}
-                    />
+                    <span className="text-white drop-shadow">{index + 1}</span>
                   </div>
 
                   <Input
@@ -125,37 +135,28 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                     onChange={(e) => updatePlayer(index, 'name', e.target.value.toUpperCase())}
                     onFocus={() => setFocusedPlayer(index)}
                     onBlur={() => setFocusedPlayer(null)}
-                    placeholder={`Jméno hráče ${index + 1}`}
-                    className="flex-1 h-14 text-lg font-bold uppercase bg-background/50 border-white/10 focus:border-primary/50 rounded-xl placeholder:text-muted-foreground/50"
-                    maxLength={15}
+                    placeholder={`Hráč ${index + 1}`}
+                    className="flex-1 h-10 text-sm font-bold uppercase bg-background/50 border-white/10 focus:border-primary/50 rounded-lg"
+                    maxLength={12}
                   />
                 </div>
 
-                {/* Color picker */}
-                <div className="flex flex-wrap gap-2 justify-center">
+                {/* Color picker - compact row */}
+                <div className="flex flex-wrap gap-1.5 mt-2 justify-center">
                   {PRESET_COLORS.map(({ hex }) => {
                     const isSelected = player.color === hex;
                     return (
                       <button
                         key={hex}
                         onClick={() => updatePlayer(index, 'color', hex)}
-                        className={`relative w-9 h-9 rounded-full transition-all duration-200 ${
-                          isSelected
-                            ? 'scale-125 z-10'
-                            : 'hover:scale-110 opacity-70 hover:opacity-100'
+                        className={`w-6 h-6 rounded-full transition-all duration-150 ${
+                          isSelected ? 'scale-125 z-10' : 'opacity-60 hover:opacity-100 hover:scale-110'
                         }`}
                         style={{
                           backgroundColor: hex,
-                          boxShadow: isSelected
-                            ? `0 0 0 3px hsl(var(--background)), 0 0 0 5px ${hex}, 0 4px 20px ${hex}80`
-                            : `0 2px 8px ${hex}40`,
+                          boxShadow: isSelected ? `0 0 0 2px hsl(var(--background)), 0 0 0 3px ${hex}` : undefined,
                         }}
-                        title={PRESET_COLORS.find(c => c.hex === hex)?.name}
-                      >
-                        {isSelected && (
-                          <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: hex }} />
-                        )}
-                      </button>
+                      />
                     );
                   })}
                 </div>
@@ -163,20 +164,74 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
             ))}
           </div>
 
+          {/* Game Settings Section */}
+          <div className="bg-black/30 backdrop-blur rounded-xl p-3 space-y-3 mb-4 border border-white/5">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Settings className="w-4 h-4" />
+              <span className="text-xs font-medium uppercase tracking-wider">Nastavení hry</span>
+            </div>
+
+            {/* Sound toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {localSoundsEnabled ? (
+                  <Volume2 className="w-4 h-4 text-primary" />
+                ) : (
+                  <VolumeX className="w-4 h-4 text-muted-foreground" />
+                )}
+                <Label className="text-sm">Zvuky</Label>
+              </div>
+              <Switch
+                checked={localSoundsEnabled}
+                onCheckedChange={handleSoundsToggle}
+              />
+            </div>
+
+            {/* Effects toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className={`w-4 h-4 ${effectsEnabled ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Label className="text-sm">Sezónní efekty</Label>
+              </div>
+              <Switch
+                checked={effectsEnabled}
+                onCheckedChange={handleEffectsToggle}
+              />
+            </div>
+
+            {/* Turn timer select */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Timer className={`w-4 h-4 ${turnTimer > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Label className="text-sm">Časovač tahu</Label>
+              </div>
+              <Select value={turnTimer.toString()} onValueChange={handleTimerChange}>
+                <SelectTrigger className="w-28 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Vypnuto</SelectItem>
+                  <SelectItem value="15">15 sekund</SelectItem>
+                  <SelectItem value="20">20 sekund</SelectItem>
+                  <SelectItem value="30">30 sekund</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* Start button */}
           <Button
             onClick={handleStart}
             size="lg"
-            className="w-full mt-8 h-16 text-xl font-black uppercase tracking-wider bg-gradient-to-r from-primary via-yellow-500 to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 shadow-[0_8px_32px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_hsl(var(--primary)/0.5)] hover:scale-[1.02] rounded-2xl border-2 border-white/20"
+            className="w-full h-12 text-lg font-black uppercase tracking-wider bg-gradient-to-r from-primary via-yellow-500 to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 shadow-[0_4px_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_8px_30px_hsl(var(--primary)/0.4)] hover:scale-[1.02] rounded-xl border border-white/20"
           >
-            <Play className="w-6 h-6 mr-2 fill-current" />
+            <Play className="w-5 h-5 mr-2 fill-current" />
             Začít hru
           </Button>
         </div>
 
-        {/* Footer hint */}
-        <p className="text-center text-muted-foreground/60 text-sm mt-6">
-          Klikněte na barvu pro změnu • Maximálně 15 znaků
+        <p className="text-center text-muted-foreground/50 text-xs mt-3">
+          Max 12 znaků • Klikněte na barvu pro změnu
         </p>
       </div>
     </div>

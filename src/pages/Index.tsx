@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Wheel3D } from "@/components/game/Wheel3D";
 import { WheelDetailView } from "@/components/game/WheelDetailView";
 import { PlayerScores } from "@/components/game/PlayerScores";
@@ -9,6 +9,7 @@ import { TeacherPuzzleInput } from "@/components/game/TeacherPuzzleInput";
 import { DeviceHandover } from "@/components/game/DeviceHandover";
 import { GuessPhraseDialog } from "@/components/game/GuessPhraseDialog";
 import { PlayerSettings } from "@/components/game/PlayerSettings";
+import { TurnTimer } from "@/components/game/TurnTimer";
 import BonusWheel from "@/components/game/BonusWheel";
 import VictoryScreen from "@/components/game/VictoryScreen";
 import EndGameDialog from "@/components/game/EndGameDialog";
@@ -22,7 +23,8 @@ import { StudioEffects } from "@/components/game/StudioEffects";
 import { SeasonalEffects } from "@/components/game/SeasonalEffects";
 import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from "@/utils/sounds";
+import { useTurnTimer } from "@/hooks/useTurnTimer";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound } from "@/utils/sounds";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
 
@@ -35,10 +37,15 @@ const Index = () => {
   const { puzzles, loading, getRandomPuzzle, getRandomPuzzles } = usePuzzles();
   const { colors } = useSeason();
   const { soundsEnabled } = useSounds();
+  const { turnTimer } = useTurnTimer();
   const [gamePhase, setGamePhase] = useState<GamePhase>("intro");
   const [gameMode, setGameMode] = useState<"random" | "teacher">("random");
   const [customPuzzles, setCustomPuzzles] = useState<CustomPuzzle[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
+
+  // Timer state
+  const [timerActive, setTimerActive] = useState(false);
+  const [timerResetKey, setTimerResetKey] = useState(0);
 
   // Sync sounds enabled state globally
   useEffect(() => {
@@ -282,6 +289,11 @@ const Index = () => {
       playWinSound();
       setCurrentWheelValue(segment.value as number);
       setShowLetterSelector(true);
+      // Activate timer when points are won
+      if (turnTimer > 0) {
+        setTimerResetKey(prev => prev + 1);
+        setTimerActive(true);
+      }
       toast.success(`Vytočili jste ${segment.value} bodů!`, {
         duration: 2000,
       });
@@ -290,6 +302,9 @@ const Index = () => {
 
   const handleLetterSelect = (letter: string) => {
     saveStateToHistory();
+    
+    // Stop timer when letter is selected
+    setTimerActive(false);
 
     const upperLetter = letter.toUpperCase();
     const variants = getLetterVariants(upperLetter);
@@ -361,6 +376,18 @@ const Index = () => {
     setResultMessage("");
     setCurrentWheelValue(0);
   };
+
+  // Handle timer expiration
+  const handleTimeUp = useCallback(() => {
+    setTimerActive(false);
+    playBuzzerSound();
+    toast.error("⏰ Čas vypršel! Ztráta tahu.", { duration: 2000 });
+    setShowLetterSelector(false);
+    setGameState((prev) => ({
+      ...prev,
+      currentPlayer: (prev.currentPlayer + 1) % 3,
+    }));
+  }, []);
 
   const handleGuessPhrase = (guess: string) => {
     saveStateToHistory();
@@ -662,6 +689,14 @@ const Index = () => {
         canUndo={gameHistory.length > 0}
         onUndo={handleUndo}
         isPlaying={gamePhase === "playing"}
+      />
+
+      {/* Turn Timer */}
+      <TurnTimer
+        duration={turnTimer}
+        isActive={timerActive && showLetterSelector}
+        onTimeUp={handleTimeUp}
+        onReset={timerResetKey}
       />
 
       {/* Seasonal Effects Background */}
