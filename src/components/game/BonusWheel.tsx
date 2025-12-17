@@ -42,18 +42,17 @@ const getVisualOffsetFromPointer = (index: number, rotation: number, totalSegmen
 };
 
 // INVERSE FUNCTION: Calculate exact rotation needed for a segment to be at offset 0 (under pointer)
+// MUST USE SAME FORMULA AS MAIN WHEEL (Index.tsx lines 374-377)
 const getRotationForSegmentAtPointer = (segmentIndex: number, totalSegments: number): number => {
   const segmentAngle = (Math.PI * 2) / totalSegments;
   const geometryOffset = -Math.PI / 2;
   const pointerPos = 3 * Math.PI / 2; // 270° = top
   
-  // Segment center angle in local coordinates
-  const segmentCenterAngle = segmentIndex * segmentAngle + segmentAngle / 2 + geometryOffset;
+  // SAME AS MAIN WHEEL: segmentCenterAngle WITHOUT geometryOffset
+  const segmentCenterAngle = segmentIndex * segmentAngle + segmentAngle / 2;
   
-  // We want: visualAngle = pointerPos
-  // visualAngle = (segmentCenterAngle - rotation) mod 2π
-  // Therefore: rotation = segmentCenterAngle - pointerPos
-  const targetRotation = segmentCenterAngle - pointerPos;
+  // SAME FORMULA AS MAIN WHEEL: pointerPos - segmentCenterAngle - geometryOffset
+  const targetRotation = pointerPos - segmentCenterAngle - geometryOffset;
   
   // Normalize to positive range [0, 2π)
   return ((targetRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
@@ -153,7 +152,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   };
 
   // Helper: Find segment physical index at a given visual offset
-  // PRECISE INVERSE of getRotationForSegmentAtPointer
+  // PRECISE INVERSE of getRotationForSegmentAtPointer (which uses main wheel formula)
   const getSegmentIndexAtVisualOffset = (offset: number, currentRotation: number): number => {
     const totalSegments = shuffledSegments.length;
     const segmentAngle = (Math.PI * 2) / totalSegments;
@@ -163,14 +162,14 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     // Adjust pointer position by offset (positive offset = segment to the right = add angle)
     const adjustedPointerPos = pointerPos + offset * segmentAngle;
     
-    // INVERSE of getRotationForSegmentAtPointer:
-    // In forward function: rotation = segmentCenterAngle - pointerPos
-    // Therefore: segmentCenterAngle = rotation + pointerPos
-    const segmentCenterAngle = currentRotation + adjustedPointerPos;
+    // INVERSE of new formula:
+    // Forward: rotation = pointerPos - segmentCenterAngle - geometryOffset
+    // Therefore: segmentCenterAngle = pointerPos - rotation - geometryOffset
+    const segmentCenterAngle = adjustedPointerPos - currentRotation - geometryOffset;
     
-    // segmentCenterAngle = index * segmentAngle + segmentAngle/2 + geometryOffset
-    // Therefore: index = (segmentCenterAngle - geometryOffset - segmentAngle/2) / segmentAngle
-    const rawIndex = (segmentCenterAngle - geometryOffset - segmentAngle / 2) / segmentAngle;
+    // segmentCenterAngle = index * segmentAngle + segmentAngle/2
+    // Therefore: index = (segmentCenterAngle - segmentAngle/2) / segmentAngle
+    const rawIndex = (segmentCenterAngle - segmentAngle / 2) / segmentAngle;
     
     // Normalize to valid range [0, totalSegments)
     const normalizedIndex = ((Math.round(rawIndex) % totalSegments) + totalSegments) % totalSegments;
