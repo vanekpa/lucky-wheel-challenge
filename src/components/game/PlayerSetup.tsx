@@ -114,7 +114,7 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                 <DialogHeader>
                   <DialogTitle className="text-xl font-black text-center">📋 Pravidla hry</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 text-sm">
+                <div className="space-y-3 text-sm max-h-[60vh] overflow-y-auto pr-2">
                   <div>
                     <h3 className="font-bold text-primary mb-1">🎯 Cíl hry</h3>
                     <p className="text-muted-foreground">Uhodnout tajenku a získat co nejvíce bodů.</p>
@@ -130,12 +130,8 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                   <div>
                     <h3 className="font-bold text-primary mb-1">⚠️ Speciální políčka</h3>
                     <ul className="text-muted-foreground space-y-0.5">
-                      <li>
-                        <span className="text-red-500 font-bold">BANKROT</span> – ztratíte všechny body
-                      </li>
-                      <li>
-                        <span className="text-gray-400 font-bold">NIC</span> – pokračuje další hráč
-                      </li>
+                      <li><span className="text-red-500 font-bold">BANKROT</span> – ztratíte všechny body</li>
+                      <li><span className="text-gray-400 font-bold">NIC</span> – pokračuje další hráč</li>
                     </ul>
                   </div>
                   <div>
@@ -145,9 +141,40 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                     </p>
                   </div>
                   <div>
+                    <h3 className="font-bold text-primary mb-1">🪙 Token bonusy</h3>
+                    <p className="text-muted-foreground">
+                      Když soupeř padne na políčko s tvým tokenem, dostaneš <span className="text-green-500 font-bold">+500 bodů</span>!
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">🧠 Paměťová výzva</h3>
+                    <p className="text-muted-foreground">
+                      Použitá písmena <span className="text-red-400 font-bold">nejsou označená</span> – musíte si je pamatovat! 
+                      Kliknutí na již hádané písmeno = ztráta tahu.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">✍️ Písmena s háčky</h3>
+                    <p className="text-muted-foreground">
+                      Varianty se odhalují automaticky – stačí hádat základní písmeno (A odhalí i Á, E odhalí É/Ě, atd.).
+                    </p>
+                  </div>
+                  <div>
                     <h3 className="font-bold text-primary mb-1">💡 Hádat tajenku</h3>
                     <p className="text-muted-foreground">
                       Můžete zkusit uhodnout celou tajenku – za správný tip bonus bodů! Špatný tip = ztráta tahu.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">💎 Bonus za hádání</h3>
+                    <p className="text-muted-foreground">
+                      Čím více skrytých písmen zbývá, tím větší bonus (<span className="text-yellow-500 font-bold">1000 × počet písmen</span>).
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">📝 Interpunkce</h3>
+                    <p className="text-muted-foreground">
+                      Tečky, čárky, otazníky a další interpunkce jsou viditelné od začátku.
                     </p>
                   </div>
                   <div>
