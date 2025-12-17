@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SessionQRCode } from '@/components/game/SessionQRCode';
@@ -10,16 +10,18 @@ const Host = () => {
   const navigate = useNavigate();
   const { session, createSession, isLoading, error } = useGameSession();
   const [sessionCode, setSessionCode] = useState<string | null>(null);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    const initSession = async () => {
-      const code = await createSession();
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+    
+    createSession().then(code => {
       if (code) {
         setSessionCode(code);
       }
-    };
-    initSession();
-  }, []);
+    });
+  }, [createSession]);
 
   const handleCopyCode = () => {
     if (sessionCode) {

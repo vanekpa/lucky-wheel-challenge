@@ -85,14 +85,17 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const hostIdRef = useRef<string | null>(null);
 
-  // Generate a unique host ID for this browser session
-  useEffect(() => {
+  // Generate a unique host ID for this browser session - synchronously
+  const getHostId = useCallback(() => {
+    if (hostIdRef.current) return hostIdRef.current;
+    
     let hostId = localStorage.getItem('game_host_id');
     if (!hostId) {
       hostId = crypto.randomUUID();
       localStorage.setItem('game_host_id', hostId);
     }
     hostIdRef.current = hostId;
+    return hostId;
   }, []);
 
   // Subscribe to realtime updates
@@ -149,19 +152,25 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
       const code = generateSessionCode();
       const gameState = { ...defaultGameState, ...initialState };
 
+      console.log('Creating session with code:', code);
+      console.log('Host ID:', getHostId());
+      
       const { data, error: insertError } = await supabase
         .from('game_sessions')
         .insert({
           session_code: code,
           game_state: gameState as any,
           game_mode: gameState.gameMode,
-          host_id: hostIdRef.current,
+          host_id: getHostId(),
           is_active: true
         })
         .select()
         .single();
 
+      console.log('Insert result:', { data, insertError });
+
       if (insertError) {
+        console.error('Insert error details:', insertError);
         // If code already exists, try again
         if (insertError.code === '23505') {
           return createSession(initialState);
@@ -187,7 +196,7 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [subscribeToSession]);
+  }, [subscribeToSession, getHostId]);
 
   const joinSession = useCallback(async (code: string): Promise<boolean> => {
     setIsLoading(true);
@@ -214,7 +223,7 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
       };
 
       setSession(joinedSession as GameSession);
-      setIsHost(data.host_id === hostIdRef.current);
+      setIsHost(data.host_id === getHostId());
       subscribeToSession(data.id);
 
       console.log('Joined session:', normalizedCode);
@@ -226,7 +235,7 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [subscribeToSession]);
+  }, [subscribeToSession, getHostId]);
 
   const updateGameState = useCallback(async (stateUpdate: Partial<GameSessionState>): Promise<void> => {
     if (!session) {
