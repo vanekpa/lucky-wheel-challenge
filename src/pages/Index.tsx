@@ -786,6 +786,11 @@ const Index = () => {
         category={gameState.puzzle.category}
         revealedLetters={gameState.puzzle.revealedLetters}
         phrase={gameState.puzzle.phrase}
+        unrevealedCount={(() => {
+          const allLetters = gameState.puzzle.phrase.split('').filter(char => /[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/i.test(char));
+          const uniqueUnrevealed = new Set(allLetters.filter(l => !gameState.puzzle.revealedLetters.has(l.toUpperCase())));
+          return uniqueUnrevealed.size;
+        })()}
       />
 
       <EndGameDialog

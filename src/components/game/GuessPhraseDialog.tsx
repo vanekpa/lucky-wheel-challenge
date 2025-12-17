@@ -17,6 +17,7 @@ interface GuessPhraseDialogProps {
   category: string;
   revealedLetters: Set<string>;
   phrase: string;
+  unrevealedCount: number;
 }
 
 export const GuessPhraseDialog = ({
@@ -26,6 +27,7 @@ export const GuessPhraseDialog = ({
   category,
   revealedLetters,
   phrase,
+  unrevealedCount,
 }: GuessPhraseDialogProps) => {
   const [guess, setGuess] = useState('');
 
@@ -38,16 +40,45 @@ export const GuessPhraseDialog = ({
     }
   };
 
-  // Show hint - revealed letters in the phrase
-  const getHint = () => {
-    return phrase
-      .split('')
-      .map((char) => {
-        if (char === ' ') return '   ';
-        if (revealedLetters.has(char.toUpperCase())) return char;
-        return '_';
-      })
-      .join(' ');
+  const bonusPoints = Math.max(unrevealedCount * 1000, 1000);
+
+  // Render hint with words that don't break across lines
+  const renderHint = () => {
+    const words = phrase.split(' ');
+    
+    return (
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+        {words.map((word, wordIndex) => (
+          <span key={wordIndex} className="whitespace-nowrap flex gap-1">
+            {word.split('').map((char, charIndex) => {
+              const upperChar = char.toUpperCase();
+              // Punctuation is always visible
+              if (/[.,!?;:'"–\-]/.test(char)) {
+                return (
+                  <span key={charIndex} className="text-2xl text-yellow-400 font-bold">
+                    {char}
+                  </span>
+                );
+              }
+              // Revealed letters
+              if (revealedLetters.has(upperChar)) {
+                return (
+                  <span key={charIndex} className="text-2xl text-green-400 font-bold">
+                    {char.toUpperCase()}
+                  </span>
+                );
+              }
+              // Unrevealed letters = underscore
+              return (
+                <span key={charIndex} className="text-2xl text-white/60 font-mono">
+                  _
+                </span>
+              );
+            })}
+          </span>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -60,7 +91,11 @@ export const GuessPhraseDialog = ({
             <Sparkles className="h-8 w-8" />
           </DialogTitle>
           <DialogDescription className="text-center text-white/70 text-lg">
-            Za správnou odpověď získáte <span className="text-yellow-400 font-bold">5000 bodů</span> navíc!
+            Za správnou odpověď získáte{' '}
+            <span className="text-yellow-400 font-bold">{bonusPoints} bodů</span>
+            <span className="block text-sm mt-1 text-white/50">
+              ({unrevealedCount} písmen × 1000)
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -73,10 +108,8 @@ export const GuessPhraseDialog = ({
 
           {/* Hint */}
           <div className="bg-black/30 rounded-xl p-4 text-center">
-            <span className="text-sm text-white/50 uppercase tracking-wider block mb-2">Nápověda</span>
-            <p className="text-2xl font-mono text-white tracking-[0.3em]">
-              {getHint()}
-            </p>
+            <span className="text-sm text-white/50 uppercase tracking-wider block mb-3">Nápověda</span>
+            {renderHint()}
           </div>
 
           {/* Input Form */}

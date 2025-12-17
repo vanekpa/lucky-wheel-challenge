@@ -63,21 +63,13 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
                 key={letter}
                 onClick={() => handleSelect(letter)}
                 disabled={disabled}
-                className={`
-                  relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
+                className="relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
                   transition-all duration-150 ease-out touch-target-lg
-                  ${isUsed 
-                    ? `bg-white/5 text-white/40 border border-white/10
-                       hover:bg-red-500/20 hover:border-red-500/50
-                       hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]
-                       cursor-pointer` 
-                    : `bg-white/10 text-white border border-white/20
-                       hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground
-                       hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)]
-                       hover:scale-110 hover:-translate-y-1
-                       active:scale-90 active:bg-primary/50`
-                  }
-                `}
+                  bg-white/10 text-white border border-white/20
+                  hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground
+                  hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)]
+                  hover:scale-110 hover:-translate-y-1
+                  active:scale-90 active:bg-primary/50"
               >
                 {letter}
                 {hasVariants && !isUsed && (
