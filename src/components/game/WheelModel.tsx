@@ -38,25 +38,25 @@ const CenterHub = ({ radius }: { radius: number }) => {
     <group>
       {/* Zlatý vnější okraj */}
       <mesh position={[0, 0.02, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[radius, radius, 0.04, 32]} />
+        <cylinderGeometry args={[radius, radius, 0.06, 32]} />
         <meshStandardMaterial color="#d4af37" metalness={0.8} roughness={0.2} />
       </mesh>
       
       {/* Tmavý vnitřní kruh pro logo */}
-      <mesh position={[0, 0.05, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[radius * 0.85, radius * 0.85, 0.02, 32]} />
+      <mesh position={[0, 0.06, 0]} rotation={[0, 0, 0]}>
+        <cylinderGeometry args={[radius * 0.9, radius * 0.9, 0.02, 32]} />
         <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.5} />
       </mesh>
       
       {/* Logo "PEKLO" */}
       <Text
-        position={[0, 0.07, 0]}
+        position={[0, 0.09, -0.15]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.18}
-        color="#ff6b6b"
+        fontSize={0.35}
+        color="#FFD700"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.012}
+        outlineWidth={0.02}
         outlineColor="#000000"
       >
         PEKLO
@@ -64,13 +64,13 @@ const CenterHub = ({ radius }: { radius: number }) => {
       
       {/* Subtext "EDU.CZ" */}
       <Text
-        position={[0, 0.07, 0.22]}
+        position={[0, 0.09, 0.25]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.09}
-        color="#ffd700"
+        fontSize={0.18}
+        color="#FFFFFF"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.006}
+        outlineWidth={0.01}
         outlineColor="#000000"
       >
         EDU.CZ
@@ -284,7 +284,7 @@ export const WheelModel = ({
         />
       ))}
       
-      <CenterHub radius={0.25 * WHEEL_RADIUS} />
+      <CenterHub radius={0.45 * WHEEL_RADIUS} />
       
       {Array.from(tokenPositions.entries()).map(([segmentId, playerId]) => (
         <PlayerToken3D
