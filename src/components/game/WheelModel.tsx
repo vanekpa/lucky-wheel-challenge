@@ -35,12 +35,11 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
 
 const CenterHub = ({ radius }: { radius: number }) => {
   return (
-    // Sedí na horním povrchu disku (jinak se text utopí v geometrii)
-    <group position={[0, WHEEL_DISK_HEIGHT / 2 + 0.07, 0]}>
+    <group position={[0, WHEEL_DISK_HEIGHT / 2 + 0.03, 0]}>
       {/* Oválný badge - vnější zlatý rámeček */}
       <RoundedBox
-        args={[1.4, 0.08, 0.7]}
-        radius={0.2}
+        args={[1.2, 0.05, 0.6]}
+        radius={0.15}
         smoothness={4}
         position={[0, 0, 0]}
       >
@@ -49,8 +48,8 @@ const CenterHub = ({ radius }: { radius: number }) => {
 
       {/* Vnitřní tmavá plocha badge */}
       <RoundedBox
-        args={[1.2, 0.06, 0.55]}
-        radius={0.15}
+        args={[1.0, 0.04, 0.48]}
+        radius={0.12}
         smoothness={4}
         position={[0, 0.01, 0]}
       >
@@ -59,34 +58,32 @@ const CenterHub = ({ radius }: { radius: number }) => {
 
       {/* Logo "PEKLO" */}
       <Text
-        position={[0, 0.065, -0.1]}
-        rotation={[-Math.PI / 2, 0, Math.PI / 2]}
-        fontSize={0.25}
+        position={[0, 0.05, -0.08]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.22}
         color="#ff3333"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.02}
-        outlineColor="#000000"
+        outlineWidth={0.03}
+        outlineColor="#ffffff"
         renderOrder={10}
         material-depthTest={false}
-        material-depthWrite={false}
       >
         PEKLO
       </Text>
 
       {/* Subtext "EDU.CZ" */}
       <Text
-        position={[0, 0.065, 0.14]}
-        rotation={[-Math.PI / 2, 0, Math.PI / 2]}
-        fontSize={0.14}
+        position={[0, 0.05, 0.10]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.12}
         color="#ffd700"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.012}
+        outlineWidth={0.02}
         outlineColor="#000000"
         renderOrder={10}
         material-depthTest={false}
-        material-depthWrite={false}
       >
         EDU.CZ
       </Text>
