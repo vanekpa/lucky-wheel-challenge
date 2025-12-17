@@ -9,6 +9,7 @@ import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { useAuth } from '@/hooks/useAuth';
 import { Player } from '@/types/game';
 import { QRCodeSVG } from 'qrcode.react';
+import { cn } from '@/lib/utils';
 
 interface PlayerSettingsProps {
   effectsEnabled: boolean;
@@ -204,37 +205,53 @@ export const PlayerSettings = ({
                 </div>
                 
                 {sessionCode && controllerUrl ? (
-                  <div className="flex gap-3 items-center">
-                    <div className="bg-white p-1.5 rounded-lg">
-                      <QRCodeSVG 
-                        value={controllerUrl} 
-                        size={80}
-                        level="M"
-                      />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="font-mono text-sm text-primary font-bold tracking-wider">
-                        {sessionCode}
+                  <div className="space-y-3">
+                    {/* QR Code - larger */}
+                    <div className="flex justify-center">
+                      <div className="bg-white p-2 rounded-xl shadow-lg">
+                        <QRCodeSVG 
+                          value={controllerUrl} 
+                          size={100}
+                          level="M"
+                        />
                       </div>
-                      <Button
-                        onClick={handleCopyLink}
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs bg-white/5 border-white/20 text-white/80 hover:bg-white/10"
-                      >
-                        {copied ? (
-                          <>
-                            <Check className="mr-1.5 h-3 w-3 text-green-400" />
-                            Zkopírováno
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="mr-1.5 h-3 w-3" />
-                            Kopírovat odkaz
-                          </>
-                        )}
-                      </Button>
                     </div>
+                    
+                    {/* Session code badge */}
+                    <div className="text-center">
+                      <span className="text-[10px] text-white/50 block mb-1">Kód relace</span>
+                      <button 
+                        onClick={handleCopyLink}
+                        className="font-mono text-lg text-primary font-bold tracking-widest bg-primary/10 px-4 py-1.5 rounded-lg hover:bg-primary/20 transition-colors"
+                      >
+                        {sessionCode}
+                      </button>
+                    </div>
+                    
+                    {/* Copy link button - redesigned */}
+                    <Button
+                      onClick={handleCopyLink}
+                      size="sm"
+                      className={cn(
+                        "w-full text-xs transition-all duration-300",
+                        copied 
+                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30" 
+                          : "bg-gradient-to-r from-primary/20 to-primary/10 border-primary/30 text-white hover:from-primary/30 hover:to-primary/20 hover:shadow-lg hover:shadow-primary/20"
+                      )}
+                      variant="outline"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="mr-1.5 h-3.5 w-3.5 animate-scale-in" />
+                          Zkopírováno!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="mr-1.5 h-3.5 w-3.5" />
+                          Kopírovat odkaz
+                        </>
+                      )}
+                    </Button>
                   </div>
                 ) : (
                   <Button
@@ -242,7 +259,7 @@ export const PlayerSettings = ({
                     variant="outline"
                     size="sm"
                     disabled={isCreatingSession}
-                    className="w-full bg-white/5 border-white/20 text-white/80 hover:bg-white/10"
+                    className="w-full bg-gradient-to-r from-primary/20 to-primary/10 border-primary/30 text-white hover:from-primary/30 hover:to-primary/20"
                   >
                     {isCreatingSession ? (
                       <>

@@ -2,12 +2,21 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Sparkles, Trophy } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Sparkles, Trophy, Wifi, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+// Vibration patterns for different actions
+const vibrate = {
+  success: () => navigator.vibrate?.([50, 30, 50]),
+  error: () => navigator.vibrate?.([100, 50, 100, 50, 100]),
+  spin: () => navigator.vibrate?.([100]),
+  letter: () => navigator.vibrate?.([30]),
+  tap: () => navigator.vibrate?.([20])
+};
 
 const RemoteController = () => {
   const { code } = useParams<{ code: string }>();
@@ -15,6 +24,7 @@ const RemoteController = () => {
   const { session, isLoading, error, sendCommand, joinSession } = useGameSession();
   const [guessInput, setGuessInput] = useState('');
   const [showGuessInput, setShowGuessInput] = useState(false);
+  const [lastAction, setLastAction] = useState<string | null>(null);
 
   useEffect(() => {
     if (code && !session) {
@@ -23,24 +33,33 @@ const RemoteController = () => {
   }, [code]);
 
   const handleCommand = async (command: GameCommand) => {
-    // Haptic feedback
-    if (navigator.vibrate) navigator.vibrate(50);
+    vibrate.tap();
     await sendCommand(command);
+    setLastAction('Příkaz odeslán');
     toast.success('Příkaz odeslán', { duration: 1500 });
   };
 
+  const handleSpinCommand = async () => {
+    vibrate.spin();
+    await sendCommand({ type: 'SPIN_WHEEL' });
+    setLastAction('Kolo se točí...');
+    toast.success('Zatáčíte kolem!', { duration: 1500 });
+  };
+
   const handleLetterSelect = async (letter: string) => {
-    if (navigator.vibrate) navigator.vibrate(30);
+    vibrate.letter();
     await sendCommand({ type: 'SELECT_LETTER', letter });
+    setLastAction(`Písmeno "${letter}"`);
     toast.success(`Písmeno "${letter}" odesláno`, { duration: 1500 });
   };
 
   const handleGuessSubmit = async () => {
     if (guessInput.trim()) {
-      if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+      vibrate.success();
       await sendCommand({ type: 'GUESS_PHRASE', phrase: guessInput.trim() });
       setGuessInput('');
       setShowGuessInput(false);
+      setLastAction('Hádání odesláno');
       toast.success('Hádání odesláno');
     }
   };
@@ -140,13 +159,19 @@ const RemoteController = () => {
           </Button>
           
           <div className="text-center flex-1 mx-4">
-            <div className="inline-flex items-center gap-2 bg-slate-700/50 rounded-full px-3 py-1 mb-1">
-              <span className="text-xs text-slate-400">Kolo</span>
-              <span className="text-sm font-bold text-white">{gameState?.round || 1}</span>
+            {/* Connection status and session code */}
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-400 rounded-full px-2 py-0.5">
+                <Wifi className="w-3 h-3" />
+                <span className="text-[10px] font-medium">Připojeno</span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 bg-slate-700/50 px-2 py-0.5 rounded-full">
+                {code}
+              </span>
             </div>
             <div className="flex items-center justify-center gap-2">
               <div 
-                className="w-3 h-3 rounded-full shadow-lg"
+                className="w-3 h-3 rounded-full shadow-lg animate-pulse"
                 style={{ 
                   backgroundColor: currentPlayer?.color,
                   boxShadow: `0 0 12px ${currentPlayer?.color}`
@@ -234,7 +259,7 @@ const RemoteController = () => {
           <div className="space-y-4">
             {/* MEGA Spin Button */}
             <button
-              onClick={() => handleCommand({ type: 'SPIN_WHEEL' })}
+              onClick={handleSpinCommand}
               disabled={!canSpin}
               className={cn(
                 "w-full relative group transition-all duration-300",
@@ -353,15 +378,18 @@ const RemoteController = () => {
 
       {/* Player selector footer */}
       <footer className="bg-slate-800/60 backdrop-blur-2xl border-t border-slate-700/50 p-4 sticky bottom-0">
-        <div className="flex justify-center gap-3 max-w-lg mx-auto">
+        <div className="flex justify-center gap-2 max-w-lg mx-auto">
           {gameState?.players?.map((player, idx) => (
             <button
               key={player.id}
-              onClick={() => handleCommand({ type: 'SET_PLAYER', playerId: idx })}
+              onClick={() => {
+                vibrate.tap();
+                handleCommand({ type: 'SET_PLAYER', playerId: idx });
+              }}
               className={cn(
-                "flex-1 max-w-28 py-3 px-4 rounded-xl font-medium transition-all",
+                "flex-1 max-w-28 py-2 px-3 rounded-xl font-medium transition-all flex flex-col items-center",
                 gameState.currentPlayer === idx
-                  ? "shadow-lg scale-105"
+                  ? "shadow-lg scale-105 ring-2 ring-white/30"
                   : "bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50"
               )}
               style={{
@@ -371,7 +399,15 @@ const RemoteController = () => {
                 color: gameState.currentPlayer === idx ? '#fff' : player.color
               }}
             >
-              {player.name?.split(' ')[0] || `H${idx + 1}`}
+              <span className="text-sm font-bold truncate w-full text-center">
+                {player.name?.split(' ')[0] || `H${idx + 1}`}
+              </span>
+              <span className={cn(
+                "text-xs font-mono mt-0.5",
+                gameState.currentPlayer === idx ? "text-white/80" : "text-slate-400"
+              )}>
+                {player.score}
+              </span>
             </button>
           ))}
         </div>

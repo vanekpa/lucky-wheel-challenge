@@ -822,6 +822,64 @@ const Index = () => {
     }
   });
 
+  // Keyboard shortcuts for desktop users
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if focus is in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Ignore if not playing
+      if (gamePhase !== 'playing') return;
+      
+      // Space = Spin
+      if (e.code === 'Space' && !gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
+        e.preventDefault();
+        handleSpin();
+        return;
+      }
+      
+      // A-Z = Select letter (when keyboard is visible)
+      if (/^Key[A-Z]$/.test(e.code) && showLetterSelector) {
+        e.preventDefault();
+        const letter = e.code.replace('Key', '');
+        handleLetterSelect(letter);
+        return;
+      }
+      
+      // Enter = Open guess dialog
+      if (e.code === 'Enter' && canGuessPhrase && !showGuessDialog) {
+        e.preventDefault();
+        setShowGuessDialog(true);
+        return;
+      }
+      
+      // Escape = Close dialogs/results
+      if (e.code === 'Escape') {
+        e.preventDefault();
+        if (showGuessDialog) setShowGuessDialog(false);
+        if (showResult) handleResultDismiss();
+        if (showEndGameDialog) setShowEndGameDialog(false);
+        return;
+      }
+      
+      // Ctrl+Z = Undo
+      if (e.ctrlKey && e.code === 'KeyZ' && gameHistory.length > 0) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+      
+      // Tab = Next player
+      if (e.code === 'Tab' && !gameState.isSpinning) {
+        e.preventDefault();
+        handleSwitchPlayer((gameState.currentPlayer + 1) % 3);
+        return;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gamePhase, gameState.isSpinning, showLetterSelector, isPlacingTokens, showGuessDialog, showResult, showEndGameDialog, gameHistory.length, canGuessPhrase]);
+
   // Intro screen - mode selection
   if (gamePhase === "intro") {
     return <GameModeSelect onSelectRandom={handleSelectRandom} onSelectTeacher={handleSelectTeacher} />;
