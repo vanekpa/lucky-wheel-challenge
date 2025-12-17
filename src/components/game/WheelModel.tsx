@@ -34,30 +34,8 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
 };
 
 const CenterHub = ({ radius }: { radius: number }) => {
-  return (
-    <group position={[0, WHEEL_DISK_HEIGHT / 2 + 0.03, 0]}>
-      {/* Oválný badge - vnější zlatý rámeček */}
-      <RoundedBox
-        args={[1.2, 0.05, 0.6]}
-        radius={0.15}
-        smoothness={4}
-        position={[0, 0, 0]}
-      >
-        <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.15} />
-      </RoundedBox>
-
-      {/* Vnitřní tmavá plocha badge */}
-      <RoundedBox
-        args={[1.0, 0.04, 0.48]}
-        radius={0.12}
-        smoothness={4}
-        position={[0, 0.01, 0]}
-      >
-        <meshStandardMaterial color="#0a0a1a" metalness={0.4} roughness={0.6} />
-      </RoundedBox>
-      {/* Text je renderován jako 2D HTML overlay v Wheel3D.tsx */}
-    </group>
-  );
+  // Badge odstraněn - prázdný hub
+  return null;
 };
 
 const WheelSegment3D = ({ 
