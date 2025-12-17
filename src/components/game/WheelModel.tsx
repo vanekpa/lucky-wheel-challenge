@@ -35,59 +35,58 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
 
 const CenterHub = ({ radius }: { radius: number }) => {
   return (
-    <group position={[0, 0.05, 0]}>
+    // Sedí na horním povrchu disku (jinak se text utopí v geometrii)
+    <group position={[0, WHEEL_DISK_HEIGHT / 2 + 0.07, 0]}>
       {/* Oválný badge - vnější zlatý rámeček */}
-      <RoundedBox 
-        args={[1.4, 0.08, 0.7]} 
-        radius={0.2} 
+      <RoundedBox
+        args={[1.4, 0.08, 0.7]}
+        radius={0.2}
         smoothness={4}
         position={[0, 0, 0]}
       >
-        <meshStandardMaterial 
-          color="#d4af37" 
-          metalness={0.9} 
-          roughness={0.15} 
-        />
+        <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.15} />
       </RoundedBox>
-      
+
       {/* Vnitřní tmavá plocha badge */}
-      <RoundedBox 
-        args={[1.2, 0.09, 0.55]} 
-        radius={0.15} 
+      <RoundedBox
+        args={[1.2, 0.06, 0.55]}
+        radius={0.15}
         smoothness={4}
         position={[0, 0.01, 0]}
       >
-        <meshStandardMaterial 
-          color="#0a0a1a" 
-          metalness={0.4} 
-          roughness={0.6} 
-        />
+        <meshStandardMaterial color="#0a0a1a" metalness={0.4} roughness={0.6} />
       </RoundedBox>
-      
-      {/* Logo "PEKLO" - výš nad povrchem */}
+
+      {/* Logo "PEKLO" */}
       <Text
-        position={[0, 0.12, -0.1]}
-        rotation={[-Math.PI/2, 0, 0]}
+        position={[0, 0.065, -0.1]}
+        rotation={[-Math.PI / 2, 0, Math.PI / 2]}
         fontSize={0.25}
         color="#ff3333"
         anchorX="center"
         anchorY="middle"
         outlineWidth={0.02}
         outlineColor="#000000"
+        renderOrder={10}
+        material-depthTest={false}
+        material-depthWrite={false}
       >
         PEKLO
       </Text>
-      
+
       {/* Subtext "EDU.CZ" */}
       <Text
-        position={[0, 0.12, 0.14]}
-        rotation={[-Math.PI/2, 0, 0]}
+        position={[0, 0.065, 0.14]}
+        rotation={[-Math.PI / 2, 0, Math.PI / 2]}
         fontSize={0.14}
         color="#ffd700"
         anchorX="center"
         anchorY="middle"
         outlineWidth={0.012}
         outlineColor="#000000"
+        renderOrder={10}
+        material-depthTest={false}
+        material-depthWrite={false}
       >
         EDU.CZ
       </Text>
