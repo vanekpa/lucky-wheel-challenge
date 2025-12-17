@@ -87,7 +87,7 @@ export const BottomDock = ({
       {canGuess && !showResult && (
         <Button
           onClick={onGuessPhrase}
-          className="absolute top-2 left-3 z-10 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold text-xs md:text-sm px-3 py-2 md:px-3 md:py-1.5 h-auto shadow-lg shadow-yellow-500/20 animate-pulse touch-target-lg active:scale-95"
+          className="absolute top-2 left-16 z-10 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold text-xs md:text-sm px-3 py-2 md:px-3 md:py-1.5 h-auto shadow-lg shadow-yellow-500/20 animate-pulse touch-target-lg active:scale-95"
         >
           <Sparkles className="mr-1.5 h-4 w-4 md:h-3.5 md:w-3.5" />
           Hádat tajenku
