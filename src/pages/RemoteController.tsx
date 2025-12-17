@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, WifiOff, Shuffle, Lock, Unlock, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, Shuffle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
@@ -293,25 +293,6 @@ const RemoteController = () => {
           <span className="text-sm text-white/70">{currentPlayer?.name}</span>
         </button>
 
-        {/* Vowel status indicator */}
-        <div className={cn(
-          "flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium",
-          vowelsUnlocked 
-            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
-            : "bg-red-500/20 text-red-400 border border-red-500/30"
-        )}>
-          {vowelsUnlocked ? (
-            <>
-              <Unlock className="w-3.5 h-3.5" />
-              <span>{vowelsForceUnlocked ? "Samohlásky odemčeny (deadlock)" : "Samohlásky odemčeny"}</span>
-            </>
-          ) : (
-            <>
-              <Lock className="w-3.5 h-3.5" />
-              <span>Samohlásky: ještě {MIN_SCORE_FOR_VOWELS - playerScore} bodů</span>
-            </>
-          )}
-        </div>
 
         {/* Quick actions row */}
         <div className="grid grid-cols-3 gap-2">
@@ -346,30 +327,19 @@ const RemoteController = () => {
           <p className="text-[10px] text-slate-500 text-center mb-1">Vyberte písmeno</p>
           <div className="flex-1 grid grid-cols-7 gap-1 content-center">
             {LETTERS.map(letter => {
-              const isVowel = VOWELS.has(letter);
-              const isLocked = isVowel && !vowelsUnlocked;
               return (
                 <button
                   key={letter}
                   onClick={() => handleLetterSelect(letter)}
                   disabled={isSpinning || isPlacingTokens || !showLetterSelector}
                   className={cn(
-                    "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center relative overflow-hidden",
-                    "border text-white",
-                    isLocked 
-                      ? "bg-gradient-to-br from-red-900/70 to-red-800/50 border-red-600/70" 
-                      : "bg-slate-700/60 border-slate-600/40",
-                    showLetterSelector && !isLocked && "active:scale-90 active:bg-primary",
+                    "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center",
+                    "border text-white bg-slate-700/60 border-slate-600/40",
+                    showLetterSelector && "active:scale-90 active:bg-primary",
                     !showLetterSelector && "opacity-30"
                   )}
                 >
-                  {/* Red overlay for locked vowels */}
-                  {isLocked && (
-                    <div className="absolute inset-0 bg-red-900/50 flex items-center justify-center">
-                      <Lock className="w-4 h-4 text-red-300 drop-shadow-lg" />
-                    </div>
-                  )}
-                  <span className={cn(isLocked && "opacity-40")}>{letter}</span>
+                  {letter}
                 </button>
               );
             })}
