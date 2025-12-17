@@ -269,14 +269,25 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
       return;
     }
 
-    // Commands are processed by updating the game state with a command marker
-    // The host will pick up these commands and execute them
+    // Commands are processed by updating ONLY the command fields
+    // This prevents overwriting the host's game state with stale data
     try {
+      // First fetch the current state to avoid race conditions
+      const { data: currentSession, error: fetchError } = await supabase
+        .from('game_sessions')
+        .select('game_state')
+        .eq('id', session.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const currentState = (currentSession?.game_state || {}) as unknown as Partial<GameSessionState>;
+      
       const { error: updateError } = await supabase
         .from('game_sessions')
         .update({ 
           game_state: {
-            ...session.game_state,
+            ...currentState,
             _pendingCommand: command,
             _commandTimestamp: Date.now()
           } as any,

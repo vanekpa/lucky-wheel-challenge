@@ -143,7 +143,7 @@ const Index = () => {
 
   // Sync game state to session when playing with remote controllers
   useEffect(() => {
-    if (!sessionCode || !session) return;
+    if (!activeSessionCode || !session) return;
     
     // Convert Sets to Arrays for JSON serialization
     const serializableState = {
@@ -158,11 +158,12 @@ const Index = () => {
       isSpinning: gameState.isSpinning,
       showLetterSelector,
       isPlacingTokens,
-      tokenPositions: Object.fromEntries(tokenPositions)
+      tokenPositions: Object.fromEntries(tokenPositions),
+      gameMode
     };
     
     updateGameState(serializableState);
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, sessionCode]);
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, activeSessionCode, gameMode]);
 
   // Process commands from remote controllers - using a ref to track processed commands
   const processedCommandsRef = useRef<Set<number>>(new Set());
@@ -919,7 +920,7 @@ const Index = () => {
       <PlayerSettings
         effectsEnabled={effectsEnabled}
         onEffectsChange={setEffectsEnabled}
-        showEndGame={gameMode === "random" && !gameState.isSpinning && !showResult}
+        showEndGame={!gameState.isSpinning && !showResult}
         onEndGame={() => setShowEndGameDialog(true)}
         players={gameState.players}
         currentPlayer={gameState.currentPlayer}
