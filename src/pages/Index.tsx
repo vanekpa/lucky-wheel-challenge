@@ -819,7 +819,6 @@ const Index = () => {
         resultMessage={resultMessage}
         resultType={resultType}
         onResultDismiss={handleResultDismiss}
-        currentPlayerScore={gameState.players[gameState.currentPlayer]?.score || 0}
       />
 
       <GuessPhraseDialog

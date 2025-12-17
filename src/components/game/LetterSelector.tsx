@@ -1,11 +1,8 @@
-import { Lock } from 'lucide-react';
-
 // Unified keyboard with glassmorphism styling
 interface LetterSelectorProps {
   usedLetters: Set<string>;
   onLetterSelect: (letter: string) => void;
   disabled: boolean;
-  currentPlayerScore?: number;
 }
 
 // Vowel constants
@@ -38,14 +35,10 @@ export const getLetterVariants = (letter: string): string[] => {
   return LETTER_GROUPS[letter] || [letter];
 };
 
-export const LetterSelector = ({ usedLetters, onLetterSelect, disabled, currentPlayerScore = 0 }: LetterSelectorProps) => {
+export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: LetterSelectorProps) => {
   const isGroupUsed = (letter: string) => {
     const variants = getLetterVariants(letter);
     return variants.some(v => usedLetters.has(v));
-  };
-
-  const isVowelLocked = (letter: string) => {
-    return VOWELS.has(letter) && currentPlayerScore < MIN_SCORE_FOR_VOWELS;
   };
 
   const handleSelect = (letter: string) => {
@@ -68,26 +61,18 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled, currentP
             const variants = getLetterVariants(letter);
             const isUsed = isGroupUsed(letter);
             const hasVariants = variants.length > 1;
-            const vowelLocked = isVowelLocked(letter);
             
             return (
               <button
                 key={letter}
                 onClick={() => handleSelect(letter)}
                 disabled={disabled}
-                title={vowelLocked ? `Samohlásky od ${MIN_SCORE_FOR_VOWELS} bodů` : undefined}
-                className={`relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
+                className="relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
                   transition-all duration-150 ease-out touch-target-lg border
-                  ${vowelLocked 
-                    ? 'bg-white/5 text-white/40 border-white/10 cursor-not-allowed' 
-                    : 'bg-white/10 text-white border-white/20 hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:scale-110 hover:-translate-y-1 active:scale-90 active:bg-primary/50'
-                  }`}
+                  bg-white/10 text-white border-white/20 hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:scale-110 hover:-translate-y-1 active:scale-90 active:bg-primary/50"
               >
                 {letter}
-                {vowelLocked && (
-                  <Lock className="absolute -top-1 -right-1 w-3 h-3 text-amber-400" />
-                )}
-                {hasVariants && !isUsed && !vowelLocked && (
+                {hasVariants && !isUsed && (
                   <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 text-[8px] md:text-[9px] bg-primary text-primary-foreground rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center font-semibold shadow-lg">
                     +{variants.length - 1}
                   </span>
@@ -98,7 +83,7 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled, currentP
         </div>
         
         <p className="relative text-center text-[10px] md:text-xs text-white/40 mt-3 md:mt-4 tracking-wide">
-          Písmena s háčky a čárkami jsou sloučena • Samohlásky 🔒 od {MIN_SCORE_FOR_VOWELS} bodů
+          Písmena s háčky a čárkami jsou sloučena • Samohlásky od {MIN_SCORE_FOR_VOWELS} bodů
         </p>
       </div>
     </div>
