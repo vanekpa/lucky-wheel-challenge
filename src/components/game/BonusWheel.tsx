@@ -290,18 +290,15 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     // After rotation animation, the target segment is now at offset 0 (under pointer)
     const currentRot = wheelRotationRef.current;
     
-    // Find segment at offset 0 (directly under pointer after rotation)
-    const targetSegment = shuffledSegments.find((_, index) => {
-      const visualOffset = getVisualOffsetFromPointer(index, currentRot, shuffledSegments.length);
-      return visualOffset === 0;
-    });
+    // USE SAME INVERSE FUNCTION as rotation calculation for mathematical consistency
+    const targetSegmentIndex = getSegmentIndexAtVisualOffset(0, currentRot);
+    const segment = shuffledSegments[targetSegmentIndex];
     
-    if (!targetSegment) {
-      console.error('No segment found at offset 0');
+    if (!segment) {
+      console.error('No segment found at index', targetSegmentIndex);
       return { bonusPoints: 0, resultText: 'Chyba', segment: shuffledSegments[0] };
     }
     
-    const segment = targetSegment;
     let bonusPoints = 0;
     let resultText = '';
 
