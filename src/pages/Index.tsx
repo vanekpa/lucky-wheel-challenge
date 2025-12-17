@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import { Wheel3D } from "@/components/game/Wheel3D";
 import { WheelDetailView } from "@/components/game/WheelDetailView";
 import { PlayerScores } from "@/components/game/PlayerScores";
@@ -24,6 +25,7 @@ import { SeasonalEffects } from "@/components/game/SeasonalEffects";
 import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
+import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound } from "@/utils/sounds";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
@@ -34,10 +36,16 @@ interface CustomPuzzle {
 }
 
 const Index = () => {
+  const { sessionCode } = useParams<{ sessionCode?: string }>();
   const { puzzles, loading, getRandomPuzzle, getRandomPuzzles } = usePuzzles();
   const { colors } = useSeason();
   const { soundsEnabled } = useSounds();
   const { turnTimer } = useTurnTimer();
+  
+  // Session management for remote control
+  const { session, isHost, updateGameState } = useGameSession(sessionCode);
+  const lastCommandTimestamp = useRef<number>(0);
+  
   const [gamePhase, setGamePhase] = useState<GamePhase>("intro");
   const [gameMode, setGameMode] = useState<"random" | "teacher">("random");
   const [customPuzzles, setCustomPuzzles] = useState<CustomPuzzle[]>([]);
@@ -98,6 +106,46 @@ const Index = () => {
       currentWheelValue: number;
     }>
   >([]);
+
+  // Sync game state to session when playing with remote controllers
+  useEffect(() => {
+    if (!sessionCode || !session) return;
+    
+    // Convert Sets to Arrays for JSON serialization
+    const serializableState = {
+      currentPlayer: gameState.currentPlayer,
+      players: gameState.players,
+      puzzle: gameState.puzzle ? {
+        ...gameState.puzzle,
+        revealedLetters: Array.from(gameState.puzzle.revealedLetters)
+      } : null,
+      usedLetters: Array.from(gameState.usedLetters),
+      round: gameState.round,
+      isSpinning: gameState.isSpinning,
+      showLetterSelector,
+      isPlacingTokens,
+      tokenPositions: Object.fromEntries(tokenPositions)
+    };
+    
+    updateGameState(serializableState);
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, sessionCode]);
+
+  // Process commands from remote controllers - using a ref to track processed commands
+  const processedCommandsRef = useRef<Set<number>>(new Set());
+  const commandQueueRef = useRef<{ command: GameCommand; timestamp: number } | null>(null);
+  
+  // Store the pending command to process after handlers are defined
+  useEffect(() => {
+    if (!session?.game_state?._pendingCommand) return;
+    
+    const command = session.game_state._pendingCommand as GameCommand;
+    const timestamp = session.game_state._commandTimestamp as number;
+    
+    // Skip if we already processed this command
+    if (!timestamp || processedCommandsRef.current.has(timestamp)) return;
+    
+    commandQueueRef.current = { command, timestamp };
+  }, [session?.game_state?._pendingCommand, session?.game_state?._commandTimestamp]);
 
   // Save current state to history before making changes
   const saveStateToHistory = () => {
@@ -670,6 +718,54 @@ const Index = () => {
     setIsPlacingTokens(true);
     setShowLetterSelector(false);
   };
+
+  // Process queued commands from remote controllers
+  useEffect(() => {
+    if (!commandQueueRef.current) return;
+    
+    const { command, timestamp } = commandQueueRef.current;
+    
+    // Mark as processed
+    processedCommandsRef.current.add(timestamp);
+    commandQueueRef.current = null;
+    
+    // Keep only last 100 processed commands to prevent memory leak
+    if (processedCommandsRef.current.size > 100) {
+      const oldTimestamps = Array.from(processedCommandsRef.current).slice(0, 50);
+      oldTimestamps.forEach(t => processedCommandsRef.current.delete(t));
+    }
+    
+    console.log('Processing remote command:', command);
+    
+    switch (command.type) {
+      case 'SPIN_WHEEL':
+        if (!gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
+          handleSpin();
+        }
+        break;
+      case 'SELECT_LETTER':
+        if (showLetterSelector && 'letter' in command) {
+          handleLetterSelect(command.letter);
+        }
+        break;
+      case 'GUESS_PHRASE':
+        if ('phrase' in command) {
+          handleGuessPhrase(command.phrase);
+        }
+        break;
+      case 'NEXT_PLAYER':
+        handleSwitchPlayer((gameState.currentPlayer + 1) % 3);
+        break;
+      case 'UNDO':
+        handleUndo();
+        break;
+      case 'SET_PLAYER':
+        if ('playerId' in command) {
+          handleSwitchPlayer(command.playerId);
+        }
+        break;
+    }
+  });
 
   // Intro screen - mode selection
   if (gamePhase === "intro") {
