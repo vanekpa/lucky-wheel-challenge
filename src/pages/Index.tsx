@@ -142,6 +142,13 @@ const Index = () => {
     }>
   >([]);
 
+  // Stop timer when guess dialog opens
+  useEffect(() => {
+    if (showGuessDialog) {
+      setTimerActive(false);
+    }
+  }, [showGuessDialog]);
+
   // Sync game state to session when playing with remote controllers
   useEffect(() => {
     if (!activeSessionCode || !session) return;
@@ -161,11 +168,12 @@ const Index = () => {
       isPlacingTokens,
       tokenPositions: Object.fromEntries(tokenPositions),
       gameMode,
-      vowelsForceUnlocked
+      vowelsForceUnlocked,
+      isGuessingPhrase: showGuessDialog
     };
     
     updateGameState(serializableState);
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, activeSessionCode, gameMode]);
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, activeSessionCode, gameMode, showGuessDialog]);
 
   // Process commands from remote controllers - using a ref to track processed commands
   const processedCommandsRef = useRef<Set<number>>(new Set());

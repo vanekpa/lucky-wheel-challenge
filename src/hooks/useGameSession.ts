@@ -24,6 +24,7 @@ export interface GameSessionState {
   gameMode: 'random' | 'teacher';
   teacherPuzzles: { phrase: string; category: string }[];
   vowelsForceUnlocked?: boolean;
+  isGuessingPhrase?: boolean;
   _pendingCommand?: GameCommand;
   _commandTimestamp?: number;
 }
