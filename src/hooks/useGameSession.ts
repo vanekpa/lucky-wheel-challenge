@@ -23,6 +23,7 @@ export interface GameSessionState {
   gameHistory: any[];
   gameMode: 'random' | 'teacher';
   teacherPuzzles: { phrase: string; category: string }[];
+  vowelsForceUnlocked?: boolean;
   _pendingCommand?: GameCommand;
   _commandTimestamp?: number;
 }

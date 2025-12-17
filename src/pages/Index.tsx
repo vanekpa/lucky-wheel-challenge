@@ -131,6 +131,7 @@ const Index = () => {
   const [effectsEnabled, setEffectsEnabled] = useState(true);
   const [showGuessDialog, setShowGuessDialog] = useState(false);
   const [showEndGameDialog, setShowEndGameDialog] = useState(false);
+  const [vowelsForceUnlocked, setVowelsForceUnlocked] = useState(false);
 
   // Game history for undo functionality (max 10 states)
   const [gameHistory, setGameHistory] = useState<
@@ -159,7 +160,8 @@ const Index = () => {
       showLetterSelector,
       isPlacingTokens,
       tokenPositions: Object.fromEntries(tokenPositions),
-      gameMode
+      gameMode,
+      vowelsForceUnlocked
     };
     
     updateGameState(serializableState);
@@ -395,8 +397,8 @@ const Index = () => {
     const currentScore = currentPlayer.score;
     const isVowelsUnlocked = currentPlayer.vowelsUnlockedThisRound || false;
 
-    // Check if vowel and not unlocked yet
-    if (VOWELS.has(upperLetter) && currentScore < MIN_SCORE_FOR_VOWELS && !isVowelsUnlocked) {
+    // Check if vowel and not unlocked yet (unless force unlocked due to deadlock)
+    if (VOWELS.has(upperLetter) && currentScore < MIN_SCORE_FOR_VOWELS && !isVowelsUnlocked && !vowelsForceUnlocked) {
       playNothingSound();
       setResultMessage(`Samohlásky můžete hádat až od ${MIN_SCORE_FOR_VOWELS} bodů! Ztráta tahu.`);
       setResultType("error");
@@ -498,6 +500,36 @@ const Index = () => {
       currentPlayer: (prev.currentPlayer + 1) % 3,
     }));
   }, []);
+
+  // Check for deadlock: all consonants tried but no one has enough points for vowels
+  const checkForDeadlock = useCallback(() => {
+    if (vowelsForceUnlocked || gamePhase !== "playing") return;
+    
+    const phrase = gameState.puzzle.phrase.toUpperCase();
+    const consonantsInPhrase = [...phrase].filter(c => 
+      /[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/.test(c) && !VOWELS.has(c)
+    );
+    
+    // All consonants either revealed or already tried?
+    const allConsonantsHandled = consonantsInPhrase.every(c => 
+      gameState.puzzle.revealedLetters.has(c) || 
+      gameState.usedLetters.has(c)
+    );
+    
+    // No one has enough points for vowels?
+    const maxScore = Math.max(...gameState.players.map(p => p.score));
+    const anyoneHasVowelsUnlocked = gameState.players.some(p => p.vowelsUnlockedThisRound);
+    
+    if (allConsonantsHandled && maxScore < MIN_SCORE_FOR_VOWELS && !anyoneHasVowelsUnlocked) {
+      setVowelsForceUnlocked(true);
+      toast.info("🔓 Samohlásky odemčeny - všechny souhlásky jsou vyřešeny!", { duration: 4000 });
+    }
+  }, [gameState, vowelsForceUnlocked, gamePhase]);
+
+  // Run deadlock check after game state changes
+  useEffect(() => {
+    checkForDeadlock();
+  }, [gameState.usedLetters, gameState.puzzle.revealedLetters, checkForDeadlock]);
 
   const handleGuessPhrase = (guess: string) => {
     saveStateToHistory();
@@ -679,6 +711,9 @@ const Index = () => {
       // Reset vowelsUnlockedThisRound for all players at new round
       players: prev.players.map((p) => ({ ...p, vowelsUnlockedThisRound: false })),
     }));
+
+    // Reset force-unlocked vowels for new round
+    setVowelsForceUnlocked(false);
 
     // Don't clear tokenPositions - tokens stay on the wheel!
     // Only reset which players have placed THIS round's token
