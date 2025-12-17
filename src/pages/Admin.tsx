@@ -130,7 +130,7 @@ const Admin = () => {
     const { error } = await supabase.from('puzzles').insert({
       phrase: validationResult.data.phrase.toUpperCase(),
       category: validationResult.data.category,
-      created_by: user?.email || 'Admin',
+      created_by: user?.id || null,
     });
 
     if (error) {
@@ -284,7 +284,7 @@ const Admin = () => {
     const puzzlesToInsert = toImport.map(phrase => ({
       phrase,
       category: categoryValidation.data,
-      created_by: user?.email || 'Admin',
+      created_by: user?.id || null,
     }));
 
     const { error } = await supabase.from('puzzles').insert(puzzlesToInsert);
