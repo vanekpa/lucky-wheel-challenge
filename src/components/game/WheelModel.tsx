@@ -44,33 +44,34 @@ const CenterHub = ({ radius }: { radius: number }) => {
       
       {/* Tmavý vnitřní kruh pro logo */}
       <mesh position={[0, 0.06, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[radius * 0.9, radius * 0.9, 0.02, 32]} />
+        <cylinderGeometry args={[radius * 0.9, radius * 0.9, 0.04, 32]} />
         <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.5} />
       </mesh>
       
-      {/* Logo "PEKLO" */}
+      {/* Logo "PEKLO" - větší, výš, červeně */}
       <Text
-        position={[0, 0.09, -0.15]}
+        position={[0, 0.15, -0.35]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.35}
-        color="#FFD700"
+        fontSize={0.65}
+        color="#ff3333"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.02}
+        outlineWidth={0.04}
         outlineColor="#000000"
+        fontWeight="bold"
       >
         PEKLO
       </Text>
       
-      {/* Subtext "EDU.CZ" */}
+      {/* Subtext "EDU.CZ" - větší, zlatě */}
       <Text
-        position={[0, 0.09, 0.25]}
+        position={[0, 0.15, 0.45]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.18}
-        color="#FFFFFF"
+        fontSize={0.35}
+        color="#ffd700"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.01}
+        outlineWidth={0.025}
         outlineColor="#000000"
       >
         EDU.CZ
