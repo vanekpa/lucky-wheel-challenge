@@ -58,7 +58,6 @@ const CenterHub = ({ radius }: { radius: number }) => {
         anchorY="middle"
         outlineWidth={0.012}
         outlineColor="#000000"
-        font="/fonts/Inter-Bold.woff"
       >
         PEKLO
       </Text>
