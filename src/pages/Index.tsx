@@ -149,6 +149,23 @@ const Index = () => {
     }
   }, [showGuessDialog]);
 
+  // Host heartbeat - send every 5 seconds to let controllers know host is active
+  useEffect(() => {
+    if (!activeSessionCode || !session) return;
+    
+    const sendHeartbeat = () => {
+      updateGameState({ _hostHeartbeat: Date.now() });
+    };
+    
+    // Send initial heartbeat
+    sendHeartbeat();
+    
+    // Send heartbeat every 5 seconds
+    const interval = setInterval(sendHeartbeat, 5000);
+    
+    return () => clearInterval(interval);
+  }, [activeSessionCode, session?.id]);
+
   // Sync game state to session when playing with remote controllers
   useEffect(() => {
     if (!activeSessionCode || !session) return;
@@ -169,7 +186,8 @@ const Index = () => {
       tokenPositions: Object.fromEntries(tokenPositions),
       gameMode,
       vowelsForceUnlocked,
-      isGuessingPhrase: showGuessDialog
+      isGuessingPhrase: showGuessDialog,
+      _hostHeartbeat: Date.now()
     };
     
     updateGameState(serializableState);
