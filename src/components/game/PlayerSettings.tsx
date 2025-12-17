@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { Settings, Volume2, VolumeX, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -9,9 +9,11 @@ import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 interface PlayerSettingsProps {
   effectsEnabled: boolean;
   onEffectsChange: (enabled: boolean) => void;
+  showEndGame?: boolean;
+  onEndGame?: () => void;
 }
 
-export const PlayerSettings = ({ effectsEnabled, onEffectsChange }: PlayerSettingsProps) => {
+export const PlayerSettings = ({ effectsEnabled, onEffectsChange, showEndGame, onEndGame }: PlayerSettingsProps) => {
   const { soundsEnabled } = useSounds();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(soundsEnabled);
 
@@ -109,6 +111,21 @@ export const PlayerSettings = ({ effectsEnabled, onEffectsChange }: PlayerSettin
               className="data-[state=checked]:bg-primary"
             />
           </div>
+
+          {/* End Game button - conditionally shown */}
+          {showEndGame && onEndGame && (
+            <div className="pt-2 mt-2 border-t border-white/10">
+              <Button
+                onClick={onEndGame}
+                variant="destructive"
+                size="sm"
+                className="w-full"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Ukončit hru
+              </Button>
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

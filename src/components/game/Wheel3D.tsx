@@ -346,7 +346,7 @@ export const Wheel3D = ({
     <div className="w-full h-full">
       <Canvas
         camera={{ 
-          position: [0, 6, 8],
+          position: [0, 8, 10],
           fov: 45,
           near: 0.1,
           far: 1000

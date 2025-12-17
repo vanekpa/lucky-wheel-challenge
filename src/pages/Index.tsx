@@ -23,7 +23,7 @@ import { SeasonalEffects } from '@/components/game/SeasonalEffects';
 import { useSeason } from '@/hooks/useSeason';
 import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound } from '@/utils/sounds';
-import { X } from 'lucide-react';
+
 
 type GamePhase = 'intro' | 'teacher-input' | 'handover' | 'setup' | 'playing' | 'bonus-wheel' | 'victory';
 
@@ -583,7 +583,12 @@ const Index = () => {
   return (
     <div className={`h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br ${colors.gradient} text-foreground transition-colors duration-1000`}>
       {/* Player Settings Popover */}
-      <PlayerSettings effectsEnabled={effectsEnabled} onEffectsChange={setEffectsEnabled} />
+      <PlayerSettings 
+        effectsEnabled={effectsEnabled} 
+        onEffectsChange={setEffectsEnabled}
+        showEndGame={gameMode === 'random' && !gameState.isSpinning && !showResult}
+        onEndGame={() => setShowEndGameDialog(true)}
+      />
 
       {/* Seasonal Effects Background */}
       {effectsEnabled && <SeasonalEffects />}
@@ -658,18 +663,6 @@ const Index = () => {
           </div>
         )}
 
-        {/* End Game Button - only in random mode */}
-        {gameMode === 'random' && !gameState.isSpinning && !showResult && (
-          <Button
-            onClick={() => setShowEndGameDialog(true)}
-            variant="outline"
-            size="sm"
-            className="fixed top-4 right-4 z-50 bg-black/50 backdrop-blur-md border-destructive/30 text-destructive hover:bg-destructive/20 hover:border-destructive/50 transition-all"
-          >
-            <X className="mr-2 h-4 w-4" />
-            Ukončit hru
-          </Button>
-        )}
       </div>
 
       <BottomDock
