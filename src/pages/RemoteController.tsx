@@ -251,8 +251,12 @@ const RemoteController = () => {
               <button
                 onClick={() => {
                   vibrate.success();
-                  const randomIdx = Math.floor(Math.random() * 32);
-                  handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: randomIdx });
+                  // Filter out BANKROT and NIČ segments for random placement
+                  const validSegments = wheelSegments
+                    .map((seg, idx) => ({ seg, idx }))
+                    .filter(({ seg }) => seg.value !== 'BANKROT' && seg.value !== 'NIČ');
+                  const randomPick = validSegments[Math.floor(Math.random() * validSegments.length)];
+                  handleCommand({ type: 'PLACE_TOKEN', playerId: gameState?.currentPlayer || 0, segmentIndex: randomPick.idx });
                 }}
                 className="flex items-center gap-1.5 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold"
               >
@@ -310,7 +314,7 @@ const RemoteController = () => {
             className="bg-slate-800/60 border border-slate-700/50 rounded-xl py-3 flex flex-col items-center gap-1 active:scale-95 disabled:opacity-40"
           >
             <SkipForward className="w-5 h-5 text-orange-400" />
-            <span className="text-[10px] font-medium text-white">Další</span>
+            <span className="text-[10px] font-medium text-white">Přeskočit</span>
           </button>
           <button
             onClick={() => handleCommand({ type: 'UNDO' })}
