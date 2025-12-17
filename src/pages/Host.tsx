@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SessionQRCode } from '@/components/game/SessionQRCode';
 import { useGameSession } from '@/hooks/useGameSession';
-import { Copy, Play, Loader2, ArrowLeft } from 'lucide-react';
+import { Copy, Play, Loader2, ArrowLeft, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Host = () => {
@@ -60,10 +60,10 @@ const Host = () => {
         {/* Main card */}
         <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl">
           <h1 className="text-3xl font-bold text-center mb-2 text-foreground">
-            📺 Hostovat hru
+            🎮 Ovladač učitele
           </h1>
           <p className="text-muted-foreground text-center mb-8">
-            Naskenujte QR kód telefonem pro ovládání
+            Naskenujte QR kód pro vzdálené ovládání hry
           </p>
 
           {isLoading ? (
@@ -125,9 +125,9 @@ const Host = () => {
         </div>
 
         {/* Info */}
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          <p>Hráči mohou ovládat hru z mobilního telefonu</p>
-          <p className="mt-1">pomocí vzdáleného ovladače</p>
+        <div className="mt-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+          <Smartphone className="w-4 h-4" />
+          <p>Ovládejte hru z mobilního telefonu jako učitel</p>
         </div>
       </div>
     </div>
