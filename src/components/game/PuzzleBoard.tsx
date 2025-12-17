@@ -16,6 +16,11 @@ export const PuzzleBoard = ({ puzzle, highlightNew = false }: PuzzleBoardProps) 
     const currentRevealed = puzzle.revealedLetters;
     const prevRevealed = prevRevealedRef.current;
     
+    // Only process if size changed (actual new letters)
+    if (currentRevealed.size === prevRevealed.size) {
+      return;
+    }
+    
     const newLetters = new Set<string>();
     currentRevealed.forEach(letter => {
       if (!prevRevealed.has(letter)) {
@@ -23,16 +28,16 @@ export const PuzzleBoard = ({ puzzle, highlightNew = false }: PuzzleBoardProps) 
       }
     });
     
+    // Update ref IMMEDIATELY before any state changes
+    prevRevealedRef.current = new Set(currentRevealed);
+    
     if (newLetters.size > 0) {
       setNewlyRevealed(newLetters);
-      // Clear the "newly revealed" state after animation
       const timer = setTimeout(() => {
         setNewlyRevealed(new Set());
       }, 800);
       return () => clearTimeout(timer);
     }
-    
-    prevRevealedRef.current = new Set(currentRevealed);
   }, [puzzle.revealedLetters]);
 
   const renderLetter = (char: string, index: number) => {
@@ -49,15 +54,14 @@ export const PuzzleBoard = ({ puzzle, highlightNew = false }: PuzzleBoardProps) 
       );
     }
 
-    // Punctuation is always visible - same style as revealed
+    // Punctuation is always visible - neutral style
     if (isPunctuation) {
       return (
         <div
           key={index}
           className="w-8 h-10 mx-0.5 flex items-center justify-center text-lg font-bold
             bg-white/15 backdrop-blur-sm rounded-lg
-            border border-primary/40 shadow-[0_0_8px_hsl(var(--primary)/0.25)]
-            text-primary-foreground"
+            border border-white/20 text-primary-foreground"
         >
           {char}
         </div>
@@ -69,7 +73,7 @@ export const PuzzleBoard = ({ puzzle, highlightNew = false }: PuzzleBoardProps) 
       ? `bg-white/15 backdrop-blur-sm border text-primary-foreground ${
           isNewlyRevealed 
             ? 'animate-flip-tile border-green-400 shadow-[0_0_20px_rgba(74,222,128,0.6)]' 
-            : 'border-primary/40 shadow-[0_0_8px_hsl(var(--primary)/0.25)]'
+            : 'border-white/20'
         }`
       : 'bg-gradient-to-br from-white/5 to-white/10 border border-white/10';
 
