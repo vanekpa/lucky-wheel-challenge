@@ -43,8 +43,28 @@ const Index = () => {
   const { turnTimer } = useTurnTimer();
   
   // Session management for remote control
-  const { session, isHost, updateGameState } = useGameSession(sessionCode);
+  const { session, isHost, updateGameState, createSession } = useGameSession(sessionCode);
   const lastCommandTimestamp = useRef<number>(0);
+  const [localSessionCode, setLocalSessionCode] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+
+  // Handle session code from URL or local creation
+  const activeSessionCode = sessionCode || localSessionCode;
+
+  const handleCreateSession = useCallback(async () => {
+    setIsCreatingSession(true);
+    try {
+      const code = await createSession();
+      if (code) {
+        setLocalSessionCode(code);
+        // Update URL without page reload
+        window.history.replaceState(null, '', `/play/${code}`);
+      }
+      return code;
+    } finally {
+      setIsCreatingSession(false);
+    }
+  }, [createSession]);
   
   const [gamePhase, setGamePhase] = useState<GamePhase>("intro");
   const [gameMode, setGameMode] = useState<"random" | "teacher">("random");
@@ -814,6 +834,9 @@ const Index = () => {
         canUndo={gameHistory.length > 0}
         onUndo={handleUndo}
         isPlaying={gamePhase === "playing"}
+        sessionCode={activeSessionCode}
+        onCreateSession={handleCreateSession}
+        isCreatingSession={isCreatingSession}
       />
 
       {/* Seasonal Effects Background */}
