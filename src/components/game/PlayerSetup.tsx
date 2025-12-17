@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Player } from '@/types/game';
-import { Play, Volume2, VolumeX, Sparkles, Settings, Timer } from 'lucide-react';
+import { Play, Volume2, VolumeX, Sparkles, Settings, Timer, Info } from 'lucide-react';
 import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { useTurnTimer } from '@/hooks/useTurnTimer';
 import { supabase } from '@/integrations/supabase/client';
@@ -97,11 +98,58 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
       <div className="relative z-10 w-full max-w-md animate-fade-in">
         {/* Compact Header */}
         <div className="text-center mb-4">
-          <h1 className="text-3xl font-black tracking-tight">
-            <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent">
-              KOLOTOČ
-            </span>
-          </h1>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-3xl font-black tracking-tight">
+              <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent">
+                KOLOTOČ
+              </span>
+            </h1>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                  <Info className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-white/10">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-black text-center">📋 Pravidla hry</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">🎯 Cíl hry</h3>
+                    <p className="text-muted-foreground">Uhodnout tajenku a získat co nejvíce bodů.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">🎲 Průběh tahu</h3>
+                    <ol className="text-muted-foreground list-decimal list-inside space-y-0.5">
+                      <li>Roztočte kolo</li>
+                      <li>Vyberte písmeno</li>
+                      <li>Za každý výskyt písmene získáte vytočené body</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">⚠️ Speciální políčka</h3>
+                    <ul className="text-muted-foreground space-y-0.5">
+                      <li><span className="text-red-500 font-bold">BANKROT</span> – ztratíte všechny body</li>
+                      <li><span className="text-gray-400 font-bold">NIČ</span> – pokračuje další hráč</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">🔤 Samohlásky</h3>
+                    <p className="text-muted-foreground">A, E, I, O, U, Y můžete hádat až od <span className="text-yellow-500 font-bold">1000 bodů</span>.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">💡 Hádat tajenku</h3>
+                    <p className="text-muted-foreground">Můžete zkusit uhodnout celou tajenku – za správný tip bonus bodů! Špatný tip = ztráta tahu.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary mb-1">🏆 Vítěz</h3>
+                    <p className="text-muted-foreground">Hráč s nejvíce body na konci hry.</p>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
           <p className="text-sm text-muted-foreground">Nastavte hráče a hru</p>
         </div>
 
