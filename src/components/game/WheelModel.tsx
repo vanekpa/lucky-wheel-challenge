@@ -64,15 +64,15 @@ const CenterHub = ({ radius }: { radius: number }) => {
         />
       </RoundedBox>
       
-      {/* Logo "PEKLO" - menší pro správné renderování */}
+      {/* Logo "PEKLO" - výš nad povrchem */}
       <Text
-        position={[0, 0.06, -0.12]}
+        position={[0, 0.12, -0.1]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.22}
+        fontSize={0.25}
         color="#ff3333"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.015}
+        outlineWidth={0.02}
         outlineColor="#000000"
       >
         PEKLO
@@ -80,13 +80,13 @@ const CenterHub = ({ radius }: { radius: number }) => {
       
       {/* Subtext "EDU.CZ" */}
       <Text
-        position={[0, 0.06, 0.15]}
+        position={[0, 0.12, 0.14]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.12}
+        fontSize={0.14}
         color="#ffd700"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.008}
+        outlineWidth={0.012}
         outlineColor="#000000"
       >
         EDU.CZ
