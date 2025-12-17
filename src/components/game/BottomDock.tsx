@@ -17,6 +17,7 @@ interface BottomDockProps {
   resultMessage?: string;
   resultType?: 'success' | 'error';
   onResultDismiss?: () => void;
+  currentPlayerScore?: number;
 }
 
 export const BottomDock = ({
@@ -31,6 +32,7 @@ export const BottomDock = ({
   resultMessage = '',
   resultType = 'success',
   onResultDismiss,
+  currentPlayerScore = 0,
 }: BottomDockProps) => {
   const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
   
@@ -125,6 +127,7 @@ export const BottomDock = ({
               usedLetters={usedLetters}
               onLetterSelect={onLetterSelect}
               disabled={disabled}
+              currentPlayerScore={currentPlayerScore}
             />
           </div>
         )}

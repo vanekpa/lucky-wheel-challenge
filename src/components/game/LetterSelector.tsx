@@ -1,9 +1,16 @@
+import { Lock } from 'lucide-react';
+
 // Unified keyboard with glassmorphism styling
 interface LetterSelectorProps {
   usedLetters: Set<string>;
   onLetterSelect: (letter: string) => void;
   disabled: boolean;
+  currentPlayerScore?: number;
 }
+
+// Vowel constants
+const VOWELS = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
+const MIN_SCORE_FOR_VOWELS = 1000;
 
 // Unified keyboard - clicking base letter reveals all diacritic variants
 const LETTER_GROUPS: Record<string, string[]> = {
@@ -31,14 +38,18 @@ export const getLetterVariants = (letter: string): string[] => {
   return LETTER_GROUPS[letter] || [letter];
 };
 
-export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: LetterSelectorProps) => {
+export const LetterSelector = ({ usedLetters, onLetterSelect, disabled, currentPlayerScore = 0 }: LetterSelectorProps) => {
   const isGroupUsed = (letter: string) => {
     const variants = getLetterVariants(letter);
     return variants.some(v => usedLetters.has(v));
   };
 
+  const isVowelLocked = (letter: string) => {
+    return VOWELS.has(letter) && currentPlayerScore < MIN_SCORE_FOR_VOWELS;
+  };
+
   const handleSelect = (letter: string) => {
-    // Always pass the letter - game logic will handle if it's already used
+    // Always pass the letter - game logic will handle if it's already used or vowel locked
     onLetterSelect(letter);
   };
 
@@ -57,22 +68,26 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
             const variants = getLetterVariants(letter);
             const isUsed = isGroupUsed(letter);
             const hasVariants = variants.length > 1;
+            const vowelLocked = isVowelLocked(letter);
             
             return (
               <button
                 key={letter}
                 onClick={() => handleSelect(letter)}
                 disabled={disabled}
-                className="relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
-                  transition-all duration-150 ease-out touch-target-lg
-                  bg-white/10 text-white border border-white/20
-                  hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground
-                  hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)]
-                  hover:scale-110 hover:-translate-y-1
-                  active:scale-90 active:bg-primary/50"
+                title={vowelLocked ? `Samohlásky od ${MIN_SCORE_FOR_VOWELS} bodů` : undefined}
+                className={`relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
+                  transition-all duration-150 ease-out touch-target-lg border
+                  ${vowelLocked 
+                    ? 'bg-white/5 text-white/40 border-white/10 cursor-not-allowed' 
+                    : 'bg-white/10 text-white border-white/20 hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:scale-110 hover:-translate-y-1 active:scale-90 active:bg-primary/50'
+                  }`}
               >
                 {letter}
-                {hasVariants && !isUsed && (
+                {vowelLocked && (
+                  <Lock className="absolute -top-1 -right-1 w-3 h-3 text-amber-400" />
+                )}
+                {hasVariants && !isUsed && !vowelLocked && (
                   <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 text-[8px] md:text-[9px] bg-primary text-primary-foreground rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center font-semibold shadow-lg">
                     +{variants.length - 1}
                   </span>
@@ -83,9 +98,11 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
         </div>
         
         <p className="relative text-center text-[10px] md:text-xs text-white/40 mt-3 md:mt-4 tracking-wide">
-          Písmena s háčky a čárkami jsou sloučena
+          Písmena s háčky a čárkami jsou sloučena • Samohlásky 🔒 od {MIN_SCORE_FOR_VOWELS} bodů
         </p>
       </div>
     </div>
   );
 };
+
+export { VOWELS, MIN_SCORE_FOR_VOWELS };
