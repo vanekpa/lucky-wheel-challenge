@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Settings, Volume2, VolumeX, Sparkles, X, Undo2, GraduationCap, Maximize, Minimize } from 'lucide-react';
+import { Settings, Volume2, VolumeX, Sparkles, X, Undo2, GraduationCap, Maximize, Minimize, Smartphone, Copy, Check, Loader2 } from 'lucide-react';
 import { useIsTablet } from '@/hooks/use-tablet';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { useAuth } from '@/hooks/useAuth';
 import { Player } from '@/types/game';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface PlayerSettingsProps {
   effectsEnabled: boolean;
@@ -21,6 +22,10 @@ interface PlayerSettingsProps {
   canUndo?: boolean;
   onUndo?: () => void;
   isPlaying?: boolean;
+  // Remote controller
+  sessionCode?: string | null;
+  onCreateSession?: () => Promise<string | null>;
+  isCreatingSession?: boolean;
 }
 
 export const PlayerSettings = ({ 
@@ -33,13 +38,29 @@ export const PlayerSettings = ({
   onSwitchPlayer,
   canUndo,
   onUndo,
-  isPlaying
+  isPlaying,
+  sessionCode,
+  onCreateSession,
+  isCreatingSession
 }: PlayerSettingsProps) => {
   const { soundsEnabled } = useSounds();
   const { isAdmin } = useAuth();
   const { isTablet } = useIsTablet();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(soundsEnabled);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const controllerUrl = sessionCode 
+    ? `${window.location.origin}/control/${sessionCode}`
+    : null;
+
+  const handleCopyLink = () => {
+    if (controllerUrl) {
+      navigator.clipboard.writeText(controllerUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     setLocalSoundsEnabled(soundsEnabled);
@@ -173,6 +194,71 @@ export const PlayerSettings = ({
                 className="data-[state=checked]:bg-primary"
               />
             </div>
+
+            {/* Remote Controller Section */}
+            {isPlaying && onCreateSession && (
+              <div className="pt-3 mt-3 border-t border-white/10 space-y-3">
+                <div className="flex items-center gap-2 text-white/70">
+                  <Smartphone className="h-4 w-4" />
+                  <span className="text-sm font-medium">Vzdálený ovladač</span>
+                </div>
+                
+                {sessionCode && controllerUrl ? (
+                  <div className="flex gap-3 items-center">
+                    <div className="bg-white p-1.5 rounded-lg">
+                      <QRCodeSVG 
+                        value={controllerUrl} 
+                        size={80}
+                        level="M"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="font-mono text-sm text-primary font-bold tracking-wider">
+                        {sessionCode}
+                      </div>
+                      <Button
+                        onClick={handleCopyLink}
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs bg-white/5 border-white/20 text-white/80 hover:bg-white/10"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="mr-1.5 h-3 w-3 text-green-400" />
+                            Zkopírováno
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="mr-1.5 h-3 w-3" />
+                            Kopírovat odkaz
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={onCreateSession}
+                    variant="outline"
+                    size="sm"
+                    disabled={isCreatingSession}
+                    className="w-full bg-white/5 border-white/20 text-white/80 hover:bg-white/10"
+                  >
+                    {isCreatingSession ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Aktivuji...
+                      </>
+                    ) : (
+                      <>
+                        <Smartphone className="mr-2 h-4 w-4" />
+                        Aktivovat ovladač
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
 
             {/* Teacher Controls Section */}
             {showTeacherControls && (
