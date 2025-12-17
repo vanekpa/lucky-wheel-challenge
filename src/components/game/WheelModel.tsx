@@ -55,38 +55,7 @@ const CenterHub = ({ radius }: { radius: number }) => {
       >
         <meshStandardMaterial color="#0a0a1a" metalness={0.4} roughness={0.6} />
       </RoundedBox>
-
-      {/* Logo "PEKLO" */}
-      <Text
-        position={[0, 0.05, -0.08]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.22}
-        color="#ff3333"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.03}
-        outlineColor="#ffffff"
-        renderOrder={10}
-        material-depthTest={false}
-      >
-        PEKLO
-      </Text>
-
-      {/* Subtext "EDU.CZ" */}
-      <Text
-        position={[0, 0.05, 0.10]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.12}
-        color="#ffd700"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.02}
-        outlineColor="#000000"
-        renderOrder={10}
-        material-depthTest={false}
-      >
-        EDU.CZ
-      </Text>
+      {/* Text je renderován jako 2D HTML overlay v Wheel3D.tsx */}
     </group>
   );
 };
