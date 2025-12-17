@@ -89,7 +89,8 @@ const RemoteController = () => {
   const canSpin = !isSpinning && !isPlacingTokens && !showLetterSelector;
   const playerColor = currentPlayer?.color || '#6366f1';
   const playerScore = currentPlayer?.score || 0;
-  const vowelsUnlocked = playerScore >= MIN_SCORE_FOR_VOWELS;
+  const vowelsForceUnlocked = gameState?.vowelsForceUnlocked || false;
+  const vowelsUnlocked = vowelsForceUnlocked || playerScore >= MIN_SCORE_FOR_VOWELS;
 
   // Determine current action state
   const getActionState = () => {
@@ -228,7 +229,7 @@ const RemoteController = () => {
           {vowelsUnlocked ? (
             <>
               <Unlock className="w-3.5 h-3.5" />
-              <span>Samohlásky odemčeny</span>
+              <span>{vowelsForceUnlocked ? "Samohlásky odemčeny (deadlock)" : "Samohlásky odemčeny"}</span>
             </>
           ) : (
             <>
