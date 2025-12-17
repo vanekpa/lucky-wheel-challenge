@@ -691,33 +691,37 @@ const Index = () => {
         isPlaying={gamePhase === "playing"}
       />
 
-      {/* Turn Timer */}
-      <TurnTimer
-        duration={turnTimer}
-        isActive={timerActive && showLetterSelector}
-        onTimeUp={handleTimeUp}
-        onReset={timerResetKey}
-      />
-
       {/* Seasonal Effects Background */}
       {effectsEnabled && <SeasonalEffects />}
       {/* Studio Effects Background */}
       {effectsEnabled && <StudioEffects />}
 
-      {/* Camera Detail View - Responsive */}
-      <div className="absolute top-4 left-4 z-40 w-64 h-48 md:w-80 md:h-60 lg:w-96 lg:h-72 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 animate-fade-in">
-        <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-2 py-0.5 md:px-3 md:py-1 rounded text-[10px] md:text-xs font-bold uppercase tracking-wide shadow-md">
-          🎥 KAMERA
+      {/* Camera Detail View with Timer - Responsive */}
+      <div className="absolute top-4 left-4 z-40 flex flex-col items-center animate-fade-in">
+        <div className="w-64 h-48 md:w-80 md:h-60 lg:w-96 lg:h-72 rounded-lg overflow-hidden border-4 border-primary/60 shadow-2xl backdrop-blur-sm bg-black/80 relative">
+          <div className="absolute top-2 left-2 z-10 bg-red-600 text-white px-2 py-0.5 md:px-3 md:py-1 rounded text-[10px] md:text-xs font-bold uppercase tracking-wide shadow-md">
+            🎥 KAMERA
+          </div>
+          <WheelDetailView
+            rotation={wheelRotation}
+            rotationRef={wheelRotationRef}
+            tokenPositions={tokenPositions}
+            players={gameState.players}
+            pointerBounce={pointerBounce}
+            currentSegment={currentDisplaySegment}
+            isSpinning={gameState.isSpinning}
+          />
         </div>
-        <WheelDetailView
-          rotation={wheelRotation}
-          rotationRef={wheelRotationRef}
-          tokenPositions={tokenPositions}
-          players={gameState.players}
-          pointerBounce={pointerBounce}
-          currentSegment={currentDisplaySegment}
-          isSpinning={gameState.isSpinning}
-        />
+        
+        {/* Turn Timer under camera */}
+        <div className="mt-2">
+          <TurnTimer
+            duration={turnTimer}
+            isActive={timerActive && showLetterSelector}
+            onTimeUp={handleTimeUp}
+            onReset={timerResetKey}
+          />
+        </div>
       </div>
 
       <PlayerScores players={gameState.players} currentPlayer={gameState.currentPlayer} />
