@@ -1,36 +1,36 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Player } from '@/types/game';
-import { Play, Volume2, VolumeX, Sparkles, Settings, Timer, Info } from 'lucide-react';
-import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
-import { useTurnTimer } from '@/hooks/useTurnTimer';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Player } from "@/types/game";
+import { Play, Volume2, VolumeX, Sparkles, Settings, Timer, Info } from "lucide-react";
+import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
+import { useTurnTimer } from "@/hooks/useTurnTimer";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PlayerSetupProps {
   onComplete: (players: Player[]) => void;
 }
 
 const PRESET_COLORS = [
-  { hex: '#ff6b6b', name: 'Červená' },
-  { hex: '#5b8def', name: 'Modrá' },
-  { hex: '#ffd700', name: 'Zlatá' },
-  { hex: '#4ecdc4', name: 'Tyrkysová' },
-  { hex: '#ff9f43', name: 'Oranžová' },
-  { hex: '#a55eea', name: 'Fialová' },
-  { hex: '#26de81', name: 'Zelená' },
-  { hex: '#fd79a8', name: 'Růžová' },
+  { hex: "#ff6b6b", name: "Červená" },
+  { hex: "#5b8def", name: "Modrá" },
+  { hex: "#ffd700", name: "Zlatá" },
+  { hex: "#4ecdc4", name: "Tyrkysová" },
+  { hex: "#ff9f43", name: "Oranžová" },
+  { hex: "#a55eea", name: "Fialová" },
+  { hex: "#26de81", name: "Zelená" },
+  { hex: "#fd79a8", name: "Růžová" },
 ];
 
 export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
   const [players, setPlayers] = useState<{ name: string; color: string }[]>([
-    { name: 'HRÁČ 1', color: PRESET_COLORS[0].hex },
-    { name: 'HRÁČ 2', color: PRESET_COLORS[1].hex },
-    { name: 'HRÁČ 3', color: PRESET_COLORS[2].hex },
+    { name: "HRÁČ 1", color: PRESET_COLORS[0].hex },
+    { name: "HRÁČ 2", color: PRESET_COLORS[1].hex },
+    { name: "HRÁČ 3", color: PRESET_COLORS[2].hex },
   ]);
   const [focusedPlayer, setFocusedPlayer] = useState<number | null>(null);
 
@@ -42,14 +42,14 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
 
   // Load settings from localStorage
   useEffect(() => {
-    const savedSounds = localStorage.getItem('sounds_enabled');
-    const savedEffects = localStorage.getItem('effects_enabled');
-    const savedTimer = localStorage.getItem('turn_timer');
-    
-    if (savedSounds !== null) setLocalSoundsEnabled(savedSounds === 'true');
+    const savedSounds = localStorage.getItem("sounds_enabled");
+    const savedEffects = localStorage.getItem("effects_enabled");
+    const savedTimer = localStorage.getItem("turn_timer");
+
+    if (savedSounds !== null) setLocalSoundsEnabled(savedSounds === "true");
     else setLocalSoundsEnabled(soundsEnabled);
-    
-    if (savedEffects !== null) setEffectsEnabled(savedEffects === 'true');
+
+    if (savedEffects !== null) setEffectsEnabled(savedEffects === "true");
     if (savedTimer !== null) setTurnTimer(parseInt(savedTimer) || 10);
   }, [soundsEnabled]);
 
@@ -58,24 +58,24 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
     setSoundsEnabledGlobal(localSoundsEnabled);
   }, [localSoundsEnabled]);
 
-  const updatePlayer = (index: number, field: 'name' | 'color', value: string) => {
-    setPlayers(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  const updatePlayer = (index: number, field: "name" | "color", value: string) => {
+    setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));
   };
 
   const handleSoundsToggle = (enabled: boolean) => {
     setLocalSoundsEnabled(enabled);
-    localStorage.setItem('sounds_enabled', enabled.toString());
+    localStorage.setItem("sounds_enabled", enabled.toString());
   };
 
   const handleEffectsToggle = (enabled: boolean) => {
     setEffectsEnabled(enabled);
-    localStorage.setItem('effects_enabled', enabled.toString());
+    localStorage.setItem("effects_enabled", enabled.toString());
   };
 
   const handleTimerChange = (value: string) => {
     const numValue = parseInt(value) || 0;
     setTurnTimer(numValue);
-    localStorage.setItem('turn_timer', numValue.toString());
+    localStorage.setItem("turn_timer", numValue.toString());
   };
 
   const handleStart = () => {
@@ -130,17 +130,25 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                   <div>
                     <h3 className="font-bold text-primary mb-1">⚠️ Speciální políčka</h3>
                     <ul className="text-muted-foreground space-y-0.5">
-                      <li><span className="text-red-500 font-bold">BANKROT</span> – ztratíte všechny body</li>
-                      <li><span className="text-gray-400 font-bold">NIČ</span> – pokračuje další hráč</li>
+                      <li>
+                        <span className="text-red-500 font-bold">BANKROT</span> – ztratíte všechny body
+                      </li>
+                      <li>
+                        <span className="text-gray-400 font-bold">NIC</span> – pokračuje další hráč
+                      </li>
                     </ul>
                   </div>
                   <div>
                     <h3 className="font-bold text-primary mb-1">🔤 Samohlásky</h3>
-                    <p className="text-muted-foreground">A, E, I, O, U, Y můžete hádat až od <span className="text-yellow-500 font-bold">1000 bodů</span>.</p>
+                    <p className="text-muted-foreground">
+                      A, E, I, O, U, Y můžete hádat až od <span className="text-yellow-500 font-bold">1000 bodů</span>.
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-bold text-primary mb-1">💡 Hádat tajenku</h3>
-                    <p className="text-muted-foreground">Můžete zkusit uhodnout celou tajenku – za správný tip bonus bodů! Špatný tip = ztráta tahu.</p>
+                    <p className="text-muted-foreground">
+                      Můžete zkusit uhodnout celou tajenku – za správný tip bonus bodů! Špatný tip = ztráta tahu.
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-bold text-primary mb-1">🏆 Vítěz</h3>
@@ -162,8 +170,8 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                 key={index}
                 className={`relative bg-white/5 rounded-xl p-3 border transition-all duration-200 ${
                   focusedPlayer === index
-                    ? 'border-primary/50 shadow-[0_0_20px_hsl(var(--primary)/0.15)]'
-                    : 'border-white/10'
+                    ? "border-primary/50 shadow-[0_0_20px_hsl(var(--primary)/0.15)]"
+                    : "border-white/10"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -180,7 +188,7 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
 
                   <Input
                     value={player.name}
-                    onChange={(e) => updatePlayer(index, 'name', e.target.value.toUpperCase())}
+                    onChange={(e) => updatePlayer(index, "name", e.target.value.toUpperCase())}
                     onFocus={() => setFocusedPlayer(index)}
                     onBlur={() => setFocusedPlayer(null)}
                     placeholder={`Hráč ${index + 1}`}
@@ -196,9 +204,9 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                     return (
                       <button
                         key={hex}
-                        onClick={() => updatePlayer(index, 'color', hex)}
+                        onClick={() => updatePlayer(index, "color", hex)}
                         className={`w-6 h-6 rounded-full transition-all duration-150 ${
-                          isSelected ? 'scale-125 z-10' : 'opacity-60 hover:opacity-100 hover:scale-110'
+                          isSelected ? "scale-125 z-10" : "opacity-60 hover:opacity-100 hover:scale-110"
                         }`}
                         style={{
                           backgroundColor: hex,
@@ -229,28 +237,22 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                 )}
                 <Label className="text-sm">Zvuky</Label>
               </div>
-              <Switch
-                checked={localSoundsEnabled}
-                onCheckedChange={handleSoundsToggle}
-              />
+              <Switch checked={localSoundsEnabled} onCheckedChange={handleSoundsToggle} />
             </div>
 
             {/* Effects toggle */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className={`w-4 h-4 ${effectsEnabled ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Sparkles className={`w-4 h-4 ${effectsEnabled ? "text-primary" : "text-muted-foreground"}`} />
                 <Label className="text-sm">Sezónní efekty</Label>
               </div>
-              <Switch
-                checked={effectsEnabled}
-                onCheckedChange={handleEffectsToggle}
-              />
+              <Switch checked={effectsEnabled} onCheckedChange={handleEffectsToggle} />
             </div>
 
             {/* Turn timer select */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Timer className={`w-4 h-4 ${turnTimer > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Timer className={`w-4 h-4 ${turnTimer > 0 ? "text-primary" : "text-muted-foreground"}`} />
                 <Label className="text-sm">Časovač tahu</Label>
               </div>
               <Select value={turnTimer.toString()} onValueChange={handleTimerChange}>
@@ -279,9 +281,7 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
           </Button>
         </div>
 
-        <p className="text-center text-muted-foreground/50 text-xs mt-3">
-          Max 12 znaků • Klikněte na barvu pro změnu
-        </p>
+        <p className="text-center text-muted-foreground/50 text-xs mt-3">Max 12 znaků • Klikněte na barvu pro změnu</p>
       </div>
     </div>
   );
