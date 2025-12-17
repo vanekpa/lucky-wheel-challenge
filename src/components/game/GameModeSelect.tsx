@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { Shuffle, BookOpen, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Shuffle, BookOpen, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface GameModeSelectProps {
   onSelectRandom: () => void;
@@ -10,13 +10,10 @@ interface GameModeSelectProps {
 // Animated background wheel SVG
 const BackgroundWheel = () => (
   <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-    <svg
-      viewBox="0 0 400 400"
-      className="w-[800px] h-[800px] opacity-10 animate-[spin_60s_linear_infinite]"
-    >
+    <svg viewBox="0 0 400 400" className="w-[800px] h-[800px] opacity-10 animate-[spin_60s_linear_infinite]">
       {Array.from({ length: 16 }).map((_, i) => {
         const angle = (i * 360) / 16;
-        const colors = ['#fe3d2f', '#3b69ee', '#e741e8', '#fed815', '#409b7b', '#ff6b35', '#8b5cf6', '#06b6d4'];
+        const colors = ["#fe3d2f", "#3b69ee", "#e741e8", "#fed815", "#409b7b", "#ff6b35", "#8b5cf6", "#06b6d4"];
         return (
           <path
             key={i}
@@ -54,36 +51,42 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0a0a1a] via-[#1a1a3e] to-[#2a1a4a] p-8 relative overflow-hidden">
       {/* Animated spotlight effects */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-0 w-64 h-64 bg-pink-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
-      
+      <div
+        className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px] animate-pulse"
+        style={{ animationDelay: "1s" }}
+      />
+      <div
+        className="absolute top-1/2 left-0 w-64 h-64 bg-pink-500/15 rounded-full blur-[100px] animate-pulse"
+        style={{ animationDelay: "2s" }}
+      />
+
       <BackgroundWheel />
       <FloatingParticles />
 
       {/* Title with neon glow effect */}
       <div className="text-center mb-16 animate-in fade-in slide-in-from-top duration-1000 relative z-10">
         <div className="relative inline-block">
-          <h1 
+          <h1
             className="text-8xl md:text-9xl font-black tracking-tighter mb-4"
             style={{
-              background: 'linear-gradient(135deg, #ffd700 0%, #ff6b35 25%, #ff1493 50%, #00ffff 75%, #ffd700 100%)',
-              backgroundSize: '200% 200%',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              animation: 'gradient-shift 4s ease infinite',
-              textShadow: '0 0 80px rgba(255,215,0,0.5)',
-              filter: 'drop-shadow(0 0 30px rgba(255,105,180,0.4))',
+              background: "linear-gradient(135deg, #ffd700 0%, #ff6b35 25%, #ff1493 50%, #00ffff 75%, #ffd700 100%)",
+              backgroundSize: "200% 200%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              animation: "gradient-shift 4s ease infinite",
+              textShadow: "0 0 80px rgba(255,215,0,0.5)",
+              filter: "drop-shadow(0 0 30px rgba(255,105,180,0.4))",
             }}
           >
             KOLOTOČ
           </h1>
           {/* Glow layer behind text */}
-          <h1 
+          <h1
             className="absolute inset-0 text-8xl md:text-9xl font-black tracking-tighter mb-4 blur-sm opacity-50"
             style={{
-              background: 'linear-gradient(135deg, #ffd700, #ff1493, #00ffff)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              background: "linear-gradient(135deg, #ffd700, #ff1493, #00ffff)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
             }}
             aria-hidden="true"
           >
@@ -91,7 +94,7 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
           </h1>
         </div>
         <p className="text-2xl md:text-3xl text-white/60 font-light tracking-wide">
-          Slovní hra inspirovaná <span className="text-yellow-400/80 font-medium">Kolem štěstí</span>
+          Návrat Pavla Poulíčka! <span className="text-yellow-400/80 font-medium">Hádej a vyhraj!</span>
         </p>
       </div>
 
@@ -131,8 +134,8 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
       </div>
 
       {/* Admin link */}
-      <Link 
-        to="/auth" 
+      <Link
+        to="/auth"
         className="relative z-10 text-white/40 hover:text-white/80 transition-all duration-300 flex items-center gap-2 text-sm animate-in fade-in duration-1000 delay-700 hover:scale-105"
       >
         <Lock className="h-4 w-4" />
