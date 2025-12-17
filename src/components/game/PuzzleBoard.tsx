@@ -66,9 +66,11 @@ export const PuzzleBoard = ({ puzzle, highlightNew = false }: PuzzleBoardProps) 
 
     // Letters - revealed or hidden
     const revealedClasses = isRevealed
-      ? `bg-white/15 backdrop-blur-sm border border-primary/40 shadow-[0_0_8px_hsl(var(--primary)/0.25)] text-primary-foreground ${
-          isNewlyRevealed ? 'animate-flip-tile' : ''
-        } ${highlightNew && isNewlyRevealed ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-transparent' : ''}`
+      ? `bg-white/15 backdrop-blur-sm border text-primary-foreground ${
+          isNewlyRevealed 
+            ? 'animate-flip-tile border-green-400 shadow-[0_0_20px_rgba(74,222,128,0.6)]' 
+            : 'border-primary/40 shadow-[0_0_8px_hsl(var(--primary)/0.25)]'
+        }`
       : 'bg-gradient-to-br from-white/5 to-white/10 border border-white/10';
 
     return (

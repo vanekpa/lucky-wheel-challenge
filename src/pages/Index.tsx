@@ -239,6 +239,22 @@ const Index = () => {
     const upperLetter = letter.toUpperCase();
     const variants = getLetterVariants(upperLetter);
     
+    // Check if letter was already used - penalty!
+    const alreadyUsed = variants.some(v => gameState.usedLetters.has(v));
+    if (alreadyUsed) {
+      playNothingSound();
+      setResultMessage(`Písmeno "${letter}" už bylo řečeno! Ztráta tahu.`);
+      setResultType('error');
+      setShowResult(true);
+      setShowLetterSelector(false);
+      
+      setGameState((prev) => ({
+        ...prev,
+        currentPlayer: (prev.currentPlayer + 1) % 3,
+      }));
+      return;
+    }
+    
     const phrase = gameState.puzzle.phrase.toUpperCase();
     
     // Count all variants in the phrase

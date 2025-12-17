@@ -38,7 +38,7 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
   };
 
   const handleSelect = (letter: string) => {
-    // Pass the base letter, the game logic will check all variants
+    // Always pass the letter - game logic will handle if it's already used
     onLetterSelect(letter);
   };
 
@@ -62,12 +62,15 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
               <button
                 key={letter}
                 onClick={() => handleSelect(letter)}
-                disabled={disabled || isUsed}
+                disabled={disabled}
                 className={`
                   relative w-10 h-10 md:w-11 md:h-11 text-base md:text-lg font-bold rounded-xl
                   transition-all duration-150 ease-out touch-target-lg
                   ${isUsed 
-                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    ? `bg-white/5 text-white/40 border border-white/10
+                       hover:bg-red-500/20 hover:border-red-500/50
+                       hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]
+                       cursor-pointer` 
                     : `bg-white/10 text-white border border-white/20
                        hover:bg-primary/30 hover:border-primary/50 hover:text-primary-foreground
                        hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)]
@@ -77,6 +80,10 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
                 `}
               >
                 {letter}
+                {/* Show dot indicator for used letters */}
+                {isUsed && (
+                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full" />
+                )}
                 {hasVariants && !isUsed && (
                   <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 text-[8px] md:text-[9px] bg-primary text-primary-foreground rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center font-semibold shadow-lg">
                     +{variants.length - 1}
@@ -88,7 +95,7 @@ export const LetterSelector = ({ usedLetters, onLetterSelect, disabled }: Letter
         </div>
         
         <p className="relative text-center text-[10px] md:text-xs text-white/40 mt-3 md:mt-4 tracking-wide">
-          Písmena s háčky a čárkami jsou sloučena (A=Á, C=Č, atd.)
+          Písmena s háčky a čárkami jsou sloučena • <span className="text-red-400">●</span> = už řečeno (ztráta tahu!)
         </p>
       </div>
     </div>
