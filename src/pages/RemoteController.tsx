@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, Shuffle, Lock, Unlock } from 'lucide-react';
+import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, WifiOff, Shuffle, Lock, Unlock, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
+import { supabase } from '@/integrations/supabase/client';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
 const MIN_SCORE_FOR_VOWELS = 1000;
+const POLL_INTERVAL_MS = 3000;
 
 // Vibration patterns
 const vibrate = {
@@ -26,12 +28,70 @@ const RemoteController = () => {
   const { session, isLoading, error, sendCommand, joinSession } = useGameSession();
   const [guessInput, setGuessInput] = useState('');
   const [showGuessInput, setShowGuessInput] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (code && !session) {
       joinSession(code);
     }
   }, [code]);
+
+  // Update lastUpdate when session changes
+  useEffect(() => {
+    if (session) {
+      setLastUpdate(new Date());
+    }
+  }, [session?.game_state]);
+
+  // Polling fallback - refetch session every 3 seconds
+  useEffect(() => {
+    if (!session?.id) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('game_sessions')
+          .select('game_state, updated_at')
+          .eq('id', session.id)
+          .single();
+        
+        if (data && !fetchError) {
+          setLastUpdate(new Date());
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(pollInterval);
+  }, [session?.id]);
+
+  // Manual refresh
+  const handleRefresh = useCallback(async () => {
+    if (!code || isRefreshing) return;
+    setIsRefreshing(true);
+    vibrate.tap();
+    
+    try {
+      await joinSession(code);
+      setLastUpdate(new Date());
+      toast.success('Synchronizováno', { duration: 1000 });
+    } catch (err) {
+      toast.error('Chyba synchronizace');
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [code, isRefreshing, joinSession]);
+
+  // Format last update time
+  const formatLastUpdate = () => {
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - lastUpdate.getTime()) / 1000);
+    if (diff < 5) return 'právě teď';
+    if (diff < 60) return `před ${diff}s`;
+    return `před ${Math.floor(diff / 60)}m`;
+  };
 
   const handleCommand = async (command: GameCommand) => {
     vibrate.tap();
@@ -145,7 +205,21 @@ const RemoteController = () => {
         </Button>
         
         <div className="flex items-center gap-2">
-          <Wifi className="w-3 h-3 text-emerald-400" />
+          {/* Sync indicator */}
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <Wifi className="w-3 h-3 text-emerald-400" />
+            <span>{formatLastUpdate()}</span>
+          </div>
+          
+          {/* Refresh button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-1.5 rounded-md hover:bg-slate-700/50 active:scale-90 transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={cn("w-4 h-4 text-slate-400", isRefreshing && "animate-spin")} />
+          </button>
+          
           <div 
             className="flex items-center gap-1.5 px-3 py-1 rounded-full"
             style={{ backgroundColor: `${playerColor}30`, border: `2px solid ${playerColor}` }}
@@ -280,19 +354,22 @@ const RemoteController = () => {
                   onClick={() => handleLetterSelect(letter)}
                   disabled={isSpinning || isPlacingTokens || !showLetterSelector}
                   className={cn(
-                    "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center relative",
+                    "aspect-square rounded-lg text-base font-bold transition-all flex items-center justify-center relative overflow-hidden",
                     "border text-white",
                     isLocked 
-                      ? "bg-red-900/40 border-red-700/50 opacity-60" 
+                      ? "bg-gradient-to-br from-red-900/70 to-red-800/50 border-red-600/70" 
                       : "bg-slate-700/60 border-slate-600/40",
                     showLetterSelector && !isLocked && "active:scale-90 active:bg-primary",
                     !showLetterSelector && "opacity-30"
                   )}
                 >
-                  {letter}
+                  {/* Red overlay for locked vowels */}
                   {isLocked && (
-                    <Lock className="w-2.5 h-2.5 absolute top-0.5 right-0.5 text-red-400" />
+                    <div className="absolute inset-0 bg-red-900/50 flex items-center justify-center">
+                      <Lock className="w-4 h-4 text-red-300 drop-shadow-lg" />
+                    </div>
                   )}
+                  <span className={cn(isLocked && "opacity-40")}>{letter}</span>
                 </button>
               );
             })}
