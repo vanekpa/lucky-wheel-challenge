@@ -133,21 +133,37 @@ const RemoteController = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col relative overflow-hidden">
-      {/* Animated background effects */}
+    <div 
+      className="min-h-screen flex flex-col relative overflow-hidden transition-colors duration-500"
+      style={{ 
+        background: `linear-gradient(135deg, ${currentPlayer?.color || '#6366f1'}15 0%, #1e293b 30%, #0f172a 100%)`
+      }}
+    >
+      {/* Animated background effects with player color */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div 
-          className="absolute top-0 left-1/4 w-64 h-64 rounded-full blur-3xl animate-pulse"
-          style={{ backgroundColor: `${currentPlayer?.color || '#6366f1'}15` }}
+          className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-3xl animate-pulse"
+          style={{ backgroundColor: `${currentPlayer?.color || '#6366f1'}25` }}
         />
         <div 
           className="absolute bottom-1/4 right-0 w-96 h-96 rounded-full blur-3xl animate-pulse delay-1000"
-          style={{ backgroundColor: `${currentPlayer?.color || '#6366f1'}10` }}
+          style={{ backgroundColor: `${currentPlayer?.color || '#6366f1'}15` }}
+        />
+        {/* Player color accent line at top */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-1 transition-colors duration-500"
+          style={{ backgroundColor: currentPlayer?.color }}
         />
       </div>
 
-      {/* Header - Glassmorphism */}
-      <header className="bg-slate-800/60 backdrop-blur-2xl border-b border-slate-700/50 px-4 py-3 sticky top-0 z-50">
+      {/* Header - with player color accent */}
+      <header 
+        className="backdrop-blur-2xl border-b px-4 py-3 sticky top-0 z-50 transition-colors duration-500"
+        style={{ 
+          backgroundColor: `${currentPlayer?.color || '#6366f1'}15`,
+          borderColor: `${currentPlayer?.color || '#6366f1'}30`
+        }}
+      >
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <Button 
             variant="ghost" 
@@ -169,7 +185,14 @@ const RemoteController = () => {
                 {code}
               </span>
             </div>
-            <div className="flex items-center justify-center gap-2">
+            {/* Current player name with colored background */}
+            <div 
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full transition-colors duration-500"
+              style={{ 
+                backgroundColor: `${currentPlayer?.color}30`,
+                border: `2px solid ${currentPlayer?.color}60`
+              }}
+            >
               <div 
                 className="w-3 h-3 rounded-full shadow-lg animate-pulse"
                 style={{ 
@@ -177,13 +200,19 @@ const RemoteController = () => {
                   boxShadow: `0 0 12px ${currentPlayer?.color}`
                 }}
               />
-              <p className="font-bold text-white text-lg">
+              <p 
+                className="font-bold text-lg transition-colors duration-500"
+                style={{ color: currentPlayer?.color }}
+              >
                 {currentPlayer?.name || 'Hráč'}
               </p>
             </div>
           </div>
 
-          <div className="text-right bg-slate-700/30 rounded-xl px-3 py-2">
+          <div 
+            className="text-right rounded-xl px-3 py-2 transition-colors duration-500"
+            style={{ backgroundColor: `${currentPlayer?.color}20` }}
+          >
             <div className="flex items-center gap-1.5">
               <Trophy className="w-4 h-4 text-yellow-500" />
               <span className="font-bold text-xl text-white">{currentPlayer?.score || 0}</span>
@@ -273,7 +302,7 @@ const RemoteController = () => {
         {/* Main actions */}
         {!showGuessInput && (
           <div className="space-y-4">
-            {/* MEGA Spin Button */}
+            {/* MEGA Spin Button - uses player color */}
             <button
               onClick={handleSpinCommand}
               disabled={!canSpin}
@@ -282,20 +311,34 @@ const RemoteController = () => {
                 canSpin ? "active:scale-95" : "opacity-50 cursor-not-allowed"
               )}
             >
-              <div className={cn(
-                "absolute inset-0 rounded-2xl transition-all duration-300",
-                canSpin && "bg-primary/30 blur-xl group-hover:bg-primary/50 group-hover:blur-2xl"
-              )} />
-              <div className={cn(
-                "relative bg-gradient-to-br from-primary via-primary to-primary/80 rounded-2xl py-6 px-8 flex items-center justify-center gap-4 shadow-2xl",
-                canSpin && "group-hover:shadow-primary/30"
-              )}>
+              <div 
+                className={cn(
+                  "absolute inset-0 rounded-3xl transition-all duration-500",
+                  canSpin && "blur-xl group-hover:blur-2xl"
+                )}
+                style={{ backgroundColor: canSpin ? `${currentPlayer?.color}40` : undefined }}
+              />
+              <div 
+                className={cn(
+                  "relative rounded-3xl py-8 px-8 flex flex-col items-center justify-center gap-2 shadow-2xl transition-all duration-500",
+                  canSpin && "group-hover:scale-[1.02]"
+                )}
+                style={{ 
+                  background: canSpin 
+                    ? `linear-gradient(135deg, ${currentPlayer?.color} 0%, ${currentPlayer?.color}cc 100%)`
+                    : 'linear-gradient(135deg, #475569 0%, #334155 100%)',
+                  boxShadow: canSpin ? `0 10px 40px ${currentPlayer?.color}50` : undefined
+                }}
+              >
                 <RotateCcw className={cn(
-                  "w-8 h-8 text-white transition-transform",
+                  "w-10 h-10 text-white transition-transform",
                   isSpinning && "animate-spin"
                 )} />
-                <span className="text-2xl font-bold text-white tracking-wide">
+                <span className="text-3xl font-black text-white tracking-wide">
                   {isSpinning ? 'TOČÍ SE...' : 'ZATOČIT'}
+                </span>
+                <span className="text-lg font-medium text-white/80">
+                  {currentPlayer?.name || 'Hráč'}
                 </span>
               </div>
             </button>
