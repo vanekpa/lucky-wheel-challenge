@@ -16,7 +16,7 @@ import EndGameDialog from "@/components/game/EndGameDialog";
 import { GameState, WheelSegment, Player } from "@/types/game";
 import { wheelSegments } from "@/data/puzzles";
 import { usePuzzles } from "@/hooks/usePuzzles";
-import { getLetterVariants } from "@/components/game/LetterSelector";
+import { getLetterVariants, VOWELS, MIN_SCORE_FOR_VOWELS } from "@/components/game/LetterSelector";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StudioEffects } from "@/components/game/StudioEffects";
@@ -308,6 +308,24 @@ const Index = () => {
 
     const upperLetter = letter.toUpperCase();
     const variants = getLetterVariants(upperLetter);
+    const currentPlayer = gameState.players[gameState.currentPlayer];
+    const currentScore = currentPlayer.score;
+    const isVowelsUnlocked = currentPlayer.vowelsUnlockedThisRound || false;
+
+    // Check if vowel and not unlocked yet
+    if (VOWELS.has(upperLetter) && currentScore < MIN_SCORE_FOR_VOWELS && !isVowelsUnlocked) {
+      playNothingSound();
+      setResultMessage(`Samohlásky můžete hádat až od ${MIN_SCORE_FOR_VOWELS} bodů! Ztráta tahu.`);
+      setResultType("error");
+      setShowResult(true);
+      setShowLetterSelector(false);
+
+      setGameState((prev) => ({
+        ...prev,
+        currentPlayer: (prev.currentPlayer + 1) % 3,
+      }));
+      return;
+    }
 
     // Check if letter was already used - penalty!
     const alreadyUsed = variants.some((v) => gameState.usedLetters.has(v));
@@ -349,14 +367,23 @@ const Index = () => {
       setShowResult(true);
       setShowLetterSelector(false);
 
-      setGameState((prev) => ({
-        ...prev,
-        puzzle: {
-          ...prev.puzzle,
-          revealedLetters: new Set([...prev.puzzle.revealedLetters, ...variants]),
-        },
-        players: prev.players.map((p) => (p.id === prev.currentPlayer ? { ...p, score: p.score + points } : p)),
-      }));
+      setGameState((prev) => {
+        const newScore = prev.players[prev.currentPlayer].score + points;
+        const shouldUnlockVowels = newScore >= MIN_SCORE_FOR_VOWELS;
+        
+        return {
+          ...prev,
+          puzzle: {
+            ...prev.puzzle,
+            revealedLetters: new Set([...prev.puzzle.revealedLetters, ...variants]),
+          },
+          players: prev.players.map((p) => 
+            p.id === prev.currentPlayer 
+              ? { ...p, score: newScore, vowelsUnlockedThisRound: shouldUnlockVowels || p.vowelsUnlockedThisRound } 
+              : p
+          ),
+        };
+      });
     } else {
       // Show error result with delay
       setResultMessage(`Písmeno "${letter}" v tajence není. Tah přechází dál.`);
@@ -566,6 +593,8 @@ const Index = () => {
       round: nextRound,
       currentPlayer: 0,
       isSpinning: false,
+      // Reset vowelsUnlockedThisRound for all players at new round
+      players: prev.players.map((p) => ({ ...p, vowelsUnlockedThisRound: false })),
     }));
 
     // Don't clear tokenPositions - tokens stay on the wheel!
@@ -790,6 +819,7 @@ const Index = () => {
         resultMessage={resultMessage}
         resultType={resultType}
         onResultDismiss={handleResultDismiss}
+        currentPlayerScore={gameState.players[gameState.currentPlayer]?.score || 0}
       />
 
       <GuessPhraseDialog

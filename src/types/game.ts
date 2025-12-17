@@ -4,6 +4,7 @@ export interface Player {
   score: number;
   color: string;
   tokenPosition?: number;
+  vowelsUnlockedThisRound?: boolean;
 }
 
 export interface WheelSegment {

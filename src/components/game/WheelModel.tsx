@@ -36,15 +36,46 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
 const CenterHub = ({ radius }: { radius: number }) => {
   return (
     <group>
+      {/* Zlatý vnější okraj */}
       <mesh position={[0, 0.02, 0]} rotation={[0, 0, 0]}>
         <cylinderGeometry args={[radius, radius, 0.04, 32]} />
         <meshStandardMaterial color="#d4af37" metalness={0.8} roughness={0.2} />
       </mesh>
       
-      <mesh position={[0, 0.06, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[radius * 0.6, radius * 0.6, 0.03, 32]} />
-        <meshStandardMaterial color="#ffd700" metalness={0.9} roughness={0.1} />
+      {/* Tmavý vnitřní kruh pro logo */}
+      <mesh position={[0, 0.05, 0]} rotation={[0, 0, 0]}>
+        <cylinderGeometry args={[radius * 0.85, radius * 0.85, 0.02, 32]} />
+        <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.5} />
       </mesh>
+      
+      {/* Logo "PEKLO" */}
+      <Text
+        position={[0, 0.07, 0]}
+        rotation={[-Math.PI/2, 0, 0]}
+        fontSize={0.18}
+        color="#ff6b6b"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.012}
+        outlineColor="#000000"
+        font="/fonts/Inter-Bold.woff"
+      >
+        PEKLO
+      </Text>
+      
+      {/* Subtext "EDU.CZ" */}
+      <Text
+        position={[0, 0.07, 0.22]}
+        rotation={[-Math.PI/2, 0, 0]}
+        fontSize={0.09}
+        color="#ffd700"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.006}
+        outlineColor="#000000"
+      >
+        EDU.CZ
+      </Text>
     </group>
   );
 };
