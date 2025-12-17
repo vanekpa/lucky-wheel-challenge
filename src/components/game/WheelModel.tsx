@@ -35,43 +35,58 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
 
 const CenterHub = ({ radius }: { radius: number }) => {
   return (
-    <group>
-      {/* Zlatý vnější okraj */}
-      <mesh position={[0, 0.02, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[radius, radius, 0.06, 32]} />
-        <meshStandardMaterial color="#d4af37" metalness={0.8} roughness={0.2} />
-      </mesh>
+    <group position={[0, 0.05, 0]}>
+      {/* Oválný badge - vnější zlatý rámeček */}
+      <RoundedBox 
+        args={[1.4, 0.08, 0.7]} 
+        radius={0.2} 
+        smoothness={4}
+        position={[0, 0, 0]}
+      >
+        <meshStandardMaterial 
+          color="#d4af37" 
+          metalness={0.9} 
+          roughness={0.15} 
+        />
+      </RoundedBox>
       
-      {/* Tmavý vnitřní kruh pro logo */}
-      <mesh position={[0, 0.06, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[radius * 0.9, radius * 0.9, 0.04, 32]} />
-        <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.5} />
-      </mesh>
+      {/* Vnitřní tmavá plocha badge */}
+      <RoundedBox 
+        args={[1.2, 0.09, 0.55]} 
+        radius={0.15} 
+        smoothness={4}
+        position={[0, 0.01, 0]}
+      >
+        <meshStandardMaterial 
+          color="#0a0a1a" 
+          metalness={0.4} 
+          roughness={0.6} 
+        />
+      </RoundedBox>
       
-      {/* Logo "PEKLO" - větší, výš, červeně */}
+      {/* Logo "PEKLO" - menší pro správné renderování */}
       <Text
-        position={[0, 0.15, -0.35]}
+        position={[0, 0.06, -0.12]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.65}
+        fontSize={0.22}
         color="#ff3333"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.04}
+        outlineWidth={0.015}
         outlineColor="#000000"
-        fontWeight="bold"
       >
         PEKLO
       </Text>
       
-      {/* Subtext "EDU.CZ" - větší, zlatě */}
+      {/* Subtext "EDU.CZ" */}
       <Text
-        position={[0, 0.15, 0.45]}
+        position={[0, 0.06, 0.15]}
         rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.35}
+        fontSize={0.12}
         color="#ffd700"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.025}
+        outlineWidth={0.008}
         outlineColor="#000000"
       >
         EDU.CZ
