@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PlayerSettingsProps {
   effectsEnabled: boolean;
@@ -15,6 +16,7 @@ interface PlayerSettingsProps {
 
 export const PlayerSettings = ({ effectsEnabled, onEffectsChange, showEndGame, onEndGame }: PlayerSettingsProps) => {
   const { soundsEnabled } = useSounds();
+  const { isAdmin } = useAuth();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(soundsEnabled);
 
   useEffect(() => {
@@ -25,38 +27,48 @@ export const PlayerSettings = ({ effectsEnabled, onEffectsChange, showEndGame, o
     setLocalSoundsEnabled(checked);
     setSoundsEnabledGlobal(checked);
     
-    // Persist to database
-    try {
-      await supabase
-        .from('game_settings')
-        .upsert({ 
-          setting_key: 'sounds_enabled', 
-          setting_value: checked.toString(),
-          updated_at: new Date().toISOString()
-        }, { 
-          onConflict: 'setting_key' 
-        });
-    } catch (error) {
-      console.error('Failed to save sounds setting:', error);
+    // Only admins can persist to database
+    if (isAdmin) {
+      try {
+        await supabase
+          .from('game_settings')
+          .upsert({ 
+            setting_key: 'sounds_enabled', 
+            setting_value: checked.toString(),
+            updated_at: new Date().toISOString()
+          }, { 
+            onConflict: 'setting_key' 
+          });
+      } catch (error) {
+        // Silently fail for non-admins - RLS will block anyway
+      }
+    } else {
+      // Non-admins save to localStorage only
+      localStorage.setItem('sounds_enabled', checked.toString());
     }
   };
 
   const handleEffectsToggle = async (checked: boolean) => {
     onEffectsChange(checked);
     
-    // Persist to database
-    try {
-      await supabase
-        .from('game_settings')
-        .upsert({ 
-          setting_key: 'effects_enabled', 
-          setting_value: checked.toString(),
-          updated_at: new Date().toISOString()
-        }, { 
-          onConflict: 'setting_key' 
-        });
-    } catch (error) {
-      console.error('Failed to save effects setting:', error);
+    // Only admins can persist to database
+    if (isAdmin) {
+      try {
+        await supabase
+          .from('game_settings')
+          .upsert({ 
+            setting_key: 'effects_enabled', 
+            setting_value: checked.toString(),
+            updated_at: new Date().toISOString()
+          }, { 
+            onConflict: 'setting_key' 
+          });
+      } catch (error) {
+        // Silently fail for non-admins - RLS will block anyway
+      }
+    } else {
+      // Non-admins save to localStorage only
+      localStorage.setItem('effects_enabled', checked.toString());
     }
   };
 

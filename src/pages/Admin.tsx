@@ -10,6 +10,18 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSeason, Season, DayTime, seasonColors } from '@/hooks/useSeason';
 import { useGameSettings } from '@/hooks/useGameSettings';
+import { z } from 'zod';
+
+// Validation schema for puzzle data
+const puzzleSchema = z.object({
+  phrase: z.string()
+    .min(1, 'Fráze je povinná')
+    .max(200, 'Fráze je příliš dlouhá (max 200 znaků)')
+    .regex(/^[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ0-9\s.,!?;:'"()-]+$/i, 'Neplatné znaky ve frázi'),
+  category: z.string()
+    .min(1, 'Kategorie je povinná')
+    .max(100, 'Kategorie je příliš dlouhá (max 100 znaků)')
+});
 
 interface Puzzle {
   id: string;
@@ -104,20 +116,25 @@ const Admin = () => {
   };
 
   const addPuzzle = async () => {
-    if (!newPhrase.trim() || !newCategory.trim()) {
-      toast.error('Vyplňte všechna pole');
+    // Validate input using zod schema
+    const validationResult = puzzleSchema.safeParse({
+      phrase: newPhrase.trim(),
+      category: newCategory.trim()
+    });
+
+    if (!validationResult.success) {
+      toast.error(validationResult.error.errors[0].message);
       return;
     }
 
     const { error } = await supabase.from('puzzles').insert({
-      phrase: newPhrase.toUpperCase().trim(),
-      category: newCategory.trim(),
+      phrase: validationResult.data.phrase.toUpperCase(),
+      category: validationResult.data.category,
       created_by: user?.email || 'Admin',
     });
 
     if (error) {
       toast.error('Chyba při přidávání tajenky');
-      console.error(error);
     } else {
       toast.success('Tajenka přidána!');
       setNewPhrase('');
@@ -147,9 +164,23 @@ const Admin = () => {
   const saveEdit = async () => {
     if (!editingId) return;
 
+    // Validate input using zod schema
+    const validationResult = puzzleSchema.safeParse({
+      phrase: editPhrase.trim(),
+      category: editCategory.trim()
+    });
+
+    if (!validationResult.success) {
+      toast.error(validationResult.error.errors[0].message);
+      return;
+    }
+
     const { error } = await supabase
       .from('puzzles')
-      .update({ phrase: editPhrase.toUpperCase().trim(), category: editCategory.trim() })
+      .update({ 
+        phrase: validationResult.data.phrase.toUpperCase(), 
+        category: validationResult.data.category 
+      })
       .eq('id', editingId);
 
     if (error) {
@@ -179,8 +210,15 @@ const Admin = () => {
       toast.error('Vložte text s tajenkami');
       return;
     }
-    if (!bulkCategory.trim()) {
-      toast.error('Zadejte kategorii pro import');
+    
+    // Validate category
+    const categoryValidation = z.string()
+      .min(1, 'Kategorie je povinná')
+      .max(100, 'Kategorie je příliš dlouhá')
+      .safeParse(bulkCategory.trim());
+    
+    if (!categoryValidation.success) {
+      toast.error(categoryValidation.error.errors[0].message);
       return;
     }
 
@@ -198,13 +236,37 @@ const Admin = () => {
       return;
     }
 
+    // Validate each phrase
+    const phraseSchema = z.string()
+      .min(1)
+      .max(200, 'Fráze je příliš dlouhá (max 200 znaků)')
+      .regex(/^[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ0-9\s.,!?;:'"()-]+$/i, 'Neplatné znaky');
+
+    const invalidPhrases: string[] = [];
+    const validLines: string[] = [];
+    
+    for (const phrase of lines) {
+      const result = phraseSchema.safeParse(phrase);
+      if (result.success) {
+        validLines.push(phrase);
+      } else {
+        invalidPhrases.push(phrase.substring(0, 30) + (phrase.length > 30 ? '...' : ''));
+      }
+    }
+
+    if (invalidPhrases.length > 0 && validLines.length === 0) {
+      toast.error(`Všechny fráze obsahují neplatné znaky nebo jsou příliš dlouhé`);
+      setIsBulkImporting(false);
+      return;
+    }
+
     // Get existing phrases for duplicate detection
     const existingPhrases = new Set(puzzles.map(p => p.phrase.toUpperCase()));
     
     const toImport: string[] = [];
     const duplicates: string[] = [];
 
-    for (const phrase of lines) {
+    for (const phrase of validLines) {
       if (existingPhrases.has(phrase) || toImport.includes(phrase)) {
         duplicates.push(phrase);
       } else {
@@ -221,7 +283,7 @@ const Admin = () => {
     // Insert all unique puzzles
     const puzzlesToInsert = toImport.map(phrase => ({
       phrase,
-      category: bulkCategory.trim(),
+      category: categoryValidation.data,
       created_by: user?.email || 'Admin',
     }));
 
@@ -229,11 +291,10 @@ const Admin = () => {
 
     if (error) {
       toast.error('Chyba při importu');
-      console.error(error);
     } else {
-      const message = duplicates.length > 0
-        ? `Importováno ${toImport.length} tajenek (${duplicates.length} duplicit přeskočeno)`
-        : `Importováno ${toImport.length} tajenek`;
+      let message = `Importováno ${toImport.length} tajenek`;
+      if (duplicates.length > 0) message += ` (${duplicates.length} duplicit přeskočeno)`;
+      if (invalidPhrases.length > 0) message += ` (${invalidPhrases.length} neplatných přeskočeno)`;
       toast.success(message);
       setBulkText('');
       setBulkCategory('');

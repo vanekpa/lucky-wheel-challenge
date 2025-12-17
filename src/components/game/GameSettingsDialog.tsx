@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Settings, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSounds } from '@/hooks/useSounds';
+import { useAuth } from '@/hooks/useAuth';
 
 interface GameSettingsDialogProps {
   effectsEnabled: boolean;
@@ -14,6 +15,7 @@ interface GameSettingsDialogProps {
 
 export const GameSettingsDialog = ({ effectsEnabled, onEffectsChange }: GameSettingsDialogProps) => {
   const { soundsEnabled } = useSounds();
+  const { isAdmin } = useAuth();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(soundsEnabled);
   const [open, setOpen] = useState(false);
 
@@ -24,15 +26,20 @@ export const GameSettingsDialog = ({ effectsEnabled, onEffectsChange }: GameSett
   const handleSoundsToggle = async (enabled: boolean) => {
     setLocalSoundsEnabled(enabled);
     
-    // Try to update in DB, but don't worry if it fails (user might not have admin access)
-    await supabase
-      .from('game_settings')
-      .upsert({ 
-        setting_key: 'sounds_enabled', 
-        setting_value: enabled ? 'true' : 'false' 
-      }, { 
-        onConflict: 'setting_key' 
-      });
+    // Only admins can persist to database
+    if (isAdmin) {
+      await supabase
+        .from('game_settings')
+        .upsert({ 
+          setting_key: 'sounds_enabled', 
+          setting_value: enabled ? 'true' : 'false' 
+        }, { 
+          onConflict: 'setting_key' 
+        });
+    } else {
+      // Non-admins save to localStorage only
+      localStorage.setItem('sounds_enabled', enabled ? 'true' : 'false');
+    }
   };
 
   return (
