@@ -146,7 +146,9 @@ const RemoteController = () => {
   const isPlacingTokens = gameState?.isPlacingTokens;
   const isSpinning = gameState?.isSpinning;
   const showLetterSelector = gameState?.showLetterSelector;
-  const canSpin = !isSpinning && !isPlacingTokens && !showLetterSelector;
+  const isGuessingPhrase = gameState?.isGuessingPhrase || false;
+  // Cannot spin when guessing phrase - player committed to guessing
+  const canSpin = !isSpinning && !isPlacingTokens && !showLetterSelector && !isGuessingPhrase;
   const playerColor = currentPlayer?.color || '#6366f1';
   const playerScore = currentPlayer?.score || 0;
   const vowelsForceUnlocked = gameState?.vowelsForceUnlocked || false;
@@ -156,6 +158,7 @@ const RemoteController = () => {
   const getActionState = () => {
     if (isPlacingTokens) return { text: '🎯 Umístěte žeton', color: 'bg-primary/20 text-primary border-primary/40' };
     if (isSpinning) return { text: '🎡 Kolo se točí...', color: 'bg-amber-500/20 text-amber-400 border-amber-500/40' };
+    if (isGuessingPhrase) return { text: '💭 Hádání tajenky...', color: 'bg-purple-500/20 text-purple-400 border-purple-500/40' };
     if (showLetterSelector) return { text: '🔤 Vyberte písmeno!', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' };
     return { text: '▶️ Můžete zatočit', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40' };
   };
