@@ -1,11 +1,16 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Points, PointMaterial } from '@react-three/drei';
+import * as THREE from 'three';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { WheelSegment, Player } from '@/types/game';
 import { WHEEL_RADIUS, POINTER_Y_POSITION, POINTER_Z_POSITION } from '@/constants/wheel';
 import { WheelModel } from './WheelModel';
 import { useSeason, Season } from '@/hooks/useSeason';
-import * as THREE from 'three';
+
+const BADGE_DEBUG_STORAGE_KEY = 'wheel.badgeDebug.v1';
 
 interface Wheel3DProps {
   rotation: number;
@@ -255,7 +260,7 @@ const Pointer3D = ({ bounce = 0 }: { bounce?: number }) => {
   );
 };
 
-const Scene = ({ 
+const Scene = ({
   rotation,
   rotationRef,
   tokenPositions,
@@ -264,8 +269,11 @@ const Scene = ({
   isClickable,
   pointerBounce = 0,
   season,
-  effectsEnabled
-}: { 
+  effectsEnabled,
+  badgeEnabled,
+  badgeScale,
+  badgeYOffset,
+}: {
   rotation: number;
   rotationRef?: React.MutableRefObject<number>;
   tokenPositions: Map<number, number>;
@@ -275,6 +283,9 @@ const Scene = ({
   pointerBounce?: number;
   season: Season;
   effectsEnabled: boolean;
+  badgeEnabled: boolean;
+  badgeScale?: number;
+  badgeYOffset?: number;
 }) => {
   return (
     <>
@@ -323,6 +334,9 @@ const Scene = ({
         players={players}
         onSegmentClick={onSegmentClick}
         isClickable={isClickable}
+        showCenterBadge={badgeEnabled}
+        centerBadgeScale={badgeScale}
+        centerBadgeYOffset={badgeYOffset}
       />
     </>
   );
@@ -338,24 +352,114 @@ export const Wheel3D = ({
   placingTokensMode,
   players,
   currentPlayer,
-  pointerBounce = 0
+  pointerBounce = 0,
 }: Wheel3DProps) => {
   const { season, effectsEnabled } = useSeason();
-  
+
+  const [badgeDebugEnabled, setBadgeDebugEnabled] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem(BADGE_DEBUG_STORAGE_KEY);
+      if (!raw) return true;
+      const parsed = JSON.parse(raw) as { enabled?: boolean };
+      return parsed.enabled ?? true;
+    } catch {
+      return true;
+    }
+  });
+
+  const [badgeScale, setBadgeScale] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(BADGE_DEBUG_STORAGE_KEY);
+      if (!raw) return 0.02;
+      const parsed = JSON.parse(raw) as { scale?: number };
+      return typeof parsed.scale === 'number' ? parsed.scale : 0.02;
+    } catch {
+      return 0.02;
+    }
+  });
+
+  const [badgeYOffset, setBadgeYOffset] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(BADGE_DEBUG_STORAGE_KEY);
+      if (!raw) return 0.12;
+      const parsed = JSON.parse(raw) as { yOffset?: number };
+      return typeof parsed.yOffset === 'number' ? parsed.yOffset : 0.12;
+    } catch {
+      return 0.12;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        BADGE_DEBUG_STORAGE_KEY,
+        JSON.stringify({ enabled: badgeDebugEnabled, scale: badgeScale, yOffset: badgeYOffset })
+      );
+    } catch {
+      // ignore
+    }
+  }, [badgeDebugEnabled, badgeScale, badgeYOffset]);
+
   return (
     <div className="w-full h-full relative">
+      <div className="absolute top-3 right-3 z-20 pointer-events-auto">
+        <div className="w-[280px] rounded-xl border border-border/60 bg-card/70 backdrop-blur-md p-3 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm font-medium">Debug: středový badge</div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="badge-debug" className="text-xs text-muted-foreground">
+                aktivní
+              </Label>
+              <Switch id="badge-debug" checked={badgeDebugEnabled} onCheckedChange={setBadgeDebugEnabled} />
+            </div>
+          </div>
+
+          {badgeDebugEnabled && (
+            <div className="mt-3 space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <Label className="text-sm">Velikost</Label>
+                  <span className="text-xs font-mono text-muted-foreground">{badgeScale.toFixed(3)}</span>
+                </div>
+                <Slider
+                  value={[badgeScale]}
+                  min={0.002}
+                  max={0.06}
+                  step={0.001}
+                  onValueChange={(v) => setBadgeScale(v[0] ?? 0.02)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <Label className="text-sm">Výška nad kolem</Label>
+                  <span className="text-xs font-mono text-muted-foreground">{badgeYOffset.toFixed(3)}</span>
+                </div>
+                <Slider
+                  value={[badgeYOffset]}
+                  min={0.02}
+                  max={0.35}
+                  step={0.005}
+                  onValueChange={(v) => setBadgeYOffset(v[0] ?? 0.12)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <Canvas
-        camera={{ 
+        camera={{
           position: [0, 8, 10],
           fov: 45,
           near: 0.1,
-          far: 1000
+          far: 1000,
         }}
         shadows
         gl={{ antialias: true, alpha: true }}
         style={{ background: 'transparent' }}
       >
-        <Scene 
+        <Scene
           rotation={rotation}
           rotationRef={rotationRef}
           tokenPositions={tokenPositions}
@@ -365,6 +469,9 @@ export const Wheel3D = ({
           pointerBounce={pointerBounce}
           season={season}
           effectsEnabled={effectsEnabled}
+          badgeEnabled={badgeDebugEnabled}
+          badgeScale={badgeScale}
+          badgeYOffset={badgeYOffset}
         />
       </Canvas>
     </div>
