@@ -122,7 +122,6 @@ const Index = () => {
   const wheelRotationRef = useRef(0);
   const [pointerBounce, setPointerBounce] = useState(0);
   const [currentDisplaySegment, setCurrentDisplaySegment] = useState<WheelSegment | null>(null);
-  const [currentSpinDuration, setCurrentSpinDuration] = useState(0);
 
   // Result display state
   const [showResult, setShowResult] = useState(false);
@@ -697,7 +696,6 @@ const Index = () => {
 
     // Duration: 4-7 seconds based on power
     const duration = 4000 + powerFactor * 3000;
-    setCurrentSpinDuration(duration); // Track for TurnTimer progress bar
     const startTime = Date.now();
     const startRotation = currentRotation;
     let lastSegmentIndex = -1;
@@ -1099,11 +1097,9 @@ const Index = () => {
         <div className="mt-2">
           <TurnTimer
             duration={turnTimer}
-            isActive={timerActive && showLetterSelector}
+            isActive={timerActive && showLetterSelector && !gameState.isSpinning}
             onTimeUp={handleTimeUp}
             onReset={timerResetKey}
-            spinDuration={currentSpinDuration}
-            isSpinning={gameState.isSpinning}
           />
         </div>
       </div>
