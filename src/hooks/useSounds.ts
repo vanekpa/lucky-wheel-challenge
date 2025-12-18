@@ -7,15 +7,22 @@ export const useSounds = () => {
 
   useEffect(() => {
     const fetchSetting = async () => {
+      // First check localStorage (for non-admin overrides)
+      const localSetting = localStorage.getItem('sounds_enabled');
+      
       const { data } = await supabase
         .from('game_settings')
         .select('setting_value')
         .eq('setting_key', 'sounds_enabled')
         .single();
       
-      if (data) {
-        setSoundsEnabled(data.setting_value === 'true');
-      }
+      // localStorage takes priority, then database, default to true
+      const enabled = localSetting !== null 
+        ? localSetting === 'true' 
+        : data?.setting_value !== 'false';
+      
+      setSoundsEnabled(enabled);
+      setSoundsEnabledGlobal(enabled); // Sync global state
       setLoading(false);
     };
 
@@ -33,8 +40,10 @@ export const useSounds = () => {
           filter: 'setting_key=eq.sounds_enabled'
         },
         (payload: any) => {
-          if (payload.new?.setting_value) {
-            setSoundsEnabled(payload.new.setting_value === 'true');
+          if (payload.new?.setting_value !== undefined) {
+            const enabled = payload.new.setting_value === 'true';
+            setSoundsEnabled(enabled);
+            setSoundsEnabledGlobal(enabled); // Sync global state
           }
         }
       )
