@@ -37,12 +37,12 @@ const CenterHub = ({ radius }: { radius: number }) => {
   const size = radius * 1.8;
   
   return (
-    <group position={[0, WHEEL_DISK_HEIGHT / 2 + 0.06, 0]}>
+    <group position={[0, WHEEL_DISK_HEIGHT / 2 + 0.1, 0]}>
       <Html
         center
         transform
         rotation={[-Math.PI / 2, 0, 0]}
-        scale={0.004}
+        scale={0.0035}
         style={{ pointerEvents: 'none' }}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="peklo-edu.cz game by Patrik Vaněk">
