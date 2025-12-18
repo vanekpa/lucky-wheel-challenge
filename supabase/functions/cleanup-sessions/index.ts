@@ -27,19 +27,42 @@ Deno.serve(async (req) => {
     }
 
     if (sessionCode) {
-      // Delete specific session immediately
-      console.log(`Deleting session: ${sessionCode}`)
+      // Delete specific session - require host_id for security
+      let hostId: string | null = null
+      try {
+        const body = await req.clone().json()
+        hostId = body.host_id || null
+      } catch {
+        // Already parsed above
+      }
       
-      const { error } = await supabase
+      console.log(`Deleting session: ${sessionCode}, host_id: ${hostId}`)
+      
+      // Build query - if host_id provided, validate ownership
+      let query = supabase
         .from('game_sessions')
         .delete()
         .eq('session_code', sessionCode)
+      
+      if (hostId) {
+        query = query.eq('host_id', hostId)
+      }
+      
+      const { data, error } = await query.select()
 
       if (error) {
         console.error('Delete session error:', error)
         return new Response(
           JSON.stringify({ success: false, error: error.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (!data || data.length === 0) {
+        console.log(`Session ${sessionCode} not found or not owned by host`)
+        return new Response(
+          JSON.stringify({ success: false, error: 'Session not found or not authorized' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 

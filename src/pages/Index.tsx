@@ -196,6 +196,13 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [activeSessionCode, session?.id]);
 
+  // Process commands from remote controllers - using a ref to track processed commands
+  const processedCommandsRef = useRef<Map<number, number>>(new Map()); // timestamp -> added time
+  const commandQueueRef = useRef<{ command: GameCommand; timestamp: number } | null>(null);
+  // Ref to capture pendingCommandResult for sync without causing infinite loop
+  const pendingCommandResultRef = useRef(pendingCommandResult);
+  pendingCommandResultRef.current = pendingCommandResult;
+
   // Sync game state to session when playing with remote controllers
   useEffect(() => {
     if (!activeSessionCode || !session) return;
@@ -204,8 +211,9 @@ const Index = () => {
     const existingPendingCommand = session.game_state?._pendingCommand;
     const existingCommandTimestamp = session.game_state?._commandTimestamp;
     
-    // Check if we have a pending command result to send
-    const shouldClearCommand = pendingCommandResult?.clearCommand;
+    // Check if we have a pending command result to send (using ref to avoid dependency)
+    const currentPendingResult = pendingCommandResultRef.current;
+    const shouldClearCommand = currentPendingResult?.clearCommand;
     
     // Convert Sets to Arrays for JSON serialization
     const serializableState = {
@@ -231,8 +239,8 @@ const Index = () => {
         _pendingCommand: null,
         _commandTimestamp: null,
         _lastCommandResult: {
-          type: pendingCommandResult.type,
-          message: pendingCommandResult.message,
+          type: currentPendingResult.type,
+          message: currentPendingResult.message,
           timestamp: Date.now()
         }
       } : (existingPendingCommand && existingCommandTimestamp && !processedCommandsRef.current.has(existingCommandTimestamp) ? {
@@ -243,15 +251,19 @@ const Index = () => {
     
     updateGameState(serializableState);
     
-    // Clear pending command result after sending
-    if (pendingCommandResult) {
-      setPendingCommandResult(null);
+    // Clear pending command result after sending (using setTimeout to avoid state update during render)
+    if (currentPendingResult) {
+      setTimeout(() => setPendingCommandResult(null), 0);
     }
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked, pendingCommandResult]);
-
-  // Process commands from remote controllers - using a ref to track processed commands
-  const processedCommandsRef = useRef<Set<number>>(new Set());
-  const commandQueueRef = useRef<{ command: GameCommand; timestamp: number } | null>(null);
+    
+    // Clean up old processed commands (older than 60 seconds) to prevent memory leak
+    const now = Date.now();
+    for (const [cmdTimestamp, addedTime] of processedCommandsRef.current.entries()) {
+      if (now - addedTime > 60000) {
+        processedCommandsRef.current.delete(cmdTimestamp);
+      }
+    }
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked]);
   
   // Store the pending command to process after handlers are defined
   useEffect(() => {
@@ -933,15 +945,9 @@ const Index = () => {
     
     const { command, timestamp } = commandQueueRef.current;
     
-    // Mark as processed
-    processedCommandsRef.current.add(timestamp);
+    // Mark as processed with current time for cleanup
+    processedCommandsRef.current.set(timestamp, Date.now());
     commandQueueRef.current = null;
-    
-    // Keep only last 100 processed commands to prevent memory leak
-    if (processedCommandsRef.current.size > 100) {
-      const oldTimestamps = Array.from(processedCommandsRef.current).slice(0, 50);
-      oldTimestamps.forEach(t => processedCommandsRef.current.delete(t));
-    }
     
     console.log('Processing remote command:', command);
     
@@ -955,7 +961,9 @@ const Index = () => {
       case 'SPIN_WHEEL':
         // Use session state to avoid sync issues
         if (!gameState.isSpinning && !sessionShowLetterSelector && !sessionIsPlacingTokens) {
-          const spinPower = 'power' in command ? command.power : 50;
+          // Validate and clamp spin power to range 10-100
+          const rawPower = 'power' in command ? command.power : 50;
+          const spinPower = Math.max(10, Math.min(100, typeof rawPower === 'number' ? rawPower : 50));
           handleSpin(spinPower);
           commandResult = { type: 'success', message: 'Kolo se točí!' };
         } else {
