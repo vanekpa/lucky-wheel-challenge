@@ -279,7 +279,7 @@ const Index = () => {
   }, [session?.game_state?._pendingCommand, session?.game_state?._commandTimestamp]);
 
   // Save current state to history before making changes
-  const saveStateToHistory = () => {
+  const saveStateToHistory = useCallback(() => {
     setGameHistory((prev) => {
       const newHistory = [
         ...prev,
@@ -300,10 +300,10 @@ const Index = () => {
       // Keep only last 10 states
       return newHistory.slice(-10);
     });
-  };
+  }, [gameState, showLetterSelector, currentWheelValue]);
 
   // Undo to previous state
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     if (gameHistory.length === 0) return;
 
     const lastState = gameHistory[gameHistory.length - 1];
@@ -319,15 +319,15 @@ const Index = () => {
     setCurrentWheelValue(lastState.currentWheelValue);
     setShowResult(false);
     setGameHistory((prev) => prev.slice(0, -1));
-  };
+  }, [gameHistory]);
 
   // Switch to specific player
-  const handleSwitchPlayer = (playerId: number) => {
+  const handleSwitchPlayer = useCallback((playerId: number) => {
     saveStateToHistory();
     setGameState((prev) => ({ ...prev, currentPlayer: playerId }));
     setShowLetterSelector(false);
     setShowResult(false);
-  };
+  }, [saveStateToHistory]);
 
   // Mode selection handlers
   const handleSelectRandom = () => {
@@ -376,7 +376,7 @@ const Index = () => {
     toast.success("Hra začíná! Umístěte žetony na kolo.");
   };
 
-  const handleTokenPlace = (segmentId: number) => {
+  const handleTokenPlace = useCallback((segmentId: number) => {
     if (tokensPlaced.has(gameState.currentPlayer)) return;
 
     // Find a free segment - if clicked segment is occupied, find nearest free one
@@ -419,7 +419,7 @@ const Index = () => {
       const nextPlayer = (currentPlayerId + 1) % 3;
       setGameState((prev) => ({ ...prev, currentPlayer: nextPlayer }));
     }
-  };
+  }, [gameState.currentPlayer, tokensPlaced, tokenPositions]);
 
   const animatePointerBounce = () => {
     const startTime = Date.now();
@@ -499,7 +499,7 @@ const Index = () => {
     }
   };
 
-  const handleLetterSelect = (letter: string) => {
+  const handleLetterSelect = useCallback((letter: string) => {
     saveStateToHistory();
     
     // Stop timer when letter is selected
@@ -596,7 +596,7 @@ const Index = () => {
         currentPlayer: (prev.currentPlayer + 1) % 3,
       }));
     }
-  };
+  }, [gameState.players, gameState.currentPlayer, gameState.usedLetters, gameState.puzzle.phrase, currentWheelValue, vowelsForceUnlocked, saveStateToHistory]);
 
   const handleResultDismiss = () => {
     setShowResult(false);
@@ -646,7 +646,65 @@ const Index = () => {
     checkForDeadlock();
   }, [gameState.usedLetters, gameState.puzzle.revealedLetters, checkForDeadlock]);
 
-  const handleGuessPhrase = (guess: string) => {
+  const newRound = useCallback(() => {
+    const nextIndex = currentPuzzleIndex + 1;
+    setCurrentPuzzleIndex(nextIndex);
+
+    let puzzle;
+    if (gameMode === "teacher" && customPuzzles.length > 0) {
+      if (nextIndex >= customPuzzles.length) {
+        // Game finished - go to bonus wheel for the winner
+        const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+        toast.success(`Všechny tajenky odehrány! ${winner.name} jde do BONUS KOLA!`);
+        setGamePhase("bonus-wheel");
+        return;
+      }
+      puzzle = {
+        id: `custom-${nextIndex}`,
+        phrase: customPuzzles[nextIndex].phrase,
+        category: customPuzzles[nextIndex].category,
+      };
+    } else {
+      puzzle = getRandomPuzzle();
+    }
+
+    const nextRoundNum = gameState.round + 1;
+
+    // Tokens persist! Only reset tokensPlaced for rounds 1-3 (each player adds 1 token per round)
+    // Round 4+ = no new tokens
+    const shouldPlaceTokens = nextRoundNum <= 3;
+
+    setGameState((prev) => ({
+      ...prev,
+      puzzle: {
+        ...puzzle,
+        revealedLetters: new Set(),
+      },
+      usedLetters: new Set(),
+      round: nextRoundNum,
+      currentPlayer: 0,
+      isSpinning: false,
+      // Reset vowelsUnlockedThisRound for all players at new round
+      players: prev.players.map((p) => ({ ...p, vowelsUnlockedThisRound: false })),
+    }));
+
+    // Reset force-unlocked vowels for new round
+    setVowelsForceUnlocked(false);
+
+    // Don't clear tokenPositions - tokens stay on the wheel!
+    // Only reset which players have placed THIS round's token
+    setTokensPlaced(new Set());
+    setIsPlacingTokens(shouldPlaceTokens);
+    setShowLetterSelector(false);
+
+    if (shouldPlaceTokens) {
+      toast.success(`Kolo ${nextRoundNum}/${gameMode === "teacher" ? customPuzzles.length : "∞"} - Umístěte další žeton!`);
+    } else {
+      toast.success(`Kolo ${nextRoundNum}/${gameMode === "teacher" ? customPuzzles.length : "∞"} začíná!`);
+    }
+  }, [currentPuzzleIndex, gameMode, customPuzzles, gameState.players, gameState.round, getRandomPuzzle]);
+
+  const handleGuessPhrase = useCallback((guess: string) => {
     saveStateToHistory();
 
     const correctPhrase = gameState.puzzle.phrase.toUpperCase().trim();
@@ -689,7 +747,7 @@ const Index = () => {
         currentPlayer: (prev.currentPlayer + 1) % 3,
       }));
     }
-  };
+  }, [gameState.puzzle.phrase, gameState.puzzle.revealedLetters, saveStateToHistory, newRound]);
 
   // Can player guess? Only when not spinning, not placing tokens, game is active, and not showing result
   const canGuessPhrase = !gameState.isSpinning && !isPlacingTokens && gamePhase === "playing" && !showResult;
@@ -715,7 +773,7 @@ const Index = () => {
     }
   }, [gameState.puzzle.revealedLetters, gamePhase, gameState.isSpinning]);
 
-  const handleSpin = (power: number = 50) => {
+  const handleSpin = useCallback((power: number = 50) => {
     if (gameState.isSpinning) return;
 
     // Ensure minimum power of 50%
@@ -802,65 +860,7 @@ const Index = () => {
     };
 
     requestAnimationFrame(animate);
-  };
-
-  const newRound = () => {
-    const nextIndex = currentPuzzleIndex + 1;
-    setCurrentPuzzleIndex(nextIndex);
-
-    let puzzle;
-    if (gameMode === "teacher" && customPuzzles.length > 0) {
-      if (nextIndex >= customPuzzles.length) {
-        // Game finished - go to bonus wheel for the winner
-        const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
-        toast.success(`Všechny tajenky odehrány! ${winner.name} jde do BONUS KOLA!`);
-        setGamePhase("bonus-wheel");
-        return;
-      }
-      puzzle = {
-        id: `custom-${nextIndex}`,
-        phrase: customPuzzles[nextIndex].phrase,
-        category: customPuzzles[nextIndex].category,
-      };
-    } else {
-      puzzle = getRandomPuzzle();
-    }
-
-    const nextRound = gameState.round + 1;
-
-    // Tokens persist! Only reset tokensPlaced for rounds 1-3 (each player adds 1 token per round)
-    // Round 4+ = no new tokens
-    const shouldPlaceTokens = nextRound <= 3;
-
-    setGameState((prev) => ({
-      ...prev,
-      puzzle: {
-        ...puzzle,
-        revealedLetters: new Set(),
-      },
-      usedLetters: new Set(),
-      round: nextRound,
-      currentPlayer: 0,
-      isSpinning: false,
-      // Reset vowelsUnlockedThisRound for all players at new round
-      players: prev.players.map((p) => ({ ...p, vowelsUnlockedThisRound: false })),
-    }));
-
-    // Reset force-unlocked vowels for new round
-    setVowelsForceUnlocked(false);
-
-    // Don't clear tokenPositions - tokens stay on the wheel!
-    // Only reset which players have placed THIS round's token
-    setTokensPlaced(new Set());
-    setIsPlacingTokens(shouldPlaceTokens);
-    setShowLetterSelector(false);
-
-    if (shouldPlaceTokens) {
-      toast.success(`Kolo ${nextRound}/${gameMode === "teacher" ? customPuzzles.length : "∞"} - Umístěte další žeton!`);
-    } else {
-      toast.success(`Kolo ${nextRound}/${gameMode === "teacher" ? customPuzzles.length : "∞"} začíná!`);
-    }
-  };
+  }, [gameState.isSpinning, handleSpinComplete]);
 
   const handleBonusWheelComplete = (finalScores: Player[]) => {
     setGameState((prev) => ({ ...prev, players: finalScores }));
@@ -1016,7 +1016,7 @@ const Index = () => {
         clearCommand: true
       });
     }
-  }, [session?.game_state?._commandTimestamp]);
+  }, [session?.game_state?._commandTimestamp, handleSpin, handleLetterSelect, handleGuessPhrase, handleSwitchPlayer, handleUndo, handleTokenPlace, gameState.isSpinning, gameState.currentPlayer, showLetterSelector, isPlacingTokens, session?.game_state?.isPlacingTokens, session?.game_state?.showLetterSelector]);
 
   // Keyboard shortcuts for desktop users
   useEffect(() => {
