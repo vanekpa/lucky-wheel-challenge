@@ -138,6 +138,7 @@ const Index = () => {
         showLetterSelector,
         isPlacingTokens,
         tokenPositions: Object.fromEntries(tokenPositions),
+        tokensPlaced: Array.from(tokensPlaced),
         gameMode,
         vowelsForceUnlocked,
         isGuessingPhrase: showGuessDialog,
@@ -154,7 +155,7 @@ const Index = () => {
     } finally {
       setIsCreatingSession(false);
     }
-  }, [createSession, gameState, showLetterSelector, isPlacingTokens, tokenPositions, gameMode, vowelsForceUnlocked, showGuessDialog]);
+  }, [createSession, gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, gameMode, vowelsForceUnlocked, showGuessDialog]);
 
   const [gameHistory, setGameHistory] = useState<
     Array<{
@@ -210,6 +211,7 @@ const Index = () => {
       showLetterSelector,
       isPlacingTokens,
       tokenPositions: Object.fromEntries(tokenPositions),
+      tokensPlaced: Array.from(tokensPlaced),
       gameMode,
       vowelsForceUnlocked,
       isGuessingPhrase: showGuessDialog,
@@ -222,7 +224,7 @@ const Index = () => {
     };
     
     updateGameState(serializableState);
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked]);
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked]);
 
   // Process commands from remote controllers - using a ref to track processed commands
   const processedCommandsRef = useRef<Set<number>>(new Set());
@@ -358,27 +360,30 @@ const Index = () => {
     };
 
     const finalSegmentId = findFreeSegment(segmentId);
+    const currentPlayerId = gameState.currentPlayer;
 
+    // 1. Update token positions
     setTokenPositions((prev) => {
       const newMap = new Map(prev);
-      newMap.set(finalSegmentId, gameState.currentPlayer);
+      newMap.set(finalSegmentId, currentPlayerId);
       return newMap;
     });
 
-    setTokensPlaced((prev) => {
-      const newSet = new Set(prev).add(gameState.currentPlayer);
+    // 2. Calculate new state outside of setters
+    const newTokensPlaced = new Set(tokensPlaced).add(currentPlayerId);
+    const allPlaced = newTokensPlaced.size === 3;
 
-      // Check if all 3 players have placed their token for this round
-      if (newSet.size === 3) {
-        setIsPlacingTokens(false);
-        setGameState((prevState) => ({ ...prevState, currentPlayer: 0 }));
-      } else {
-        const nextPlayer = (gameState.currentPlayer + 1) % 3;
-        setGameState((prevState) => ({ ...prevState, currentPlayer: nextPlayer }));
-      }
+    // 3. Update tokensPlaced
+    setTokensPlaced(newTokensPlaced);
 
-      return newSet;
-    });
+    // 4. Update isPlacingTokens and currentPlayer separately (not nested)
+    if (allPlaced) {
+      setIsPlacingTokens(false);
+      setGameState((prev) => ({ ...prev, currentPlayer: 0 }));
+    } else {
+      const nextPlayer = (currentPlayerId + 1) % 3;
+      setGameState((prev) => ({ ...prev, currentPlayer: nextPlayer }));
+    }
   };
 
   const animatePointerBounce = () => {
