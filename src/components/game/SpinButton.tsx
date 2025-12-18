@@ -13,7 +13,7 @@ interface SpinButtonProps {
 
 const QUICK_TAP_THRESHOLD_MS = 300;
 const MIN_POWER = 50; // Minimum guaranteed power
-const OSCILLATION_SPEED = 1.5; // Cycles per second
+const OSCILLATION_SPEED = 0.4; // Slower oscillation - ~2.5s per cycle
 
 export const SpinButton = ({
   onSpin,
@@ -125,17 +125,21 @@ export const SpinButton = ({
     <div className="flex flex-col gap-2 w-full">
       {/* Power meter */}
       {isCharging && (
-        <div className="relative h-3 bg-slate-700/60 rounded-full overflow-hidden">
+        <div className="relative h-8 bg-slate-700/60 rounded-full overflow-hidden border-2 border-white/20">
           <div 
             className={cn(
-              "h-full transition-all duration-75 rounded-full",
-              getPowerColor()
+              "h-full transition-all duration-100 rounded-full",
+              getPowerColor(),
+              powerLevel >= 80 && "animate-pulse"
             )}
-            style={{ width: `${powerLevel}%` }}
+            style={{ 
+              width: `${powerLevel}%`,
+              boxShadow: powerLevel >= 70 ? '0 0 20px #ef4444' : '0 0 10px #22c55e'
+            }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-white drop-shadow-md">
-              {Math.round(powerLevel)}%
+            <span className="text-sm font-bold text-white drop-shadow-lg">
+              {Math.round(powerLevel)}% SÍLA
             </span>
           </div>
         </div>
