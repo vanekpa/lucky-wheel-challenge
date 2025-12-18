@@ -657,11 +657,12 @@ const Index = () => {
 
     const currentRotation = wheelRotationRef.current;
 
-    const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2;
+    // angleOffset matches WheelSegment3D geometry offset
+    const angleOffset = -Math.PI / 2;
+    const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2 + angleOffset;
     const pointerPos = (3 * Math.PI) / 2;
     const geometryOffset = -Math.PI / 2;
-    // Account for the -rotation in WheelModel (rotation.y = -currentRotation)
-    const targetRotationInCircle = segmentCenterAngle + geometryOffset - pointerPos;
+    const targetRotationInCircle = pointerPos - segmentCenterAngle - geometryOffset;
 
     const normalizedTarget = ((targetRotationInCircle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const fullRotations = Math.floor(currentRotation / (Math.PI * 2)) * (Math.PI * 2);
