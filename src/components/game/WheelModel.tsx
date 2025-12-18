@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Text, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
@@ -36,6 +36,149 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
   );
 };
 
+// Canvas texture generator for the badge
+function makeBadgeTexture({
+  labelTop,
+  labelMid,
+  name1,
+  name2,
+  tagline,
+}: {
+  labelTop: string;
+  labelMid: string;
+  name1: string;
+  name2: string;
+  tagline: string;
+}) {
+  const c = document.createElement("canvas");
+  c.width = 1024;
+  c.height = 1024;
+  const ctx = c.getContext("2d")!;
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  const cx = c.width / 2;
+  const cy = c.height / 2;
+
+  // Background plate gradient
+  {
+    const g = ctx.createRadialGradient(cx - 140, cy - 180, 80, cx, cy, 520);
+    g.addColorStop(0, "#1a1a1a");
+    g.addColorStop(0.55, "#0c0c0c");
+    g.addColorStop(1, "#050505");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 480, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Soft vignette
+  {
+    const v = ctx.createRadialGradient(cx, cy, 240, cx, cy, 520);
+    v.addColorStop(0, "rgba(0,0,0,0)");
+    v.addColorStop(1, "rgba(0,0,0,0.55)");
+    ctx.fillStyle = v;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 480, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Grain / speckle
+  {
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    const data = img.data;
+    let seed = 1337;
+    const rnd = () => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+    for (let i = 0; i < data.length; i += 4) {
+      const px = ((i / 4) % c.width) - cx;
+      const py = Math.floor(i / 4 / c.width) - cy;
+      if (px * px + py * py > 480 * 480) continue;
+      const n = (rnd() - 0.5) * 18;
+      data[i] = Math.max(0, Math.min(255, data[i] + n));
+      data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + n));
+      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + n));
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  // Text helper
+  const drawText = (
+    txt: string,
+    x: number,
+    y: number,
+    font: string,
+    fill: string,
+    shadow = 0.35,
+    blur = 8,
+    yShadow = 6
+  ) => {
+    ctx.font = font;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.save();
+    ctx.shadowColor = `rgba(0,0,0,${shadow})`;
+    ctx.shadowBlur = blur;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = yShadow;
+    ctx.fillStyle = fill;
+    ctx.fillText(txt, x, y);
+    ctx.restore();
+    ctx.fillStyle = fill;
+    ctx.fillText(txt, x, y);
+  };
+
+  const blockCenterY = cy + 18;
+
+  // Top: URL
+  drawText(labelTop, cx, blockCenterY - 240, "800 58px system-ui, -apple-system, Segoe UI, Roboto, Arial", "rgba(255,255,255,0.92)", 0.22, 10, 6);
+
+  // GAME BY with divider lines
+  drawText(labelMid, cx, blockCenterY - 175, "900 38px system-ui, -apple-system, Segoe UI, Roboto, Arial", "rgba(255,255,255,0.70)", 0.18, 7, 4);
+  {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.32)";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    const y = blockCenterY - 175;
+    ctx.beginPath();
+    ctx.moveTo(cx - 300, y);
+    ctx.lineTo(cx - 120, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + 120, y);
+    ctx.lineTo(cx + 300, y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Name (two lines)
+  drawText(name1, cx, blockCenterY - 30, "900 156px system-ui, -apple-system, Segoe UI, Roboto, Arial", "rgba(255,255,255,1)", 0.28, 12, 7);
+  drawText(name2, cx, blockCenterY + 140, "900 156px system-ui, -apple-system, Segoe UI, Roboto, Arial", "rgba(255,255,255,1)", 0.28, 12, 7);
+
+  // Bottom: tagline
+  drawText(tagline, cx, blockCenterY + 285, "900 40px system-ui, -apple-system, Segoe UI, Roboto, Arial", "rgba(255,255,255,0.55)", 0.16, 6, 4);
+
+  // Contrast curve
+  {
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = Math.max(0, Math.min(255, (d[i] - 128) * 1.06 + 128));
+      d[i + 1] = Math.max(0, Math.min(255, (d[i + 1] - 128) * 1.06 + 128));
+      d[i + 2] = Math.max(0, Math.min(255, (d[i + 2] - 128) * 1.06 + 128));
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 const CenterBadge3D = ({
   show = true,
   scale = 1.0,
@@ -45,67 +188,74 @@ const CenterBadge3D = ({
   scale?: number;
   yOffset?: number;
 }) => {
+  const texture = useMemo(() => makeBadgeTexture({
+    labelTop: "peklo-edu.cz",
+    labelMid: "GAME BY",
+    name1: "Patrik",
+    name2: "Vaněk",
+    tagline: "EDU • GAMES • CANVA",
+  }), []);
+
+  useEffect(() => {
+    return () => texture.dispose();
+  }, [texture]);
+
   if (!show) return null;
-  
-  const badgeWidth = 0.9 * scale;
-  const badgeHeight = 0.55 * scale;
-  const frameThickness = 0.06 * scale;
-  const depth = 0.04;
-  
+
+  const r = 0.34 * scale;
+  const thickness = 0.045 * scale;
+  const rimOuterR = r * 1.03;
+  const rimInnerR = r * 0.965;
+
   return (
-    <group position={[0, WHEEL_DISK_HEIGHT / 2 + yOffset, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      {/* Zlatý vnější rámeček - pill shape */}
-      <RoundedBox 
-        args={[badgeWidth, badgeHeight, depth]} 
-        radius={badgeHeight * 0.45} 
-        smoothness={8}
-      >
-        <meshStandardMaterial 
-          color="#d4af37"
-          metalness={0.85}
-          roughness={0.2}
-        />
-      </RoundedBox>
-      
-      {/* Tmavý vnitřní panel */}
-      <RoundedBox 
-        args={[badgeWidth - frameThickness * 2, badgeHeight - frameThickness * 2, depth + 0.005]} 
-        radius={(badgeHeight - frameThickness * 2) * 0.45}
-        smoothness={8}
-        position={[0, 0, depth * 0.3]}
-      >
-        <meshStandardMaterial 
-          color="#1a1a2e"
-          metalness={0.1}
-          roughness={0.9}
-        />
-      </RoundedBox>
-      
-      {/* Text "PEKLO" - červený */}
-      <Text
-        position={[0, 0.08 * scale, depth * 0.5]}
-        fontSize={0.16 * scale}
-        color="#ff3333"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.008}
-        outlineColor="#000000"
-      >
-        PEKLO
-      </Text>
-      
-      {/* Text "EDU.CZ" - zlatý */}
-      <Text
-        position={[0, -0.1 * scale, depth * 0.5]}
-        fontSize={0.1 * scale}
-        color="#ffd700"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.005}
-        outlineColor="#000000"
-      >
-        EDU.CZ
-      </Text>
+    <group position={[0, WHEEL_DISK_HEIGHT / 2 + yOffset, 0]}>
+      {/* Base disk (main plate) */}
+      <mesh>
+        <cylinderGeometry args={[r, r, thickness, 96]} />
+        <meshStandardMaterial color="#070707" metalness={0.05} roughness={0.85} />
+      </mesh>
+
+      {/* Outer rim body (coin-like side wall) */}
+      <mesh>
+        <cylinderGeometry args={[rimOuterR, rimOuterR, thickness * 1.02, 128, 1, true]} />
+        <meshPhysicalMaterial color="#8a6a1f" metalness={1} roughness={0.35} clearcoat={0.4} clearcoatRoughness={0.25} />
+      </mesh>
+
+      {/* Dark inner step */}
+      <mesh>
+        <cylinderGeometry args={[rimInnerR, rimInnerR, thickness * 1.005, 128, 1, true]} />
+        <meshStandardMaterial color="#0b0b0f" metalness={0.2} roughness={0.7} />
+      </mesh>
+
+      {/* Highlight circle plane */}
+      <mesh position={[0, thickness * 0.52, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[r * 0.94, 80]} />
+        <meshPhysicalMaterial color="#101010" metalness={0} roughness={0.35} transparent opacity={0.55} clearcoat={0.7} clearcoatRoughness={0.25} />
+      </mesh>
+
+      {/* Gold rim highlight ring (thin torus on top edge) */}
+      <mesh position={[0, thickness * 0.52, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[r * 1.01, 0.0105, 24, 140]} />
+        <meshPhysicalMaterial color="#d4af37" metalness={1} roughness={0.22} clearcoat={0.6} clearcoatRoughness={0.18} />
+      </mesh>
+
+      {/* Secondary inner gold lip */}
+      <mesh position={[0, thickness * 0.525, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[r * 0.965, 0.0042, 18, 140]} />
+        <meshPhysicalMaterial color="#d4af37" metalness={1} roughness={0.18} clearcoat={0.7} clearcoatRoughness={0.12} />
+      </mesh>
+
+      {/* Inner thin line */}
+      <mesh position={[0, thickness * 0.52, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[r * 0.88, 0.0032, 12, 140]} />
+        <meshStandardMaterial color="#ffffff" transparent opacity={0.14} roughness={1} />
+      </mesh>
+
+      {/* Text plane with canvas texture */}
+      <mesh position={[0, thickness * 0.53, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.70 * scale, 0.70 * scale]} />
+        <meshBasicMaterial map={texture} transparent alphaTest={0.02} />
+      </mesh>
     </group>
   );
 };
