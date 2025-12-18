@@ -59,7 +59,7 @@ interface UseGameSessionReturn {
 }
 
 export type GameCommand = 
-  | { type: 'SPIN_WHEEL' }
+  | { type: 'SPIN_WHEEL'; power?: number }
   | { type: 'SELECT_LETTER'; letter: string }
   | { type: 'PLACE_TOKEN'; playerId: number; segmentIndex?: number }
   | { type: 'GUESS_PHRASE'; phrase: string }
