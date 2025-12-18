@@ -430,7 +430,8 @@ const Index = () => {
     const variants = getLetterVariants(upperLetter);
     const currentPlayer = gameState.players[gameState.currentPlayer];
     const currentScore = currentPlayer.score;
-    const isVowelsUnlocked = currentPlayer.vowelsUnlockedThisRound || false;
+    // Team unlock: if ANY player has unlocked vowels this round, all can use them
+    const isVowelsUnlocked = gameState.players.some(p => p.vowelsUnlockedThisRound);
 
     // Check if vowel and not unlocked yet (unless force unlocked due to deadlock)
     if (VOWELS.has(upperLetter) && currentScore < MIN_SCORE_FOR_VOWELS && !isVowelsUnlocked && !vowelsForceUnlocked) {
