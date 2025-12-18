@@ -47,10 +47,10 @@ const CenterBadge3D = ({
 }) => {
   if (!show) return null;
   
-  const badgeWidth = 1.4 * scale;
-  const badgeHeight = 0.8 * scale;
-  const frameThickness = 0.1 * scale;
-  const depth = 0.08 * scale;
+  const badgeWidth = 0.9 * scale;
+  const badgeHeight = 0.55 * scale;
+  const frameThickness = 0.06 * scale;
+  const depth = 0.04;
   
   return (
     <group position={[0, WHEEL_DISK_HEIGHT / 2 + yOffset, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -62,37 +62,49 @@ const CenterBadge3D = ({
       >
         <meshStandardMaterial 
           color="#d4af37"
-          metalness={0.9}
-          roughness={0.15}
+          metalness={0.85}
+          roughness={0.2}
         />
       </RoundedBox>
       
       {/* Tmavý vnitřní panel */}
       <RoundedBox 
-        args={[badgeWidth - frameThickness * 2, badgeHeight - frameThickness * 2, depth + 0.01]} 
+        args={[badgeWidth - frameThickness * 2, badgeHeight - frameThickness * 2, depth + 0.005]} 
         radius={(badgeHeight - frameThickness * 2) * 0.45}
         smoothness={8}
         position={[0, 0, depth * 0.3]}
       >
         <meshStandardMaterial 
-          color="#0a0a1a"
-          metalness={0.2}
-          roughness={0.8}
+          color="#1a1a2e"
+          metalness={0.1}
+          roughness={0.9}
         />
       </RoundedBox>
       
-      {/* Text "CANVA" */}
+      {/* Text "PEKLO" - červený */}
       <Text
-        position={[0, 0, depth * 0.6]}
-        fontSize={0.28 * scale}
+        position={[0, 0.08 * scale, depth * 0.5]}
+        fontSize={0.16 * scale}
+        color="#ff3333"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.008}
+        outlineColor="#000000"
+      >
+        PEKLO
+      </Text>
+      
+      {/* Text "EDU.CZ" - zlatý */}
+      <Text
+        position={[0, -0.1 * scale, depth * 0.5]}
+        fontSize={0.1 * scale}
         color="#ffd700"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.015}
+        outlineWidth={0.005}
         outlineColor="#000000"
-        fontWeight="bold"
       >
-        CANVA
+        EDU.CZ
       </Text>
     </group>
   );
