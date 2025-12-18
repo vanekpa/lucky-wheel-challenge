@@ -657,15 +657,12 @@ const Index = () => {
 
     const currentRotation = wheelRotationRef.current;
 
-    // WheelSegment3D uses angleOffset = -π/2, so segment 0 starts at bottom
-    // WheelModel applies NEGATIVE rotation: rotation.y = -currentRotation
-    // For segment to be under pointer (at 3π/2), we need:
-    // segmentVisualAngle - rotation = pointerPos (due to negative rotation in model)
-    // So: rotation = segmentVisualAngle - pointerPos
-    const angleOffset = -Math.PI / 2;
-    const segmentCenterAngle = targetSegmentIndex * segmentAngle + segmentAngle / 2 + angleOffset;
+    // EXACT INVERSE of displaySegmentIdx calculation from animate():
+    // displaySegmentIdx = floor((pointerAngle - rotation - geometryOffset) / segmentAngle)
+    // So for segment center: rotation = pointerPos - geometryOffset - (index + 0.5) * segmentAngle
+    const geometryOffset = -Math.PI / 2;
     const pointerPos = (3 * Math.PI) / 2;
-    const targetRotationInCircle = segmentCenterAngle - pointerPos;
+    const targetRotationInCircle = pointerPos - geometryOffset - (targetSegmentIndex + 0.5) * segmentAngle;
 
     const normalizedTarget = ((targetRotationInCircle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const fullRotations = Math.floor(currentRotation / (Math.PI * 2)) * (Math.PI * 2);
