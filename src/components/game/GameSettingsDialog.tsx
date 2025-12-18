@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Settings, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useSounds } from '@/hooks/useSounds';
+import { useSounds, setSoundsEnabledGlobal } from '@/hooks/useSounds';
 import { useAuth } from '@/hooks/useAuth';
 
 interface GameSettingsDialogProps {
@@ -25,6 +25,7 @@ export const GameSettingsDialog = ({ effectsEnabled, onEffectsChange }: GameSett
 
   const handleSoundsToggle = async (enabled: boolean) => {
     setLocalSoundsEnabled(enabled);
+    setSoundsEnabledGlobal(enabled); // Sync global state immediately
     
     // Only admins can persist to database
     if (isAdmin) {
