@@ -181,7 +181,7 @@ function makeBadgeTexture({
 
 const CenterBadge3D = ({
   show = true,
-  scale = 1.0,
+  scale = 1.3,
   yOffset = 0.05,
 }: {
   show?: boolean;
