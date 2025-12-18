@@ -179,20 +179,14 @@ const Index = () => {
     }
   }, [showGuessDialog]);
 
-  // Host heartbeat - send every 5 seconds to let controllers know host is active
+  // Heartbeat tick - triggers sync effect every 5 seconds to keep controllers updated
+  const [heartbeatTick, setHeartbeatTick] = useState(0);
+  
   useEffect(() => {
     if (!activeSessionCode || !session) return;
-    
-    const sendHeartbeat = () => {
-      updateGameState({ _hostHeartbeat: Date.now() });
-    };
-    
-    // Send initial heartbeat
-    sendHeartbeat();
-    
-    // Send heartbeat every 5 seconds
-    const interval = setInterval(sendHeartbeat, 5000);
-    
+    const interval = setInterval(() => {
+      setHeartbeatTick(prev => prev + 1);
+    }, 5000);
     return () => clearInterval(interval);
   }, [activeSessionCode, session?.id]);
 
@@ -262,7 +256,7 @@ const Index = () => {
         processedCommandsRef.current.delete(cmdTimestamp);
       }
     }
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked]);
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked, heartbeatTick]);
   
 
   // Save current state to history before making changes
