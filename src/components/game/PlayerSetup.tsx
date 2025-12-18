@@ -148,11 +148,11 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                     </p>
                   </div>
                   <div>
-                    <h3 className="font-bold text-primary mb-1">🪙 Tokeny na kole</h3>
+                  <h3 className="font-bold text-primary mb-1">🪙 Žetony na kole</h3>
                     <p className="text-muted-foreground">
-                      V prvních 3 kolech každý hráč umístí na kolo jeden token (celkem 3 tokeny za hru). 
-                      Tokeny zůstávají na kole po celou hru. Pokud kolo zastaví na políčku s cizím tokenem, 
-                      majitel tokenu získá <span className="text-green-500 font-bold">+500 bodů</span> jako bonus.
+                      V prvních 3 kolech každý hráč umístí na kolo jeden žeton (celkem 3 žetony za hru). 
+                      Žetony zůstávají na kole po celou hru. Pokud kolo zastaví na políčku s cizím žetonem, 
+                      majitel žetonu získá <span className="text-green-500 font-bold">+2000 bodů</span> jako bonus.
                     </p>
                   </div>
                   <div>

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Shuffle, BookOpen, Lock } from "lucide-react";
+import { Shuffle, BookOpen, Lock, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface GameModeSelectProps {
   onSelectRandom: () => void;
@@ -45,6 +47,62 @@ const FloatingParticles = () => (
     ))}
   </div>
 );
+
+// Collapsible game info section
+const GameInfoSection = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="relative z-10 w-full max-w-2xl animate-in fade-in duration-1000 delay-500">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-center gap-2 text-white/60 hover:text-white/90 transition-colors py-3 group">
+            <Info className="w-5 h-5" />
+            <span className="font-medium">Pravidla hry</span>
+            {isOpen ? (
+              <ChevronUp className="w-4 h-4 transition-transform" />
+            ) : (
+              <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+            )}
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mt-2 text-sm space-y-3">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-bold text-yellow-400 mb-1">🎲 Průběh tahu</h3>
+                <p className="text-white/70">Roztočte kolo → Vyberte písmeno → Za každý výskyt získáte body</p>
+              </div>
+              <div>
+                <h3 className="font-bold text-yellow-400 mb-1">⚠️ Speciální políčka</h3>
+                <p className="text-white/70">
+                  <span className="text-red-400 font-bold">BANKROT</span> = ztráta bodů, 
+                  <span className="text-gray-400 font-bold"> NIC</span> = další hráč
+                </p>
+              </div>
+              <div>
+                <h3 className="font-bold text-yellow-400 mb-1">🔤 Samohlásky</h3>
+                <p className="text-white/70">A, E, I, O, U, Y můžete hádat až od <span className="text-yellow-300 font-bold">1000 bodů</span></p>
+              </div>
+              <div>
+                <h3 className="font-bold text-yellow-400 mb-1">🪙 Žetony na kole</h3>
+                <p className="text-white/70">Cizí žeton na políčku = majitel získá <span className="text-green-400 font-bold">+2000 bodů</span></p>
+              </div>
+              <div>
+                <h3 className="font-bold text-yellow-400 mb-1">🧠 Paměťová výzva</h3>
+                <p className="text-white/70">Použitá písmena nejsou označená – pamatujte si je!</p>
+              </div>
+              <div>
+                <h3 className="font-bold text-yellow-400 mb-1">💡 Hádat tajenku</h3>
+                <p className="text-white/70">Bonus = <span className="text-yellow-300 font-bold">1000 × počet skrytých písmen</span></p>
+              </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+};
 
 export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSelectProps) => {
   return (
@@ -133,10 +191,13 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
         </Button>
       </div>
 
+      {/* Game info collapsible */}
+      <GameInfoSection />
+
       {/* Admin link */}
       <Link
         to="/auth"
-        className="relative z-10 text-white/40 hover:text-white/80 transition-all duration-300 flex items-center gap-2 text-sm animate-in fade-in duration-1000 delay-700 hover:scale-105"
+        className="relative z-10 text-white/40 hover:text-white/80 transition-all duration-300 flex items-center gap-2 text-sm animate-in fade-in duration-1000 delay-700 hover:scale-105 mt-6"
       >
         <Lock className="h-4 w-4" />
         Správa tajenek
