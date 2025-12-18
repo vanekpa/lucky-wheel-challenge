@@ -42,7 +42,7 @@ const CenterHub = ({ radius }: { radius: number }) => {
         center
         transform
         rotation={[-Math.PI / 2, 0, 0]}
-        scale={0.0035}
+        scale={0.012}
         style={{ pointerEvents: 'none' }}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="peklo-edu.cz game by Patrik Vaněk">
