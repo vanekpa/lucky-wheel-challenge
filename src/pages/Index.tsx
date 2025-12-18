@@ -114,6 +114,13 @@ const Index = () => {
   const [resultMessage, setResultMessage] = useState("");
   const [resultType, setResultType] = useState<"success" | "error">("success");
 
+  // Pending command result - used to sync command feedback after state updates
+  const [pendingCommandResult, setPendingCommandResult] = useState<{
+    type: 'success' | 'error';
+    message: string;
+    clearCommand: boolean;
+  } | null>(null);
+
   // Effects toggle state
   const [effectsEnabled, setEffectsEnabled] = useState(true);
   const [showGuessDialog, setShowGuessDialog] = useState(false);
@@ -197,6 +204,9 @@ const Index = () => {
     const existingPendingCommand = session.game_state?._pendingCommand;
     const existingCommandTimestamp = session.game_state?._commandTimestamp;
     
+    // Check if we have a pending command result to send
+    const shouldClearCommand = pendingCommandResult?.clearCommand;
+    
     // Convert Sets to Arrays for JSON serialization
     const serializableState = {
       currentPlayer: gameState.currentPlayer,
@@ -216,15 +226,28 @@ const Index = () => {
       vowelsForceUnlocked,
       isGuessingPhrase: showGuessDialog,
       _hostHeartbeat: Date.now(),
-      // Preserve pending command to prevent race condition
-      ...(existingPendingCommand && existingCommandTimestamp && !processedCommandsRef.current.has(existingCommandTimestamp) ? {
+      // If we processed a command, clear it and send result; otherwise preserve pending
+      ...(shouldClearCommand ? {
+        _pendingCommand: null,
+        _commandTimestamp: null,
+        _lastCommandResult: {
+          type: pendingCommandResult.type,
+          message: pendingCommandResult.message,
+          timestamp: Date.now()
+        }
+      } : (existingPendingCommand && existingCommandTimestamp && !processedCommandsRef.current.has(existingCommandTimestamp) ? {
         _pendingCommand: existingPendingCommand,
         _commandTimestamp: existingCommandTimestamp
-      } : {})
+      } : {}))
     };
     
     updateGameState(serializableState);
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked]);
+    
+    // Clear pending command result after sending
+    if (pendingCommandResult) {
+      setPendingCommandResult(null);
+    }
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked, pendingCommandResult]);
 
   // Process commands from remote controllers - using a ref to track processed commands
   const processedCommandsRef = useRef<Set<number>>(new Set());
@@ -978,17 +1001,11 @@ const Index = () => {
         break;
     }
     
-    // Send command result feedback to controller and CLEAR the pending command
-    if (activeSessionCode && session) {
-      updateGameState({
-        _pendingCommand: null,
-        _commandTimestamp: null,
-        ...(commandResult ? {
-          _lastCommandResult: {
-            ...commandResult,
-            timestamp: Date.now()
-          }
-        } : {})
+    // Store command result to be sent with next state sync (after React updates)
+    if (commandResult) {
+      setPendingCommandResult({
+        ...commandResult,
+        clearCommand: true
       });
     }
   }, [session?.game_state?._commandTimestamp]);
