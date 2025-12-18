@@ -1,5 +1,4 @@
-import { useRef, useMemo, useEffect, useState } from 'react';
-import { Html } from '@react-three/drei';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Text, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
@@ -182,17 +181,13 @@ function makeBadgeTexture({
 
 const CenterBadge3D = ({
   show = true,
-  scale = 2.0,
-  yOffset = 0.05,
-  debugMode = false,
+  scale = 2.20,
+  yOffset = 0.02,
 }: {
   show?: boolean;
   scale?: number;
   yOffset?: number;
-  debugMode?: boolean;
 }) => {
-  const [debugScale, setDebugScale] = useState(scale);
-  const [debugYOffset, setDebugYOffset] = useState(yOffset);
   const texture = useMemo(() => makeBadgeTexture({
     labelTop: "peklo-edu.cz",
     labelMid: "GAME BY",
@@ -207,32 +202,13 @@ const CenterBadge3D = ({
 
   if (!show) return null;
 
-  const s = debugMode ? debugScale : scale;
-  const yOff = debugMode ? debugYOffset : yOffset;
-  const r = 0.34 * s;
-  const thickness = 0.045 * s;
+  const r = 0.34 * scale;
+  const thickness = 0.045 * scale;
   const rimOuterR = r * 1.03;
   const rimInnerR = r * 0.965;
 
   return (
-    <group position={[0, WHEEL_DISK_HEIGHT / 2 + yOff, 0]}>
-      {/* Debug UI */}
-      {debugMode && (
-        <Html position={[0, 1.5, 0]} center>
-          <div style={{ background: 'rgba(0,0,0,0.85)', padding: '12px', borderRadius: '8px', color: 'white', fontSize: '12px', minWidth: '200px' }}>
-            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Badge Debug</div>
-            <div style={{ marginBottom: '6px' }}>
-              <label>Scale: {debugScale.toFixed(2)}</label>
-              <input type="range" min="0.5" max="4" step="0.1" value={debugScale} onChange={(e) => setDebugScale(parseFloat(e.target.value))} style={{ width: '100%' }} />
-            </div>
-            <div>
-              <label>Y Offset: {debugYOffset.toFixed(2)}</label>
-              <input type="range" min="0" max="0.5" step="0.01" value={debugYOffset} onChange={(e) => setDebugYOffset(parseFloat(e.target.value))} style={{ width: '100%' }} />
-            </div>
-          </div>
-        </Html>
-      )}
-
+    <group position={[0, WHEEL_DISK_HEIGHT / 2 + yOffset, 0]}>
       {/* Base disk (main plate) */}
       <mesh>
         <cylinderGeometry args={[r, r, thickness, 96]} />
@@ -277,7 +253,7 @@ const CenterBadge3D = ({
 
       {/* Text plane with canvas texture */}
       <mesh position={[0, thickness * 0.53, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.70 * s, 0.70 * s]} />
+        <planeGeometry args={[0.70 * scale, 0.70 * scale]} />
         <meshBasicMaterial map={texture} transparent alphaTest={0.02} />
       </mesh>
     </group>
@@ -496,7 +472,6 @@ export const WheelModel = ({
         show={showCenterBadge}
         scale={centerBadgeScale}
         yOffset={centerBadgeYOffset}
-        debugMode={true}
       />
       
       {Array.from(tokenPositions.entries()).map(([segmentId, playerId]) => (
