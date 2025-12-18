@@ -375,8 +375,8 @@ export const Wheel3D = ({
           season={season}
           effectsEnabled={effectsEnabled}
           badgeEnabled={true}
-          badgeScale={1.2}
-          badgeYOffset={0.05}
+        badgeScale={2.20}
+        badgeYOffset={0.02}
         />
       </Canvas>
     </div>
