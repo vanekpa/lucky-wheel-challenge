@@ -11,6 +11,7 @@ import { DeviceHandover } from "@/components/game/DeviceHandover";
 import { GuessPhraseDialog } from "@/components/game/GuessPhraseDialog";
 import { PlayerSettings } from "@/components/game/PlayerSettings";
 import { TurnTimer } from "@/components/game/TurnTimer";
+import { SpinButton } from "@/components/game/SpinButton";
 import BonusWheel from "@/components/game/BonusWheel";
 import VictoryScreen from "@/components/game/VictoryScreen";
 import EndGameDialog from "@/components/game/EndGameDialog";
@@ -636,15 +637,22 @@ const Index = () => {
     }
   }, [gameState.puzzle.revealedLetters, gamePhase, gameState.isSpinning]);
 
-  const handleSpin = () => {
+  const handleSpin = (power: number = 50) => {
     if (gameState.isSpinning) return;
 
-    console.log("🚀 Spinning started...");
+    // Ensure minimum power of 50%
+    const effectivePower = Math.max(50, power);
+    
+    console.log(`🚀 Spinning started with power: ${effectivePower}%`);
     setGameState((prev) => ({ ...prev, isSpinning: true }));
     setShowLetterSelector(false);
 
-    const extraSpins = 5;
-    const targetSegmentIndex = Math.floor(Math.random() * 32);
+    // Power affects visual only: more spins and longer duration
+    // Range: 5-10 extra spins based on power (50-100%)
+    const powerFactor = (effectivePower - 50) / 50; // 0 to 1
+    const extraSpins = 5 + powerFactor * 5; // 5 to 10 spins
+    
+    const targetSegmentIndex = Math.floor(Math.random() * 32); // ALWAYS random!
     const segmentAngle = (Math.PI * 2) / 32;
 
     const currentRotation = wheelRotationRef.current;
@@ -658,7 +666,8 @@ const Index = () => {
     const fullRotations = Math.floor(currentRotation / (Math.PI * 2)) * (Math.PI * 2);
     const newRotation = fullRotations + Math.PI * 2 * extraSpins + normalizedTarget;
 
-    const duration = 4000;
+    // Duration: 4-7 seconds based on power
+    const duration = 4000 + powerFactor * 3000;
     const startTime = Date.now();
     const startRotation = currentRotation;
     let lastSegmentIndex = -1;
@@ -864,7 +873,8 @@ const Index = () => {
     switch (command.type) {
       case 'SPIN_WHEEL':
         if (!gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
-          handleSpin();
+          const spinPower = 'power' in command ? command.power : 50;
+          handleSpin(spinPower);
           commandResult = { type: 'success', message: 'Kolo se točí!' };
         } else {
           commandResult = { type: 'error', message: 'Nelze točit' };
@@ -931,10 +941,10 @@ const Index = () => {
       // Ignore if not playing
       if (gamePhase !== 'playing') return;
       
-      // Space = Spin
+      // Space = Spin (with default 50% power for keyboard)
       if (e.code === 'Space' && !gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
         e.preventDefault();
-        handleSpin();
+        handleSpin(50);
         return;
       }
       
@@ -1107,15 +1117,13 @@ const Index = () => {
 
         {/* Controls */}
         {!gameState.isSpinning && !showLetterSelector && !isPlacingTokens && !showResult && (
-          <div className="fixed bottom-28 md:bottom-8 right-4 md:right-8 flex flex-col gap-4 z-40 animate-in slide-in-from-right duration-500">
-            <Button
-              onClick={handleSpin}
-              variant="default"
-              size="lg"
-              className="text-xl md:text-2xl px-8 py-6 md:px-12 md:py-8 shadow-lg backdrop-blur-md bg-primary text-primary-foreground hover:scale-105 hover:bg-primary/90 transition-all duration-200 border-4 border-white/10 touch-target-lg active:scale-95"
-            >
-              ROZTOČIT
-            </Button>
+          <div className="fixed bottom-28 md:bottom-8 right-4 md:right-8 z-40 animate-in slide-in-from-right duration-500 w-48 md:w-64">
+            <SpinButton
+              onSpin={handleSpin}
+              isSpinning={gameState.isSpinning}
+              playerName={gameState.players[gameState.currentPlayer]?.name}
+              playerColor={gameState.players[gameState.currentPlayer]?.color}
+            />
           </div>
         )}
       </div>

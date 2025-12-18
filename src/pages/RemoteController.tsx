@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession, type GameCommand, type ConnectionStatus } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, RotateCcw, MessageSquare, SkipForward, Undo2, Target, Wifi, WifiOff, Shuffle, RefreshCw, AlertTriangle, Check, X } from 'lucide-react';
+import { SpinButton } from '@/components/game/SpinButton';
+import { ArrowLeft, Loader2, MessageSquare, SkipForward, Undo2, Target, Wifi, WifiOff, Shuffle, RefreshCw, AlertTriangle, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
@@ -193,11 +194,11 @@ const RemoteController = () => {
     setTimeout(() => setPendingCommand(null), 500);
   };
 
-  const handleSpinCommand = async () => {
+  const handleSpinCommand = async (power: number = 50) => {
     vibrate.spin();
     setPendingCommand('SPIN');
     
-    const result = await sendCommand({ type: 'SPIN_WHEEL' });
+    const result = await sendCommand({ type: 'SPIN_WHEEL', power });
     
     if (!result.success) {
       vibrate.error();
@@ -488,26 +489,15 @@ const RemoteController = () => {
           </div>
         )}
 
-        {/* SPIN Button - Big but not huge */}
-        <button
-          onClick={handleSpinCommand}
-          disabled={!canSpin}
-          className={cn(
-            "rounded-2xl py-5 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 relative overflow-hidden",
-            !canSpin && "opacity-50"
-          )}
-          style={{ 
-            background: canSpin ? `linear-gradient(135deg, ${playerColor} 0%, ${playerColor}bb 100%)` : '#475569',
-            boxShadow: canSpin ? `0 8px 30px ${playerColor}40` : undefined
-          }}
-        >
-          {pendingCommand === 'SPIN' && (
-            <div className="absolute inset-0 bg-white/20 animate-pulse" />
-          )}
-          <RotateCcw className={cn("w-8 h-8 text-white", isSpinning && "animate-spin")} />
-          <span className="text-2xl font-black text-white">{isSpinning ? 'TOČÍ SE...' : 'ZATOČIT'}</span>
-          <span className="text-sm text-white/70">{currentPlayer?.name}</span>
-        </button>
+        {/* SPIN Button with Power Meter */}
+        <SpinButton
+          onSpin={handleSpinCommand}
+          disabled={!canSpin || !!pendingCommand}
+          isSpinning={isSpinning}
+          playerName={currentPlayer?.name}
+          playerColor={playerColor}
+          size="compact"
+        />
 
 
         {/* Quick actions row */}
