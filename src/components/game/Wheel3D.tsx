@@ -423,9 +423,9 @@ export const Wheel3D = ({
                 </div>
                 <Slider
                   value={[badgeScale]}
-                  min={0.002}
-                  max={0.06}
-                  step={0.001}
+                  min={0.005}
+                  max={0.25}
+                  step={0.005}
                   onValueChange={(v) => setBadgeScale(v[0] ?? 0.02)}
                 />
               </div>
