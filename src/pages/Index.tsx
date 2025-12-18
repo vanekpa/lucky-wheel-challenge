@@ -122,6 +122,7 @@ const Index = () => {
   const wheelRotationRef = useRef(0);
   const [pointerBounce, setPointerBounce] = useState(0);
   const [currentDisplaySegment, setCurrentDisplaySegment] = useState<WheelSegment | null>(null);
+  const [currentSpinDuration, setCurrentSpinDuration] = useState(0);
 
   // Result display state
   const [showResult, setShowResult] = useState(false);
@@ -321,9 +322,26 @@ const Index = () => {
   const handleTokenPlace = (segmentId: number) => {
     if (tokensPlaced.has(gameState.currentPlayer)) return;
 
+    // Find a free segment - if clicked segment is occupied, find nearest free one
+    const findFreeSegment = (startId: number): number => {
+      const occupiedSegments = new Set(tokenPositions.keys());
+      if (!occupiedSegments.has(startId)) return startId;
+      
+      // Search outward from clicked segment
+      for (let offset = 1; offset <= 16; offset++) {
+        const nextId = (startId + offset) % 32;
+        if (!occupiedSegments.has(nextId)) return nextId;
+        const prevId = (startId - offset + 32) % 32;
+        if (!occupiedSegments.has(prevId)) return prevId;
+      }
+      return startId; // Fallback (shouldn't happen with 32 segments and max 9 tokens)
+    };
+
+    const finalSegmentId = findFreeSegment(segmentId);
+
     setTokenPositions((prev) => {
       const newMap = new Map(prev);
-      newMap.set(segmentId, gameState.currentPlayer);
+      newMap.set(finalSegmentId, gameState.currentPlayer);
       return newMap;
     });
 
@@ -679,6 +697,7 @@ const Index = () => {
 
     // Duration: 4-7 seconds based on power
     const duration = 4000 + powerFactor * 3000;
+    setCurrentSpinDuration(duration); // Track for TurnTimer progress bar
     const startTime = Date.now();
     const startRotation = currentRotation;
     let lastSegmentIndex = -1;
@@ -1083,6 +1102,8 @@ const Index = () => {
             isActive={timerActive && showLetterSelector}
             onTimeUp={handleTimeUp}
             onReset={timerResetKey}
+            spinDuration={currentSpinDuration}
+            isSpinning={gameState.isSpinning}
           />
         </div>
       </div>
