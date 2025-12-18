@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Text, RoundedBox, useTexture } from '@react-three/drei';
+import { Text, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { wheelSegments } from '@/data/puzzles';
 import { WheelSegment, Player } from '@/types/game';
@@ -36,31 +36,65 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
   );
 };
 
-const CenterBadge = ({
+const CenterBadge3D = ({
   show = true,
-  badgeScale = 1.2,
-  badgeYOffset = 0.05,
+  scale = 1.0,
+  yOffset = 0.05,
 }: {
   show?: boolean;
-  badgeScale?: number;
-  badgeYOffset?: number;
+  scale?: number;
+  yOffset?: number;
 }) => {
-  const texture = useTexture('/images/center-badge.png');
-  
   if (!show) return null;
-
+  
+  const badgeWidth = 1.4 * scale;
+  const badgeHeight = 0.8 * scale;
+  const frameThickness = 0.1 * scale;
+  const depth = 0.08 * scale;
+  
   return (
-    <mesh 
-      position={[0, WHEEL_DISK_HEIGHT / 2 + badgeYOffset, 0]} 
-      rotation={[-Math.PI / 2, 0, 0]}
-    >
-      <circleGeometry args={[badgeScale, 64]} />
-      <meshBasicMaterial 
-        map={texture} 
-        transparent 
-        side={THREE.DoubleSide}
-      />
-    </mesh>
+    <group position={[0, WHEEL_DISK_HEIGHT / 2 + yOffset, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      {/* Zlatý vnější rámeček - pill shape */}
+      <RoundedBox 
+        args={[badgeWidth, badgeHeight, depth]} 
+        radius={badgeHeight * 0.45} 
+        smoothness={8}
+      >
+        <meshStandardMaterial 
+          color="#d4af37"
+          metalness={0.9}
+          roughness={0.15}
+        />
+      </RoundedBox>
+      
+      {/* Tmavý vnitřní panel */}
+      <RoundedBox 
+        args={[badgeWidth - frameThickness * 2, badgeHeight - frameThickness * 2, depth + 0.01]} 
+        radius={(badgeHeight - frameThickness * 2) * 0.45}
+        smoothness={8}
+        position={[0, 0, depth * 0.3]}
+      >
+        <meshStandardMaterial 
+          color="#0a0a1a"
+          metalness={0.2}
+          roughness={0.8}
+        />
+      </RoundedBox>
+      
+      {/* Text "CANVA" */}
+      <Text
+        position={[0, 0, depth * 0.6]}
+        fontSize={0.28 * scale}
+        color="#ffd700"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.015}
+        outlineColor="#000000"
+        fontWeight="bold"
+      >
+        CANVA
+      </Text>
+    </group>
   );
 };
 
@@ -272,10 +306,10 @@ export const WheelModel = ({
         />
       ))}
       
-      <CenterBadge
+      <CenterBadge3D
         show={showCenterBadge}
-        badgeScale={centerBadgeScale}
-        badgeYOffset={centerBadgeYOffset}
+        scale={centerBadgeScale}
+        yOffset={centerBadgeYOffset}
       />
       
       {Array.from(tokenPositions.entries()).map(([segmentId, playerId]) => (
