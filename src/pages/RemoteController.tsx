@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
 const MIN_SCORE_FOR_VOWELS = 1000;
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 10000; // Reduced from 3s to 10s - only fallback for realtime
 const HOST_TIMEOUT_MS = 10000; // Host is considered offline after 10s
 const SESSION_WARNING_MS = 55 * 60 * 1000; // Warn 5min before 60min expiry
 
@@ -108,27 +108,29 @@ const RemoteController = () => {
     setTimeout(() => setCommandFeedback(null), 2000);
   }, [session?.game_state?._lastCommandResult]);
 
-  // Polling fallback - update local state when realtime fails
+  // Polling fallback - only check heartbeat to detect stale realtime, don't rejoin aggressively
   useEffect(() => {
     if (!session?.id || !code) return;
+    
+    let lastKnownHeartbeat = session.game_state?._hostHeartbeat || 0;
 
     const pollInterval = setInterval(async () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('game_sessions')
-          .select('game_state, updated_at')
+          .select('game_state')
           .eq('id', session.id)
           .single();
         
         if (data && !fetchError && data.game_state) {
-          // Check if data is newer than what we have
           const remoteHeartbeat = (data.game_state as any)?._hostHeartbeat || 0;
-          const localHeartbeat = (session.game_state as any)?._hostHeartbeat || 0;
           
-          if (remoteHeartbeat > localHeartbeat) {
-            // Re-join to refresh the entire session state
+          // Only rejoin if heartbeat jumped significantly (realtime might be stale)
+          if (remoteHeartbeat > lastKnownHeartbeat + 15000) {
+            console.log('Heartbeat gap detected, refreshing session...');
             await joinSession(code);
           }
+          lastKnownHeartbeat = remoteHeartbeat;
         }
       } catch (err) {
         console.error('Polling error:', err);

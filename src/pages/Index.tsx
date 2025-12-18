@@ -52,20 +52,6 @@ const Index = () => {
   // Handle session code from URL or local creation
   const activeSessionCode = sessionCode || localSessionCode;
 
-  const handleCreateSession = useCallback(async () => {
-    setIsCreatingSession(true);
-    try {
-      const code = await createSession();
-      if (code) {
-        setLocalSessionCode(code);
-        // Update URL without page reload
-        window.history.replaceState(null, '', `/play/${code}`);
-      }
-      return code;
-    } finally {
-      setIsCreatingSession(false);
-    }
-  }, [createSession]);
   
   const [gamePhase, setGamePhase] = useState<GamePhase>("intro");
   const [gameMode, setGameMode] = useState<"random" | "teacher">("random");
@@ -134,7 +120,42 @@ const Index = () => {
   const [showEndGameDialog, setShowEndGameDialog] = useState(false);
   const [vowelsForceUnlocked, setVowelsForceUnlocked] = useState(false);
 
-  // Game history for undo functionality (max 10 states)
+  // Create session with current game state for remote control
+  const handleCreateSession = useCallback(async () => {
+    setIsCreatingSession(true);
+    try {
+      // Build current game state for session initialization
+      const initialState = {
+        currentPlayer: gameState.currentPlayer,
+        players: gameState.players,
+        puzzle: gameState.puzzle ? {
+          ...gameState.puzzle,
+          revealedLetters: Array.from(gameState.puzzle.revealedLetters)
+        } : null,
+        usedLetters: Array.from(gameState.usedLetters),
+        round: gameState.round,
+        isSpinning: gameState.isSpinning,
+        showLetterSelector,
+        isPlacingTokens,
+        tokenPositions: Object.fromEntries(tokenPositions),
+        gameMode,
+        vowelsForceUnlocked,
+        isGuessingPhrase: showGuessDialog,
+        _hostHeartbeat: Date.now()
+      };
+      
+      const code = await createSession(initialState);
+      if (code) {
+        setLocalSessionCode(code);
+        // Update URL without page reload
+        window.history.replaceState(null, '', `/play/${code}`);
+      }
+      return code;
+    } finally {
+      setIsCreatingSession(false);
+    }
+  }, [createSession, gameState, showLetterSelector, isPlacingTokens, tokenPositions, gameMode, vowelsForceUnlocked, showGuessDialog]);
+
   const [gameHistory, setGameHistory] = useState<
     Array<{
       gameState: GameState;
@@ -201,7 +222,7 @@ const Index = () => {
     };
     
     updateGameState(serializableState);
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, activeSessionCode, gameMode, showGuessDialog]);
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked]);
 
   // Process commands from remote controllers - using a ref to track processed commands
   const processedCommandsRef = useRef<Set<number>>(new Set());
@@ -898,13 +919,19 @@ const Index = () => {
     
     let commandResult: { type: 'success' | 'error'; message: string } | null = null;
     
+    // Read current state from session for accurate command processing
+    const sessionIsPlacingTokens = session?.game_state?.isPlacingTokens ?? isPlacingTokens;
+    const sessionShowLetterSelector = session?.game_state?.showLetterSelector ?? showLetterSelector;
+    
     switch (command.type) {
       case 'SPIN_WHEEL':
-        if (!gameState.isSpinning && !showLetterSelector && !isPlacingTokens) {
+        // Use session state to avoid sync issues
+        if (!gameState.isSpinning && !sessionShowLetterSelector && !sessionIsPlacingTokens) {
           const spinPower = 'power' in command ? command.power : 50;
           handleSpin(spinPower);
           commandResult = { type: 'success', message: 'Kolo se točí!' };
         } else {
+          console.log('SPIN blocked:', { isSpinning: gameState.isSpinning, showLetterSelector: sessionShowLetterSelector, isPlacingTokens: sessionIsPlacingTokens });
           commandResult = { type: 'error', message: 'Nelze točit' };
         }
         break;
@@ -937,7 +964,7 @@ const Index = () => {
         }
         break;
       case 'PLACE_TOKEN':
-        if ('segmentIndex' in command && isPlacingTokens) {
+        if ('segmentIndex' in command && sessionIsPlacingTokens) {
           handleTokenPlace(command.segmentIndex);
           commandResult = { type: 'success', message: 'Žeton umístěn' };
         } else {
