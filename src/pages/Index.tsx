@@ -198,7 +198,6 @@ const Index = () => {
 
   // Process commands from remote controllers - using a ref to track processed commands
   const processedCommandsRef = useRef<Map<number, number>>(new Map()); // timestamp -> added time
-  const commandQueueRef = useRef<{ command: GameCommand; timestamp: number } | null>(null);
   // Ref to capture pendingCommandResult for sync without causing infinite loop
   const pendingCommandResultRef = useRef(pendingCommandResult);
   pendingCommandResultRef.current = pendingCommandResult;
@@ -265,18 +264,6 @@ const Index = () => {
     }
   }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked]);
   
-  // Store the pending command to process after handlers are defined
-  useEffect(() => {
-    if (!session?.game_state?._pendingCommand) return;
-    
-    const command = session.game_state._pendingCommand as GameCommand;
-    const timestamp = session.game_state._commandTimestamp as number;
-    
-    // Skip if we already processed this command
-    if (!timestamp || processedCommandsRef.current.has(timestamp)) return;
-    
-    commandQueueRef.current = { command, timestamp };
-  }, [session?.game_state?._pendingCommand, session?.game_state?._commandTimestamp]);
 
   // Save current state to history before making changes
   const saveStateToHistory = useCallback(() => {
@@ -939,17 +926,20 @@ const Index = () => {
     setShowLetterSelector(false);
   };
 
-  // Process queued commands from remote controllers
+  // Process commands from remote controllers - read directly from session
   useEffect(() => {
-    if (!commandQueueRef.current) return;
+    // Read command directly from session, not from ref
+    const pendingCommand = session?.game_state?._pendingCommand as GameCommand | undefined;
+    const timestamp = session?.game_state?._commandTimestamp as number | undefined;
     
-    const { command, timestamp } = commandQueueRef.current;
+    // Skip if no command or already processed
+    if (!pendingCommand || !timestamp) return;
+    if (processedCommandsRef.current.has(timestamp)) return;
     
-    // Mark as processed with current time for cleanup
+    // Mark as processed immediately
     processedCommandsRef.current.set(timestamp, Date.now());
-    commandQueueRef.current = null;
     
-    console.log('Processing remote command:', command);
+    console.log('Processing remote command:', pendingCommand);
     
     let commandResult: { type: 'success' | 'error'; message: string } | null = null;
     
@@ -957,12 +947,12 @@ const Index = () => {
     const sessionIsPlacingTokens = session?.game_state?.isPlacingTokens ?? isPlacingTokens;
     const sessionShowLetterSelector = session?.game_state?.showLetterSelector ?? showLetterSelector;
     
-    switch (command.type) {
+    switch (pendingCommand.type) {
       case 'SPIN_WHEEL':
         // Use session state to avoid sync issues
         if (!gameState.isSpinning && !sessionShowLetterSelector && !sessionIsPlacingTokens) {
           // Validate and clamp spin power to range 10-100
-          const rawPower = 'power' in command ? command.power : 50;
+          const rawPower = 'power' in pendingCommand ? pendingCommand.power : 50;
           const spinPower = Math.max(10, Math.min(100, typeof rawPower === 'number' ? rawPower : 50));
           handleSpin(spinPower);
           commandResult = { type: 'success', message: 'Kolo se točí!' };
@@ -972,16 +962,16 @@ const Index = () => {
         }
         break;
       case 'SELECT_LETTER':
-        if (showLetterSelector && 'letter' in command) {
-          handleLetterSelect(command.letter);
-          commandResult = { type: 'success', message: `Písmeno ${command.letter}` };
+        if (showLetterSelector && 'letter' in pendingCommand) {
+          handleLetterSelect(pendingCommand.letter);
+          commandResult = { type: 'success', message: `Písmeno ${pendingCommand.letter}` };
         } else {
           commandResult = { type: 'error', message: 'Nelze vybrat písmeno' };
         }
         break;
       case 'GUESS_PHRASE':
-        if ('phrase' in command) {
-          handleGuessPhrase(command.phrase);
+        if ('phrase' in pendingCommand) {
+          handleGuessPhrase(pendingCommand.phrase);
           commandResult = { type: 'success', message: 'Hádání odesláno' };
         }
         break;
@@ -994,14 +984,14 @@ const Index = () => {
         commandResult = { type: 'success', message: 'Krok vrácen' };
         break;
       case 'SET_PLAYER':
-        if ('playerId' in command) {
-          handleSwitchPlayer(command.playerId);
+        if ('playerId' in pendingCommand) {
+          handleSwitchPlayer(pendingCommand.playerId);
           commandResult = { type: 'success', message: 'Hráč změněn' };
         }
         break;
       case 'PLACE_TOKEN':
-        if ('segmentIndex' in command && sessionIsPlacingTokens) {
-          handleTokenPlace(command.segmentIndex);
+        if ('segmentIndex' in pendingCommand && sessionIsPlacingTokens) {
+          handleTokenPlace(pendingCommand.segmentIndex);
           commandResult = { type: 'success', message: 'Žeton umístěn' };
         } else {
           commandResult = { type: 'error', message: 'Nelze umístit žeton' };
@@ -1016,7 +1006,7 @@ const Index = () => {
         clearCommand: true
       });
     }
-  }, [session?.game_state?._commandTimestamp, handleSpin, handleLetterSelect, handleGuessPhrase, handleSwitchPlayer, handleUndo, handleTokenPlace, gameState.isSpinning, gameState.currentPlayer, showLetterSelector, isPlacingTokens, session?.game_state?.isPlacingTokens, session?.game_state?.showLetterSelector]);
+  }, [session?.game_state?._commandTimestamp, session?.game_state?._pendingCommand, handleSpin, handleLetterSelect, handleGuessPhrase, handleSwitchPlayer, handleUndo, handleTokenPlace, gameState.isSpinning, showLetterSelector, isPlacingTokens, session?.game_state?.isPlacingTokens, session?.game_state?.showLetterSelector]);
 
   // Keyboard shortcuts for desktop users
   useEffect(() => {
