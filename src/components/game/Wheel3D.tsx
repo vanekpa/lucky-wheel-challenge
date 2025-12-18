@@ -370,22 +370,24 @@ export const Wheel3D = ({
   const [badgeScale, setBadgeScale] = useState<number>(() => {
     try {
       const raw = localStorage.getItem(BADGE_DEBUG_STORAGE_KEY);
-      if (!raw) return 0.02;
+      if (!raw) return 1.2;
       const parsed = JSON.parse(raw) as { scale?: number };
-      return typeof parsed.scale === 'number' ? parsed.scale : 0.02;
+      // If old small values, reset to new default
+      const val = typeof parsed.scale === 'number' ? parsed.scale : 1.2;
+      return val < 0.5 ? 1.2 : val;
     } catch {
-      return 0.02;
+      return 1.2;
     }
   });
 
   const [badgeYOffset, setBadgeYOffset] = useState<number>(() => {
     try {
       const raw = localStorage.getItem(BADGE_DEBUG_STORAGE_KEY);
-      if (!raw) return 0.12;
+      if (!raw) return 0.05;
       const parsed = JSON.parse(raw) as { yOffset?: number };
-      return typeof parsed.yOffset === 'number' ? parsed.yOffset : 0.12;
+      return typeof parsed.yOffset === 'number' ? parsed.yOffset : 0.05;
     } catch {
-      return 0.12;
+      return 0.05;
     }
   });
 
@@ -418,29 +420,29 @@ export const Wheel3D = ({
             <div className="mt-3 space-y-4">
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between">
-                  <Label className="text-sm">Velikost</Label>
-                  <span className="text-xs font-mono text-muted-foreground">{badgeScale.toFixed(3)}</span>
+                  <Label className="text-sm">Velikost (poloměr)</Label>
+                  <span className="text-xs font-mono text-muted-foreground">{badgeScale.toFixed(2)}</span>
                 </div>
                 <Slider
                   value={[badgeScale]}
-                  min={0.005}
-                  max={0.25}
-                  step={0.005}
-                  onValueChange={(v) => setBadgeScale(v[0] ?? 0.02)}
+                  min={0.5}
+                  max={2.0}
+                  step={0.05}
+                  onValueChange={(v) => setBadgeScale(v[0] ?? 1.2)}
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between">
                   <Label className="text-sm">Výška nad kolem</Label>
-                  <span className="text-xs font-mono text-muted-foreground">{badgeYOffset.toFixed(3)}</span>
+                  <span className="text-xs font-mono text-muted-foreground">{badgeYOffset.toFixed(2)}</span>
                 </div>
                 <Slider
                   value={[badgeYOffset]}
-                  min={0.02}
-                  max={0.35}
-                  step={0.005}
-                  onValueChange={(v) => setBadgeYOffset(v[0] ?? 0.12)}
+                  min={0.01}
+                  max={0.15}
+                  step={0.01}
+                  onValueChange={(v) => setBadgeYOffset(v[0] ?? 0.05)}
                 />
               </div>
             </div>
