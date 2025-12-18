@@ -14,6 +14,9 @@ interface WheelModelProps {
   players: Player[];
   onSegmentClick?: (segmentId: number) => void;
   isClickable?: boolean;
+  showCenterBadge?: boolean;
+  centerBadgeScale?: number;
+  centerBadgeYOffset?: number;
 }
 
 const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; height: number }) => {
@@ -33,43 +36,88 @@ const WheelPeg = ({ angle, radius, height }: { angle: number; radius: number; he
   );
 };
 
-const CenterHub = ({ radius }: { radius: number }) => {
-  const size = radius * 1.8;
-  
+const CenterHub = ({
+  radius,
+  show = true,
+  badgeScale = 0.012,
+  badgeYOffset = 0.1,
+}: {
+  radius: number;
+  show?: boolean;
+  badgeScale?: number;
+  badgeYOffset?: number;
+}) => {
+  if (!show) return null;
+
   return (
-    <group position={[0, WHEEL_DISK_HEIGHT / 2 + 0.1, 0]}>
+    <group position={[0, WHEEL_DISK_HEIGHT / 2 + badgeYOffset, 0]}>
       <Html
         center
         transform
         rotation={[-Math.PI / 2, 0, 0]}
-        scale={0.012}
+        scale={badgeScale}
         style={{ pointerEvents: 'none' }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="peklo-edu.cz game by Patrik Vaněk">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="512"
+          height="512"
+          viewBox="0 0 512 512"
+          role="img"
+          aria-label="peklo-edu.cz game by Patrik Vaněk"
+        >
           <defs>
             <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#000" floodOpacity="0.45"/>
+              <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#000" floodOpacity="0.45" />
             </filter>
             <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#ffd36a" stopOpacity="0.95"/>
-              <stop offset="0.5" stopColor="#b8872b" stopOpacity="0.95"/>
-              <stop offset="1" stopColor="#ffe7a6" stopOpacity="0.95"/>
+              <stop offset="0" stopColor="#ffd36a" stopOpacity="0.95" />
+              <stop offset="0.5" stopColor="#b8872b" stopOpacity="0.95" />
+              <stop offset="1" stopColor="#ffe7a6" stopOpacity="0.95" />
             </linearGradient>
             <radialGradient id="plate" cx="35%" cy="30%" r="75%">
-              <stop offset="0" stopColor="#1a1a1a"/>
-              <stop offset="1" stopColor="#050505"/>
+              <stop offset="0" stopColor="#1a1a1a" />
+              <stop offset="1" stopColor="#050505" />
             </radialGradient>
           </defs>
           <g filter="url(#shadow)">
-            <circle cx="256" cy="256" r="190" fill="url(#plate)"/>
-            <circle cx="256" cy="256" r="190" fill="none" stroke="url(#rim)" strokeWidth="10" opacity="0.95"/>
-            <circle cx="256" cy="256" r="168" fill="none" stroke="#ffffff" strokeOpacity="0.10" strokeWidth="2"/>
+            <circle cx="256" cy="256" r="190" fill="url(#plate)" />
+            <circle
+              cx="256"
+              cy="256"
+              r="190"
+              fill="none"
+              stroke="url(#rim)"
+              strokeWidth="10"
+              opacity="0.95"
+            />
+            <circle
+              cx="256"
+              cy="256"
+              r="168"
+              fill="none"
+              stroke="#ffffff"
+              strokeOpacity="0.10"
+              strokeWidth="2"
+            />
           </g>
-          <g fill="#ffffff" textAnchor="middle" fontFamily="Fredoka, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif">
-            <text x="256" y="210" fontSize="26" letterSpacing="1.2" opacity="0.92">peklo-edu.cz</text>
-            <text x="256" y="245" fontSize="18" letterSpacing="3" opacity="0.70">GAME BY</text>
-            <text x="256" y="305" fontSize="44" fontWeight="800" letterSpacing="0.5">Patrik Vaněk</text>
-            <text x="256" y="350" fontSize="16" letterSpacing="2.6" opacity="0.55">EDU • GAMES • CANVA</text>
+          <g
+            fill="#ffffff"
+            textAnchor="middle"
+            fontFamily="Fredoka, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+          >
+            <text x="256" y="210" fontSize="26" letterSpacing="1.2" opacity="0.92">
+              peklo-edu.cz
+            </text>
+            <text x="256" y="245" fontSize="18" letterSpacing="3" opacity="0.70">
+              GAME BY
+            </text>
+            <text x="256" y="305" fontSize="44" fontWeight="800" letterSpacing="0.5">
+              Patrik Vaněk
+            </text>
+            <text x="256" y="350" fontSize="16" letterSpacing="2.6" opacity="0.55">
+              EDU • GAMES • CANVA
+            </text>
           </g>
         </svg>
       </Html>
@@ -234,12 +282,15 @@ const PlayerToken3D = ({
 };
 
 export const WheelModel = ({
-  rotation, 
+  rotation,
   rotationRef: externalRotationRef,
   tokenPositions,
   players,
   onSegmentClick,
-  isClickable
+  isClickable,
+  showCenterBadge = true,
+  centerBadgeScale,
+  centerBadgeYOffset,
 }: WheelModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   
@@ -282,7 +333,12 @@ export const WheelModel = ({
         />
       ))}
       
-      <CenterHub radius={0.45 * WHEEL_RADIUS} />
+      <CenterHub
+        radius={0.45 * WHEEL_RADIUS}
+        show={showCenterBadge}
+        badgeScale={centerBadgeScale}
+        badgeYOffset={centerBadgeYOffset}
+      />
       
       {Array.from(tokenPositions.entries()).map(([segmentId, playerId]) => (
         <PlayerToken3D
