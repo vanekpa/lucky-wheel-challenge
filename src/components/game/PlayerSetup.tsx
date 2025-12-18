@@ -79,6 +79,13 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
   };
 
   const handleStart = () => {
+    // Play intro jingle if sounds are enabled
+    if (localSoundsEnabled) {
+      const audio = new Audio('/sounds/intro-jingle.ogg');
+      audio.volume = 0.7;
+      audio.play().catch(() => {});
+    }
+
     const gamePlayers: Player[] = players.map((p, i) => ({
       id: i,
       name: p.name || `HRÁČ ${i + 1}`,
