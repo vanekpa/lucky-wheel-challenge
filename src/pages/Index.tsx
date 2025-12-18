@@ -664,9 +664,18 @@ const Index = () => {
     const pointerPos = (3 * Math.PI) / 2;
     const targetRotationInCircle = pointerPos - geometryOffset - (targetSegmentIndex + 0.5) * segmentAngle;
 
-    const normalizedTarget = ((targetRotationInCircle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-    const fullRotations = Math.floor(currentRotation / (Math.PI * 2)) * (Math.PI * 2);
-    const newRotation = fullRotations + Math.PI * 2 * extraSpins + normalizedTarget;
+    const tau = Math.PI * 2;
+    const normalizedTarget = ((targetRotationInCircle % tau) + tau) % tau;
+
+    // IMPORTANT: extraSpins is fractional (based on power), but FULL rotations must be an integer,
+    // otherwise the final normalized rotation will drift and land on the wrong segment.
+    const fullSpins = Math.round(extraSpins); // 5..10
+
+    const normalizedCurrent = ((currentRotation % tau) + tau) % tau;
+    const deltaToTarget = (normalizedTarget - normalizedCurrent + tau) % tau;
+
+    // Guarantee: newRotation % tau === normalizedTarget
+    const newRotation = currentRotation + fullSpins * tau + deltaToTarget;
 
     // Duration: 4-7 seconds based on power
     const duration = 4000 + powerFactor * 3000;
