@@ -81,10 +81,10 @@ export const SpinButton = ({
     
     const pressDuration = Date.now() - pressStartTime.current;
     
-    // Quick tap = 50% power, otherwise use current power level with minimum
+    // Quick tap = MIN_POWER (35%), otherwise use current power level with minimum
     let finalPower: number;
     if (pressDuration < QUICK_TAP_THRESHOLD_MS) {
-      finalPower = 50; // Quick tap = normal spin
+      finalPower = MIN_POWER; // Quick tap = minimum power (35%)
     } else {
       finalPower = Math.max(MIN_POWER, powerLevel);
     }
