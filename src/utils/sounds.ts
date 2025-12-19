@@ -307,20 +307,28 @@ const getLetterSounds = (letter: string): string[] => {
 };
 
 export const playLetterSound = (letter: string): boolean => {
-  if (!getSoundsEnabled()) return false;
+  if (!getSoundsEnabled()) {
+    console.log('Letter sound skipped - sounds disabled');
+    return false;
+  }
   
   const sounds = getLetterSounds(letter);
+  console.log(`Letter sound for "${letter}":`, sounds);
   
   if (sounds.length === 0) {
+    console.log(`No sound found for letter "${letter}"`);
     return false; // No sound for this letter
   }
   
   // Pick random version if multiple exist
   const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+  console.log(`Playing letter sound: ${randomSound}`);
   
   const audio = new Audio(randomSound);
-  audio.volume = 0.7;
-  audio.play().catch(err => console.log('Audio play failed:', err));
+  audio.volume = 0.8;
+  audio.play()
+    .then(() => console.log('Letter sound playing successfully'))
+    .catch(err => console.log('Letter sound play failed:', err));
   
   return true;
 };
