@@ -31,6 +31,15 @@ export const playTickSound = () => {
   oscillator.stop(ctx.currentTime + 0.03);
 };
 
+// 1000 points voice line
+export const play1000PointsSound = () => {
+  if (!getSoundsEnabled()) return;
+  
+  const audio = new Audio('/sounds/1000-points.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+};
+
 // Win fanfare - ascending tones
 export const playWinSound = () => {
   if (!getSoundsEnabled()) return;
