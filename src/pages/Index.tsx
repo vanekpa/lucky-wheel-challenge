@@ -27,7 +27,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound } from "@/utils/sounds";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play1000PointsSound } from "@/utils/sounds";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
 
@@ -466,7 +466,12 @@ const Index = () => {
       }));
       setShowLetterSelector(false);
     } else {
-      playWinSound();
+      // Special voice line for 1000 points
+      if (segment.value === 1000) {
+        play1000PointsSound();
+      } else {
+        playWinSound();
+      }
       setCurrentWheelValue(segment.value as number);
       setShowLetterSelector(true);
       // Activate timer when points are won
