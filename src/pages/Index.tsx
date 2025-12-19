@@ -27,7 +27,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound } from "@/utils/sounds";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound } from "@/utils/sounds";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
 
@@ -508,7 +508,7 @@ const Index = () => {
 
     // Check if vowel and not unlocked yet (unless force unlocked due to deadlock)
     if (VOWELS.has(upperLetter) && currentScore < MIN_SCORE_FOR_VOWELS && !isVowelsUnlocked && !vowelsForceUnlocked) {
-      playNothingSound();
+      playNotEnoughPointsSound();
       setResultMessage(`Samohlásky můžete hádat až od ${MIN_SCORE_FOR_VOWELS} bodů! Ztráta tahu.`);
       setResultType("error");
       setShowResult(true);
