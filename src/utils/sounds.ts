@@ -287,3 +287,12 @@ export const playBuzzerSound = () => {
     oscillator.stop(startTime + 0.2);
   });
 };
+
+// Not enough points for vowel - voice line
+export const playNotEnoughPointsSound = () => {
+  if (!getSoundsEnabled()) return;
+  
+  const audio = new Audio('/sounds/not-enough-points.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+};
