@@ -31,11 +31,14 @@ export const playTickSound = () => {
   oscillator.stop(ctx.currentTime + 0.03);
 };
 
-// 100 points voice line
+// 100 points voice line (multiple versions, random selection)
 export const play100PointsSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const audio = new Audio('/sounds/100-points.ogg');
+  const versions = ['/sounds/100-points.ogg', '/sounds/100-points-2.ogg'];
+  const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  
+  const audio = new Audio(randomVersion);
   audio.volume = 0.7;
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
