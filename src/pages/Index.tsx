@@ -27,7 +27,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound } from "@/utils/sounds";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound } from "@/utils/sounds";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
 
@@ -554,6 +554,9 @@ const Index = () => {
     if (totalCount > 0) {
       const points = currentWheelValue * totalCount;
       const variantsFound = variants.filter((v) => phrase.includes(v)).join(", ");
+
+      // Play letter-specific sound if available
+      playLetterSound(upperLetter);
 
       // Show result with delay
       setResultMessage(`Správně! ${totalCount}× "${variantsFound}" = +${points} bodů`);
