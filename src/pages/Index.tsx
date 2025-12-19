@@ -551,12 +551,12 @@ const Index = () => {
       usedLetters: new Set([...prev.usedLetters, ...variants]),
     }));
 
+    // Play letter-specific sound if available (plays on every valid letter attempt)
+    playLetterSound(upperLetter);
+
     if (totalCount > 0) {
       const points = currentWheelValue * totalCount;
       const variantsFound = variants.filter((v) => phrase.includes(v)).join(", ");
-
-      // Play letter-specific sound if available
-      playLetterSound(upperLetter);
 
       // Show result with delay
       setResultMessage(`Správně! ${totalCount}× "${variantsFound}" = +${points} bodů`);
