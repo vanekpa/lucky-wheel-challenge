@@ -296,3 +296,48 @@ export const playNotEnoughPointsSound = () => {
   audio.volume = 0.7;
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
+
+// Letter-specific sound effects (e.g., "B jako Babička")
+// Supports multiple versions per letter - files should be named: b.ogg, b-2.ogg, b-3.ogg, etc.
+const letterSoundCache: Map<string, string[]> = new Map();
+
+// Check which letter sounds exist (called on first use)
+const getLetterSounds = (letter: string): string[] => {
+  const lowerLetter = letter.toLowerCase();
+  
+  if (letterSoundCache.has(lowerLetter)) {
+    return letterSoundCache.get(lowerLetter)!;
+  }
+  
+  // For now, we define known letter sounds manually
+  // As you add more sounds, add them here
+  const knownLetterSounds: Record<string, string[]> = {
+    'b': ['/sounds/letters/b.ogg'],
+    // Add more letters here as you record them:
+    // 'c': ['/sounds/letters/c.ogg'],
+    // 'd': ['/sounds/letters/d.ogg', '/sounds/letters/d-2.ogg'],
+  };
+  
+  const sounds = knownLetterSounds[lowerLetter] || [];
+  letterSoundCache.set(lowerLetter, sounds);
+  return sounds;
+};
+
+export const playLetterSound = (letter: string): boolean => {
+  if (!getSoundsEnabled()) return false;
+  
+  const sounds = getLetterSounds(letter);
+  
+  if (sounds.length === 0) {
+    return false; // No sound for this letter
+  }
+  
+  // Pick random version if multiple exist
+  const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+  
+  const audio = new Audio(randomSound);
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+  
+  return true;
+};
