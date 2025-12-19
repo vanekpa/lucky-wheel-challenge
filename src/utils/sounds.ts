@@ -105,30 +105,13 @@ export const playWinSound = () => {
   });
 };
 
-// Bankrupt sound - descending tones
+// Bankrupt sound - voice line
 export const playBankruptSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const ctx = getAudioContext();
-  const frequencies = [400, 300, 200, 150]; // Descending
-  
-  frequencies.forEach((freq, index) => {
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    oscillator.frequency.value = freq;
-    oscillator.type = 'sawtooth';
-    
-    const startTime = ctx.currentTime + index * 0.15;
-    gainNode.gain.setValueAtTime(0.1, startTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
-    
-    oscillator.start(startTime);
-    oscillator.stop(startTime + 0.2);
-  });
+  const audio = new Audio('/sounds/bankrot.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
 };
 
 // Nothing sound - single low tone
