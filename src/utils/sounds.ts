@@ -31,6 +31,15 @@ export const playTickSound = () => {
   oscillator.stop(ctx.currentTime + 0.03);
 };
 
+// 100 points voice line
+export const play100PointsSound = () => {
+  if (!getSoundsEnabled()) return;
+  
+  const audio = new Audio('/sounds/100-points.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+};
+
 // 1000 points voice line
 export const play1000PointsSound = () => {
   if (!getSoundsEnabled()) return;
