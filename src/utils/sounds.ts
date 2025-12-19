@@ -49,6 +49,15 @@ export const play1000PointsSound = () => {
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
 
+// 2000 points voice line
+export const play2000PointsSound = () => {
+  if (!getSoundsEnabled()) return;
+  
+  const audio = new Audio('/sounds/2000-points.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+};
+
 // Win fanfare - ascending tones
 export const playWinSound = () => {
   if (!getSoundsEnabled()) return;
