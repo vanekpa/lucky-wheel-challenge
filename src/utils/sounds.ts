@@ -40,6 +40,15 @@ export const play100PointsSound = () => {
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
 
+// 200 points voice line
+export const play200PointsSound = () => {
+  if (!getSoundsEnabled()) return;
+  
+  const audio = new Audio('/sounds/200-points.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+};
+
 // 500 points voice line
 export const play500PointsSound = () => {
   if (!getSoundsEnabled()) return;
