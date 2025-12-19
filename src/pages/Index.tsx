@@ -27,7 +27,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play1000PointsSound, play2000PointsSound } from "@/utils/sounds";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound } from "@/utils/sounds";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
 
@@ -469,6 +469,8 @@ const Index = () => {
       // Special voice lines for specific point values
       if (segment.value === 100) {
         play100PointsSound();
+      } else if (segment.value === 500) {
+        play500PointsSound();
       } else if (segment.value === 1000) {
         play1000PointsSound();
       } else if (segment.value === 2000) {
