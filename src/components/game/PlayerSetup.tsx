@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface PlayerSetupProps {
   onComplete: (players: Player[], maxRounds: number) => void;
-  showRoundsSelect?: boolean; // Only show in database mode
 }
 
 const PRESET_COLORS = [
@@ -27,7 +26,7 @@ const PRESET_COLORS = [
   { hex: "#fd79a8", name: "Růžová" },
 ];
 
-export const PlayerSetup = ({ onComplete, showRoundsSelect = false }: PlayerSetupProps) => {
+export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
   const [players, setPlayers] = useState<{ name: string; color: string }[]>([
     { name: "HRÁČ 1", color: PRESET_COLORS[0].hex },
     { name: "HRÁČ 2", color: PRESET_COLORS[1].hex },
@@ -40,7 +39,7 @@ export const PlayerSetup = ({ onComplete, showRoundsSelect = false }: PlayerSetu
   const { turnTimer, setTurnTimer } = useTurnTimer();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(true);
   const [effectsEnabled, setEffectsEnabled] = useState(true);
-  const [numberOfRounds, setNumberOfRounds] = useState<number>(5); // Default 5 rounds
+  const [numberOfRounds, setNumberOfRounds] = useState<number>(4); // Default 4 rounds
 
   // Load settings from localStorage
   useEffect(() => {
@@ -81,8 +80,7 @@ export const PlayerSetup = ({ onComplete, showRoundsSelect = false }: PlayerSetu
   };
 
   const handleRoundsChange = (value: string) => {
-    const numValue = value === "∞" ? Infinity : parseInt(value);
-    setNumberOfRounds(numValue);
+    setNumberOfRounds(parseInt(value));
   };
 
   const handleStart = () => {
@@ -312,27 +310,25 @@ export const PlayerSetup = ({ onComplete, showRoundsSelect = false }: PlayerSetu
               </Select>
             </div>
 
-            {/* Number of rounds select - only for database mode */}
-            {showRoundsSelect && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Target className={`w-4 h-4 ${numberOfRounds !== Infinity ? "text-primary" : "text-muted-foreground"}`} />
-                  <Label className="text-sm">Počet kol</Label>
-                </div>
-                <Select value={numberOfRounds === Infinity ? "∞" : numberOfRounds.toString()} onValueChange={handleRoundsChange}>
-                  <SelectTrigger className="w-28 h-8 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 kola</SelectItem>
-                    <SelectItem value="5">5 kol</SelectItem>
-                    <SelectItem value="7">7 kol</SelectItem>
-                    <SelectItem value="10">10 kol</SelectItem>
-                    <SelectItem value="∞">Nekonečno ∞</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Number of rounds select */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                <Label className="text-sm">Počet kol</Label>
               </div>
-            )}
+              <Select value={numberOfRounds.toString()} onValueChange={handleRoundsChange}>
+                <SelectTrigger className="w-28 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num} {num === 1 ? "kolo" : num < 5 ? "kola" : "kol"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Start button */}
