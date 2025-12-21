@@ -27,7 +27,7 @@ import { SeasonalEffects } from "@/components/game/SeasonalEffects";
 import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
-import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
+import { useGameSession, type GameCommand, type BonusWheelSessionState } from "@/hooks/useGameSession";
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, playFirstRoundCompleteSound, unlockAudio, preloadAllSounds } from "@/utils/sounds";
 import { saveGameToLocal, loadGameFromLocal, clearSavedGame, SavedGameState } from "@/utils/gameStorage";
 
@@ -151,6 +151,10 @@ const Index = () => {
   const [savedGame, setSavedGame] = useState<SavedGameState | null>(null);
   const [checkedLocalStorage, setCheckedLocalStorage] = useState(false);
   const [vowelsForceUnlocked, setVowelsForceUnlocked] = useState(false);
+  
+  // Bonus wheel remote control state
+  const [bonusWheelRemoteCommand, setBonusWheelRemoteCommand] = useState<GameCommand | null>(null);
+  const [bonusWheelState, setBonusWheelState] = useState<BonusWheelSessionState | null>(null);
 
   // Create session with current game state for remote control
   const handleCreateSession = useCallback(async () => {
@@ -277,6 +281,8 @@ const Index = () => {
       gameMode,
       vowelsForceUnlocked,
       isGuessingPhrase: showGuessDialog,
+      gamePhase: gamePhase as 'playing' | 'bonus-wheel' | 'victory',
+      bonusWheelState: bonusWheelState || undefined,
       _hostHeartbeat: Date.now(),
       // If we processed a command, clear it and send result; otherwise preserve pending
       ...(shouldClearCommand ? {
@@ -307,7 +313,7 @@ const Index = () => {
         processedCommandsRef.current.delete(cmdTimestamp);
       }
     }
-  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked, heartbeatTick]);
+  }, [gameState, showLetterSelector, isPlacingTokens, tokenPositions, tokensPlaced, activeSessionCode, gameMode, showGuessDialog, vowelsForceUnlocked, heartbeatTick, gamePhase, bonusWheelState]);
   
 
   // Save current state to history before making changes
@@ -1117,6 +1123,19 @@ const Index = () => {
           commandResult = { type: 'error', message: 'Nelze umístit žeton' };
         }
         break;
+      // Bonus wheel commands - forward to BonusWheel component
+      case 'BONUS_CONTINUE':
+      case 'BONUS_SPIN':
+      case 'BONUS_SELECT_OFFSET':
+      case 'BONUS_CONFIRM':
+      case 'BONUS_FINISH':
+        if (gamePhase === 'bonus-wheel') {
+          setBonusWheelRemoteCommand(pendingCommand);
+          commandResult = { type: 'success', message: 'Bonus příkaz' };
+        } else {
+          commandResult = { type: 'error', message: 'Není bonus kolo' };
+        }
+        break;
     }
     
     // Store command result to be sent with next state sync (after React updates)
@@ -1226,7 +1245,18 @@ const Index = () => {
   // Bonus Wheel phase
   if (gamePhase === "bonus-wheel") {
     const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
-    return <BonusWheel winner={winner} players={gameState.players} onComplete={handleBonusWheelComplete} />;
+    return (
+      <BonusWheel 
+        winner={winner} 
+        players={gameState.players} 
+        onComplete={handleBonusWheelComplete}
+        remoteCommand={bonusWheelRemoteCommand}
+        onStateChange={(state) => {
+          setBonusWheelState(state);
+          setBonusWheelRemoteCommand(null);
+        }}
+      />
+    );
   }
 
   // Victory screen phase

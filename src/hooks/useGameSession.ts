@@ -4,6 +4,15 @@ import { generateSessionCode, normalizeSessionCode } from '@/utils/sessionCode';
 import type { GameState, Player, Puzzle } from '@/types/game';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+export interface BonusWheelSessionState {
+  phase: 'intro' | 'ready' | 'spin' | 'blackout' | 'choice' | 'reveal' | 'result';
+  selectedOffset: number;
+  winnerName: string;
+  winnerScore: number;
+  resultText?: string;
+  finalScore?: number;
+}
+
 export interface GameSessionState {
   currentPlayer: number;
   players: Player[];
@@ -25,6 +34,8 @@ export interface GameSessionState {
   teacherPuzzles: { phrase: string; category: string }[];
   vowelsForceUnlocked?: boolean;
   isGuessingPhrase?: boolean;
+  gamePhase?: 'playing' | 'bonus-wheel' | 'victory';
+  bonusWheelState?: BonusWheelSessionState;
   _pendingCommand?: GameCommand;
   _commandTimestamp?: number;
   _hostHeartbeat?: number;
@@ -67,7 +78,13 @@ export type GameCommand =
   | { type: 'UNDO' }
   | { type: 'SET_PLAYER'; playerId: number }
   | { type: 'TOGGLE_SOUND' }
-  | { type: 'TOGGLE_EFFECTS' };
+  | { type: 'TOGGLE_EFFECTS' }
+  // Bonus wheel commands
+  | { type: 'BONUS_CONTINUE' }
+  | { type: 'BONUS_SPIN' }
+  | { type: 'BONUS_SELECT_OFFSET'; offset: number }
+  | { type: 'BONUS_CONFIRM' }
+  | { type: 'BONUS_FINISH' };
 
 const defaultGameState: GameSessionState = {
   currentPlayer: 0,
