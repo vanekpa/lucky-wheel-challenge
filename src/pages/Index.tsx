@@ -734,14 +734,17 @@ const Index = () => {
         newRound();
       }, 3000);
     } else {
-      // Wrong guess - lose turn
+      // Wrong guess - lose ALL POINTS and turn!
       playNothingSound();
-      toast.error(`❌ Špatně! Tah přechází na dalšího hráče.`, {
+      toast.error(`❌ Špatně! Přicházíš o VŠECHNY body!`, {
         duration: 3000,
       });
       setGameState((prev) => ({
         ...prev,
         currentPlayer: (prev.currentPlayer + 1) % 3,
+        players: prev.players.map((p, index) => 
+          index === prev.currentPlayer ? { ...p, score: 0 } : p
+        ),
       }));
     }
   }, [gameState.puzzle.phrase, gameState.puzzle.revealedLetters, saveStateToHistory, newRound]);
