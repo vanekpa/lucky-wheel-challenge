@@ -1214,7 +1214,13 @@ const Index = () => {
 
   // Player setup screen
   if (gamePhase === "setup") {
-    return <PlayerSetup onComplete={handleSetupComplete} />;
+    return (
+      <PlayerSetup 
+        onComplete={handleSetupComplete} 
+        hideRoundsSelect={gameMode === "teacher"}
+        defaultRounds={gameMode === "teacher" ? customPuzzles.length : 4}
+      />
+    );
   }
 
   // Bonus Wheel phase

@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface PlayerSetupProps {
   onComplete: (players: Player[], maxRounds: number) => void;
+  hideRoundsSelect?: boolean;
+  defaultRounds?: number;
 }
 
 const PRESET_COLORS = [
@@ -26,7 +28,7 @@ const PRESET_COLORS = [
   { hex: "#fd79a8", name: "Růžová" },
 ];
 
-export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
+export const PlayerSetup = ({ onComplete, hideRoundsSelect = false, defaultRounds }: PlayerSetupProps) => {
   const [players, setPlayers] = useState<{ name: string; color: string }[]>([
     { name: "HRÁČ 1", color: PRESET_COLORS[0].hex },
     { name: "HRÁČ 2", color: PRESET_COLORS[1].hex },
@@ -39,8 +41,14 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
   const { turnTimer, setTurnTimer } = useTurnTimer();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(true);
   const [effectsEnabled, setEffectsEnabled] = useState(true);
-  const [numberOfRounds, setNumberOfRounds] = useState<number>(4); // Default 4 rounds
+  const [numberOfRounds, setNumberOfRounds] = useState<number>(defaultRounds ?? 4);
 
+  // Update rounds when defaultRounds changes
+  useEffect(() => {
+    if (defaultRounds !== undefined) {
+      setNumberOfRounds(defaultRounds);
+    }
+  }, [defaultRounds]);
   // Load settings from localStorage
   useEffect(() => {
     const savedSounds = localStorage.getItem("sounds_enabled");
@@ -310,25 +318,27 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
               </Select>
             </div>
 
-            {/* Number of rounds select */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                <Label className="text-sm">Počet kol</Label>
+            {/* Number of rounds select - hidden for teacher mode */}
+            {!hideRoundsSelect && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-primary" />
+                  <Label className="text-sm">Počet kol</Label>
+                </div>
+                <Select value={numberOfRounds.toString()} onValueChange={handleRoundsChange}>
+                  <SelectTrigger className="w-28 h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} {num === 1 ? "kolo" : num < 5 ? "kola" : "kol"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={numberOfRounds.toString()} onValueChange={handleRoundsChange}>
-                <SelectTrigger className="w-28 h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {num} {num === 1 ? "kolo" : num < 5 ? "kola" : "kol"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            )}
           </div>
 
           {/* Start button */}
