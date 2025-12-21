@@ -9,13 +9,9 @@ interface TeacherPuzzleInputProps {
 }
 
 export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputProps) => {
+  const [puzzleCount, setPuzzleCount] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [puzzles, setPuzzles] = useState<{ phrase: string; category: string }[]>([
-    { phrase: '', category: '' },
-    { phrase: '', category: '' },
-    { phrase: '', category: '' },
-    { phrase: '', category: '' },
-  ]);
+  const [puzzles, setPuzzles] = useState<{ phrase: string; category: string }[]>([]);
 
   const updatePuzzle = (index: number, field: 'phrase' | 'category', value: string) => {
     setPuzzles(prev => {
@@ -25,8 +21,13 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
     });
   };
 
-  const canProceed = puzzles[currentStep].phrase.trim().length > 0;
-  const isLastStep = currentStep === 3;
+  const handleSelectCount = (count: number) => {
+    setPuzzleCount(count);
+    setPuzzles(Array.from({ length: count }, () => ({ phrase: '', category: '' })));
+  };
+
+  const canProceed = puzzles[currentStep]?.phrase.trim().length > 0;
+  const isLastStep = puzzleCount !== null && currentStep === puzzleCount - 1;
 
   const handleNext = () => {
     if (isLastStep) {
@@ -51,12 +52,56 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
     }
   };
 
+  // Phase 1: Select puzzle count
+  if (puzzleCount === null) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-8">
+        <div className="w-full max-w-2xl">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Kolik tajenek chcete zadat?
+            </h2>
+            <p className="text-white/60 text-lg">
+              Počet tajenek = počet kol ve hře
+            </p>
+          </div>
+
+          <div className="grid grid-cols-5 gap-4 mb-12">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+              <Button
+                key={num}
+                onClick={() => handleSelectCount(num)}
+                variant="outline"
+                className="h-20 text-3xl font-bold bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-yellow-400 hover:text-yellow-400 transition-all duration-200"
+              >
+                {num}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              onClick={onBack}
+              variant="ghost"
+              size="lg"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+            >
+              <ArrowLeft className="mr-2 h-5 w-5" />
+              Zpět na výběr režimu
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Phase 2: Enter puzzles
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-8">
       <div className="w-full max-w-2xl">
         {/* Progress */}
         <div className="flex justify-center gap-3 mb-8">
-          {[0, 1, 2, 3].map(step => (
+          {Array.from({ length: puzzleCount }).map((_, step) => (
             <div
               key={step}
               className={`w-4 h-4 rounded-full transition-all duration-300 ${
@@ -73,7 +118,7 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
         {/* Title */}
         <div className="text-center mb-8 animate-in fade-in duration-300">
           <h2 className="text-4xl font-bold text-white mb-2">
-            Tajenka {currentStep + 1} ze 4
+            Tajenka {currentStep + 1} z {puzzleCount}
           </h2>
           <p className="text-white/60">
             Zadejte text tajenky pro kolo {currentStep + 1}
@@ -146,12 +191,6 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
           </Button>
         </div>
 
-        {/* Skip hint */}
-        {!isLastStep && currentStep > 0 && (
-          <p className="text-center text-white/40 text-sm mt-4">
-            Můžete přeskočit na konec s méně tajenkami
-          </p>
-        )}
       </div>
     </div>
   );
