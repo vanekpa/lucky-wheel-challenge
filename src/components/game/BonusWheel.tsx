@@ -1,14 +1,17 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Player, BonusWheelState, WheelSegment } from '@/types/game';
 import { bonusWheelSegments } from '@/data/puzzles';
 import { Button } from '@/components/ui/button';
 import { BonusWheel3D } from './BonusWheel3D';
 import { playTickSound, playBonusDrumroll, playJackpotSound, playRevealSound, playVictoryFanfare, playBankruptSound, playNothingSound } from '@/utils/sounds';
+import type { GameCommand, BonusWheelSessionState } from '@/hooks/useGameSession';
 
 interface BonusWheelProps {
   winner: Player;
   players: Player[];
   onComplete: (finalScores: Player[]) => void;
+  remoteCommand?: GameCommand | null;
+  onStateChange?: (state: BonusWheelSessionState) => void;
 }
 
 // Fisher-Yates shuffle
@@ -58,7 +61,7 @@ const getRotationForSegmentAtPointer = (segmentIndex: number, totalSegments: num
   return ((targetRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 };
 
-const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
+const BonusWheel = ({ winner, players, onComplete, remoteCommand, onStateChange }: BonusWheelProps) => {
   const [phase, setPhase] = useState<BonusWheelState['phase']>('intro');
   const [wheelRotation, setWheelRotation] = useState(0);
   const [initialSegmentIndex, setInitialSegmentIndex] = useState(0);
@@ -68,6 +71,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
   const [pointerBounce, setPointerBounce] = useState(0);
   const [blackoutActive, setBlackoutActive] = useState(false);
   const wheelRotationRef = useRef(0);
+  const lastCommandTimestampRef = useRef<number>(0);
   
   // Shuffle segments once when component mounts
   const shuffledSegments = useMemo(() => {
@@ -77,7 +81,26 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     }));
   }, []);
 
-  const handleStartSpin = () => {
+  // Notify parent of state changes
+  const notifyStateChange = useCallback((newPhase: BonusWheelState['phase'], resultText?: string, finalScore?: number) => {
+    if (onStateChange) {
+      onStateChange({
+        phase: newPhase,
+        selectedOffset,
+        winnerName: winner.name,
+        winnerScore: winner.score,
+        resultText,
+        finalScore
+      });
+    }
+  }, [onStateChange, selectedOffset, winner]);
+
+  // Update state change when phase changes
+  useEffect(() => {
+    notifyStateChange(phase);
+  }, [phase]);
+
+  const handleStartSpin = useCallback(() => {
     setPhase('spin');
     setIsSpinning(true);
     setBlackoutActive(true); // Blackout immediately when spinning starts
@@ -145,15 +168,24 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     };
 
     requestAnimationFrame(animate);
-  };
+  }, []);
 
-  const handleSelectOffset = (offset: number) => {
+  const handleSelectOffset = useCallback((offset: number) => {
     setSelectedOffset(offset);
-  };
+    // Notify parent about offset change
+    if (onStateChange) {
+      onStateChange({
+        phase: 'choice',
+        selectedOffset: offset,
+        winnerName: winner.name,
+        winnerScore: winner.score
+      });
+    }
+  }, [onStateChange, winner]);
 
   // Helper: Find segment physical index at a given visual offset
   // PRECISE INVERSE of getRotationForSegmentAtPointer (which uses main wheel formula)
-  const getSegmentIndexAtVisualOffset = (offset: number, currentRotation: number): number => {
+  const getSegmentIndexAtVisualOffset = useCallback((offset: number, currentRotation: number): number => {
     const totalSegments = shuffledSegments.length;
     const segmentAngle = (Math.PI * 2) / totalSegments;
     const geometryOffset = -Math.PI / 2;
@@ -175,9 +207,9 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     const normalizedIndex = ((Math.round(rawIndex) % totalSegments) + totalSegments) % totalSegments;
     
     return normalizedIndex;
-  };
+  }, [shuffledSegments.length]);
 
-  const handleConfirmChoice = () => {
+  const handleConfirmChoice = useCallback(() => {
     setPhase('reveal');
     
     const startRotation = wheelRotationRef.current;
@@ -269,7 +301,7 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
         setTimeout(() => {
           setPhase('result');
           
-          const { segment } = getFinalResult();
+          const { segment, resultText, bonusPoints } = getFinalResult();
           if (segment.type === 'jackpot') {
             playJackpotSound();
           } else if (segment.type === 'bankrot') {
@@ -279,14 +311,26 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
           } else {
             playVictoryFanfare();
           }
+          
+          // Notify parent with result
+          if (onStateChange) {
+            onStateChange({
+              phase: 'result',
+              selectedOffset,
+              winnerName: winner.name,
+              winnerScore: winner.score,
+              resultText,
+              finalScore: Math.max(0, winner.score + bonusPoints)
+            });
+          }
         }, 600);
       }
     };
     
     requestAnimationFrame(animate);
-  };
+  }, [selectedOffset, getSegmentIndexAtVisualOffset, onStateChange, winner]);
 
-  const getFinalResult = () => {
+  const getFinalResult = useCallback(() => {
     // After rotation animation, the target segment is now at offset 0 (under pointer)
     const currentRot = wheelRotationRef.current;
     
@@ -317,9 +361,9 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     }
 
     return { bonusPoints, resultText, segment };
-  };
+  }, [getSegmentIndexAtVisualOffset, shuffledSegments, winner.score]);
 
-  const handleFinish = () => {
+  const handleFinish = useCallback(() => {
     const { bonusPoints } = getFinalResult();
     
     const updatedPlayers = players.map(p => 
@@ -329,7 +373,49 @@ const BonusWheel = ({ winner, players, onComplete }: BonusWheelProps) => {
     );
 
     onComplete(updatedPlayers);
-  };
+  }, [getFinalResult, players, winner.id, onComplete]);
+
+  // Process remote commands
+  useEffect(() => {
+    if (!remoteCommand) return;
+    
+    // Check if this is a new command (using a simple timestamp approach)
+    const commandKey = JSON.stringify(remoteCommand);
+    const commandHash = commandKey.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+    
+    if (commandHash === lastCommandTimestampRef.current) return;
+    lastCommandTimestampRef.current = commandHash;
+    
+    console.log('BonusWheel processing remote command:', remoteCommand);
+    
+    switch (remoteCommand.type) {
+      case 'BONUS_CONTINUE':
+        if (phase === 'intro') {
+          setPhase('ready');
+        }
+        break;
+      case 'BONUS_SPIN':
+        if (phase === 'ready' && !isSpinning) {
+          handleStartSpin();
+        }
+        break;
+      case 'BONUS_SELECT_OFFSET':
+        if (phase === 'choice' && 'offset' in remoteCommand) {
+          handleSelectOffset(remoteCommand.offset);
+        }
+        break;
+      case 'BONUS_CONFIRM':
+        if (phase === 'choice') {
+          handleConfirmChoice();
+        }
+        break;
+      case 'BONUS_FINISH':
+        if (phase === 'result') {
+          handleFinish();
+        }
+        break;
+    }
+  }, [remoteCommand, phase, isSpinning, handleStartSpin, handleSelectOffset, handleConfirmChoice, handleFinish]);
 
   const renderWheel = () => {
     const isBlackout = blackoutActive && phase !== 'ready';

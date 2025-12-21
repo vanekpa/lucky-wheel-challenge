@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGameSession, type GameCommand, type ConnectionStatus } from '@/hooks/useGameSession';
+import { useGameSession, type GameCommand, type ConnectionStatus, type BonusWheelSessionState } from '@/hooks/useGameSession';
 import { Button } from '@/components/ui/button';
 import { SpinButton } from '@/components/game/SpinButton';
+import { BonusWheelRemoteUI } from '@/components/game/BonusWheelRemoteUI';
 import { ArrowLeft, Loader2, MessageSquare, SkipForward, Undo2, Target, Wifi, WifiOff, Shuffle, RefreshCw, AlertTriangle, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -271,6 +272,21 @@ const RemoteController = () => {
   }
 
   const gameState = session.game_state;
+  const sessionGamePhase = gameState?.gamePhase;
+  const bonusWheelState = gameState?.bonusWheelState as BonusWheelSessionState | undefined;
+  
+  // If in bonus-wheel phase, show bonus UI
+  if (sessionGamePhase === 'bonus-wheel' && bonusWheelState) {
+    return (
+      <BonusWheelRemoteUI
+        bonusState={bonusWheelState}
+        onCommand={handleCommand}
+        isPending={!!pendingCommand}
+        playerColor={bonusWheelState.winnerName ? gameState?.players?.find(p => p.name === bonusWheelState.winnerName)?.color || '#6366f1' : '#6366f1'}
+      />
+    );
+  }
+  
   const currentPlayer = gameState?.players?.[gameState?.currentPlayer];
   const isPlacingTokens = gameState?.isPlacingTokens;
   const isSpinning = gameState?.isSpinning || pendingCommand === 'SPIN';
@@ -281,14 +297,6 @@ const RemoteController = () => {
   const playerScore = currentPlayer?.score || 0;
   const vowelsForceUnlocked = gameState?.vowelsForceUnlocked || false;
   const vowelsUnlocked = vowelsForceUnlocked || playerScore >= MIN_SCORE_FOR_VOWELS;
-  
-  // Puzzle preview
-  const puzzle = gameState?.puzzle;
-  const puzzlePreview = puzzle ? {
-    phrase: puzzle.phrase,
-    revealed: new Set(puzzle.revealedLetters || []),
-    category: puzzle.category
-  } : null;
 
   const connectionIndicator = getConnectionIndicator();
   const ConnectionIcon = connectionIndicator.icon;
