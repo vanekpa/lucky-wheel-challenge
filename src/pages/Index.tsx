@@ -27,7 +27,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound } from "@/utils/sounds";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, playFirstRoundCompleteSound } from "@/utils/sounds";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
 
@@ -647,6 +647,11 @@ const Index = () => {
     const nextIndex = currentPuzzleIndex + 1;
     setCurrentPuzzleIndex(nextIndex);
 
+    // Play "first round complete" sound when transitioning from round 1 to round 2
+    if (gameState.round === 1) {
+      playFirstRoundCompleteSound();
+    }
+
     let puzzle;
     if (gameMode === "teacher" && customPuzzles.length > 0) {
       if (nextIndex >= customPuzzles.length) {
@@ -1159,6 +1164,7 @@ const Index = () => {
             duration={turnTimer}
             isActive={timerActive && showLetterSelector && !gameState.isSpinning}
             onTimeUp={handleTimeUp}
+            onWarning={playTimeWarningSound}
             onReset={timerResetKey}
           />
         </div>

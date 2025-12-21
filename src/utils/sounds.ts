@@ -312,6 +312,24 @@ const getLetterSounds = (letter: string): string[] => {
   return sounds;
 };
 
+// Time warning sound - plays when 5 seconds remaining on timer
+export const playTimeWarningSound = () => {
+  if (!getSoundsEnabled()) return;
+  
+  const audio = new Audio('/sounds/time-warning.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+};
+
+// First round complete - plays when transitioning from round 1 to round 2
+export const playFirstRoundCompleteSound = () => {
+  if (!getSoundsEnabled()) return;
+  
+  const audio = new Audio('/sounds/first-round-complete.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
+};
+
 export const playLetterSound = (letter: string): boolean => {
   if (!getSoundsEnabled()) {
     console.log('Letter sound skipped - sounds disabled');
