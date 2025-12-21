@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Timer } from 'lucide-react';
 
 interface TurnTimerProps {
   duration: number;
   isActive: boolean;
   onTimeUp: () => void;
+  onWarning?: () => void;
   onReset?: number;
 }
 
@@ -12,12 +13,15 @@ export const TurnTimer = ({
   duration, 
   isActive, 
   onTimeUp, 
+  onWarning,
   onReset
 }: TurnTimerProps) => {
   const [timeLeft, setTimeLeft] = useState(duration);
+  const warningFiredRef = useRef(false);
 
   useEffect(() => {
     setTimeLeft(duration);
+    warningFiredRef.current = false;
   }, [duration, onReset]);
 
   useEffect(() => {
@@ -30,12 +34,17 @@ export const TurnTimer = ({
           onTimeUp();
           return 0;
         }
+        // Fire warning when hitting 5 seconds (once per timer cycle)
+        if (prev === 6 && !warningFiredRef.current) {
+          warningFiredRef.current = true;
+          onWarning?.();
+        }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, duration, onTimeUp, onReset]);
+  }, [isActive, duration, onTimeUp, onWarning, onReset]);
 
   if (!isActive || duration === 0) return null;
 
