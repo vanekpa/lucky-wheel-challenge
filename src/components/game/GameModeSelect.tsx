@@ -94,7 +94,10 @@ const GameInfoSection = () => {
               </div>
               <div>
                 <h3 className="font-bold text-yellow-400 mb-1">💡 Hádat tajenku</h3>
-                <p className="text-white/70">Bonus = <span className="text-yellow-300 font-bold">1000 × počet skrytých písmen</span></p>
+                <p className="text-white/70">
+                  Bonus = <span className="text-yellow-300 font-bold">1000 × skrytá písmena</span>. 
+                  <span className="text-red-400 font-bold"> Špatný tip = ztráta VŠECH bodů!</span>
+                </p>
               </div>
             </div>
           </div>
