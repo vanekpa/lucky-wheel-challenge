@@ -693,7 +693,7 @@ const Index = () => {
     checkForDeadlock();
   }, [gameState.usedLetters, gameState.puzzle.revealedLetters, checkForDeadlock]);
 
-  const newRound = useCallback(() => {
+  const newRound = useCallback((winnerIndex?: number) => {
     const nextIndex = currentPuzzleIndex + 1;
     setCurrentPuzzleIndex(nextIndex);
 
@@ -734,7 +734,7 @@ const Index = () => {
       },
       usedLetters: new Set(),
       round: nextRoundNum,
-      currentPlayer: 0,
+      currentPlayer: winnerIndex ?? prev.currentPlayer,
       isSpinning: false,
       // Reset vowelsUnlockedThisRound for all players at new round
       players: prev.players.map((p) => ({ ...p, vowelsUnlockedThisRound: false })),
@@ -784,9 +784,10 @@ const Index = () => {
         players: prev.players.map((p) => (p.id === prev.currentPlayer ? { ...p, score: p.score + bonusPoints } : p)),
       }));
 
-      // Auto-advance to next round after delay
+      // Auto-advance to next round after delay - winner starts next round
+      const winner = gameState.currentPlayer;
       setTimeout(() => {
-        newRound();
+        newRound(winner);
       }, 3000);
     } else {
       // Wrong guess - lose ALL POINTS and turn!
@@ -822,8 +823,9 @@ const Index = () => {
     if (allRevealed && lettersInPhrase.size > 0) {
       playWinSound();
       toast.success("🎉 TAJENKA VYŘEŠENA! Přechod na další kolo...", { duration: 3000 });
+      const winner = gameState.currentPlayer;
       setTimeout(() => {
-        newRound();
+        newRound(winner);
       }, 3000);
     }
   }, [gameState.puzzle.revealedLetters, gamePhase, gameState.isSpinning]);
