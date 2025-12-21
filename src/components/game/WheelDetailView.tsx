@@ -111,7 +111,7 @@ const ValueTicker = ({ segment, isSpinning }: { segment?: WheelSegment | null; i
   const getDisplayValue = () => {
     if (!segment) return '---';
     if (segment.type === 'bankrot') return 'BANKROT';
-    if (segment.type === 'nic') return 'NIČ';
+    if (segment.type === 'nic') return 'NIC';
     return `${segment.value}`;
   };
   
