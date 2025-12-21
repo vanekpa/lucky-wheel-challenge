@@ -59,6 +59,7 @@ const Index = () => {
   const [gameMode, setGameMode] = useState<"random" | "teacher">("random");
   const [customPuzzles, setCustomPuzzles] = useState<CustomPuzzle[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
+  const [maxRounds, setMaxRounds] = useState<number>(5); // Max rounds for database mode
 
   // Timer state
   const [timerActive, setTimerActive] = useState(false);
@@ -393,8 +394,9 @@ const Index = () => {
     return getRandomPuzzle();
   };
 
-  const handleSetupComplete = (players: Player[]) => {
+  const handleSetupComplete = (players: Player[], numberOfRounds: number) => {
     const puzzle = getNextPuzzle();
+    setMaxRounds(numberOfRounds);
     setGameState((prev) => ({
       ...prev,
       players,
@@ -404,7 +406,8 @@ const Index = () => {
       },
     }));
     setGamePhase("playing");
-    toast.success("Hra začíná! Umístěte žetony na kolo.");
+    const roundsText = numberOfRounds === Infinity ? "∞" : numberOfRounds;
+    toast.success(`Hra začíná! ${gameMode === "random" ? `Odehrajete ${roundsText} kol.` : ""} Umístěte žetony na kolo.`);
   };
 
   const handleTokenPlace = useCallback((segmentId: number) => {
@@ -702,6 +705,8 @@ const Index = () => {
       playFirstRoundCompleteSound();
     }
 
+    const nextRoundNum = gameState.round + 1;
+
     let puzzle;
     if (gameMode === "teacher" && customPuzzles.length > 0) {
       if (nextIndex >= customPuzzles.length) {
@@ -717,14 +722,24 @@ const Index = () => {
         category: customPuzzles[nextIndex].category,
       };
     } else {
+      // Database mode - check if max rounds reached
+      if (maxRounds !== Infinity && nextRoundNum > maxRounds) {
+        const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+        toast.success(`Odehráno ${maxRounds} kol! ${winner.name} jde do BONUS KOLA!`);
+        setGamePhase("bonus-wheel");
+        return;
+      }
       puzzle = getRandomPuzzle();
     }
-
-    const nextRoundNum = gameState.round + 1;
 
     // Tokens persist! Only reset tokensPlaced for rounds 1-3 (each player adds 1 token per round)
     // Round 4+ = no new tokens
     const shouldPlaceTokens = nextRoundNum <= 3;
+
+    // Calculate rounds display text
+    const totalRoundsText = gameMode === "teacher" 
+      ? customPuzzles.length.toString()
+      : (maxRounds === Infinity ? "∞" : maxRounds.toString());
 
     setGameState((prev) => ({
       ...prev,
@@ -750,11 +765,11 @@ const Index = () => {
     setShowLetterSelector(false);
 
     if (shouldPlaceTokens) {
-      toast.success(`Kolo ${nextRoundNum}/${gameMode === "teacher" ? customPuzzles.length : "∞"} - Umístěte další žeton!`);
+      toast.success(`Kolo ${nextRoundNum}/${totalRoundsText} - Umístěte další žeton!`);
     } else {
-      toast.success(`Kolo ${nextRoundNum}/${gameMode === "teacher" ? customPuzzles.length : "∞"} začíná!`);
+      toast.success(`Kolo ${nextRoundNum}/${totalRoundsText} začíná!`);
     }
-  }, [currentPuzzleIndex, gameMode, customPuzzles, gameState.players, gameState.round, getRandomPuzzle]);
+  }, [currentPuzzleIndex, gameMode, customPuzzles, gameState.players, gameState.round, getRandomPuzzle, maxRounds]);
 
   const handleGuessPhrase = useCallback((guess: string) => {
     saveStateToHistory();
@@ -1209,7 +1224,7 @@ const Index = () => {
 
   // Player setup screen
   if (gamePhase === "setup") {
-    return <PlayerSetup onComplete={handleSetupComplete} />;
+    return <PlayerSetup onComplete={handleSetupComplete} showRoundsSelect={gameMode === "random"} />;
   }
 
   // Bonus Wheel phase
@@ -1285,7 +1300,9 @@ const Index = () => {
           <h1 className="text-5xl font-bold text-primary mb-1 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)_/_0.5)]">
             KOLOTOČ
           </h1>
-          <p className="text-xl text-muted-foreground font-semibold">Kolo {gameState.round}</p>
+          <p className="text-xl text-muted-foreground font-semibold">
+            Kolo {gameState.round}/{gameMode === "teacher" ? customPuzzles.length : (maxRounds === Infinity ? "∞" : maxRounds)}
+          </p>
         </div>
 
         <div className="relative w-full h-[400px] sm:h-[500px] md:h-[550px] lg:h-[650px] flex items-center justify-center">

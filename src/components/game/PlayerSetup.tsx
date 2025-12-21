@@ -6,13 +6,14 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Player } from "@/types/game";
-import { Play, Volume2, VolumeX, Sparkles, Settings, Timer, Info } from "lucide-react";
+import { Play, Volume2, VolumeX, Sparkles, Settings, Timer, Info, Target } from "lucide-react";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PlayerSetupProps {
-  onComplete: (players: Player[]) => void;
+  onComplete: (players: Player[], maxRounds: number) => void;
+  showRoundsSelect?: boolean; // Only show in database mode
 }
 
 const PRESET_COLORS = [
@@ -26,7 +27,7 @@ const PRESET_COLORS = [
   { hex: "#fd79a8", name: "Růžová" },
 ];
 
-export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
+export const PlayerSetup = ({ onComplete, showRoundsSelect = false }: PlayerSetupProps) => {
   const [players, setPlayers] = useState<{ name: string; color: string }[]>([
     { name: "HRÁČ 1", color: PRESET_COLORS[0].hex },
     { name: "HRÁČ 2", color: PRESET_COLORS[1].hex },
@@ -39,6 +40,7 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
   const { turnTimer, setTurnTimer } = useTurnTimer();
   const [localSoundsEnabled, setLocalSoundsEnabled] = useState(true);
   const [effectsEnabled, setEffectsEnabled] = useState(true);
+  const [numberOfRounds, setNumberOfRounds] = useState<number>(5); // Default 5 rounds
 
   // Load settings from localStorage
   useEffect(() => {
@@ -78,6 +80,11 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
     localStorage.setItem("turn_timer", numValue.toString());
   };
 
+  const handleRoundsChange = (value: string) => {
+    const numValue = value === "∞" ? Infinity : parseInt(value);
+    setNumberOfRounds(numValue);
+  };
+
   const handleStart = () => {
     // Play intro jingle if sounds are enabled
     if (localSoundsEnabled) {
@@ -92,7 +99,7 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
       score: 0,
       color: p.color,
     }));
-    onComplete(gamePlayers);
+    onComplete(gamePlayers, numberOfRounds);
   };
 
   return (
@@ -304,6 +311,28 @@ export const PlayerSetup = ({ onComplete }: PlayerSetupProps) => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Number of rounds select - only for database mode */}
+            {showRoundsSelect && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className={`w-4 h-4 ${numberOfRounds !== Infinity ? "text-primary" : "text-muted-foreground"}`} />
+                  <Label className="text-sm">Počet kol</Label>
+                </div>
+                <Select value={numberOfRounds === Infinity ? "∞" : numberOfRounds.toString()} onValueChange={handleRoundsChange}>
+                  <SelectTrigger className="w-28 h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 kola</SelectItem>
+                    <SelectItem value="5">5 kol</SelectItem>
+                    <SelectItem value="7">7 kol</SelectItem>
+                    <SelectItem value="10">10 kol</SelectItem>
+                    <SelectItem value="∞">Nekonečno ∞</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Start button */}
