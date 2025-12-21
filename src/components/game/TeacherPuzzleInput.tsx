@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, AlertTriangle } from 'lucide-react';
 
 interface TeacherPuzzleInputProps {
   onComplete: (puzzles: { phrase: string; category: string }[]) => void;
@@ -12,8 +12,12 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
   const [puzzleCount, setPuzzleCount] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [puzzles, setPuzzles] = useState<{ phrase: string; category: string }[]>([]);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   const updatePuzzle = (index: number, field: 'phrase' | 'category', value: string) => {
+    if (field === 'phrase') {
+      setAttemptedSubmit(false);
+    }
     setPuzzles(prev => {
       const newPuzzles = [...prev];
       newPuzzles[index] = { ...newPuzzles[index], [field]: value };
@@ -30,8 +34,13 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
   const isLastStep = puzzleCount !== null && currentStep === puzzleCount - 1;
 
   const handleNext = () => {
+    if (!canProceed) {
+      setAttemptedSubmit(true);
+      return;
+    }
+    setAttemptedSubmit(false);
+    
     if (isLastStep) {
-      // Filter out empty puzzles and validate
       const validPuzzles = puzzles.filter(p => p.phrase.trim().length > 0);
       if (validPuzzles.length > 0) {
         onComplete(validPuzzles.map(p => ({
@@ -136,9 +145,19 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
                 value={puzzles[currentStep].phrase}
                 onChange={(e) => updatePuzzle(currentStep, 'phrase', e.target.value)}
                 placeholder="např. ARCHIMÉDŮV ZÁKON"
-                className="text-2xl font-bold text-center py-6 bg-white/10 border-white/30 text-white placeholder:text-white/30 uppercase tracking-wider"
+                className={`text-2xl font-bold text-center py-6 bg-white/10 text-white placeholder:text-white/30 uppercase tracking-wider transition-all ${
+                  attemptedSubmit && !canProceed 
+                    ? 'border-red-500 ring-2 ring-red-500/50' 
+                    : 'border-white/30'
+                }`}
                 autoFocus
               />
+              {attemptedSubmit && !canProceed && (
+                <div className="flex items-center gap-2 text-red-400 mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Zadejte text tajenky pro pokračování</span>
+                </div>
+              )}
             </div>
 
             <div>
@@ -169,13 +188,12 @@ export const TeacherPuzzleInput = ({ onComplete, onBack }: TeacherPuzzleInputPro
 
           <Button
             onClick={handleNext}
-            disabled={!canProceed}
             size="lg"
             className={`${
               isLastStep
                 ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500'
                 : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500'
-            } text-white shadow-xl transition-all duration-300 disabled:opacity-50`}
+            } text-white shadow-xl transition-all duration-300`}
           >
             {isLastStep ? (
               <>
