@@ -304,7 +304,7 @@ const getLetterSounds = (letter: string): string[] => {
     'p': ['/sounds/letters/p.ogg'],
     's': ['/sounds/letters/s.ogg'],
     't': ['/sounds/letters/t.ogg'],
-    'u': ['/sounds/letters/u.ogg'],
+    'u': ['/sounds/letters/u.ogg', '/sounds/letters/u-2.ogg'],
   };
   
   const sounds = knownLetterSounds[lowerLetter] || [];
