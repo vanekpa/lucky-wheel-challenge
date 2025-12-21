@@ -59,7 +59,7 @@ const Index = () => {
   const [gameMode, setGameMode] = useState<"random" | "teacher">("random");
   const [customPuzzles, setCustomPuzzles] = useState<CustomPuzzle[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
-  const [maxRounds, setMaxRounds] = useState<number>(5); // Max rounds for database mode
+  const [maxRounds, setMaxRounds] = useState<number>(4); // Max rounds (default 4)
 
   // Timer state
   const [timerActive, setTimerActive] = useState(false);
@@ -406,8 +406,7 @@ const Index = () => {
       },
     }));
     setGamePhase("playing");
-    const roundsText = numberOfRounds === Infinity ? "∞" : numberOfRounds;
-    toast.success(`Hra začíná! ${gameMode === "random" ? `Odehrajete ${roundsText} kol.` : ""} Umístěte žetony na kolo.`);
+    toast.success(`Hra začíná! Odehrajete ${numberOfRounds} ${numberOfRounds === 1 ? "kolo" : numberOfRounds < 5 ? "kola" : "kol"}. Umístěte žetony na kolo.`);
   };
 
   const handleTokenPlace = useCallback((segmentId: number) => {
@@ -707,39 +706,30 @@ const Index = () => {
 
     const nextRoundNum = gameState.round + 1;
 
+    // Check if max rounds reached (applies to both modes)
+    if (nextRoundNum > maxRounds) {
+      const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+      toast.success(`Odehráno ${maxRounds} ${maxRounds === 1 ? "kolo" : maxRounds < 5 ? "kola" : "kol"}! ${winner.name} jde do BONUS KOLA!`);
+      setGamePhase("bonus-wheel");
+      return;
+    }
+
     let puzzle;
     if (gameMode === "teacher" && customPuzzles.length > 0) {
-      if (nextIndex >= customPuzzles.length) {
-        // Game finished - go to bonus wheel for the winner
-        const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
-        toast.success(`Všechny tajenky odehrány! ${winner.name} jde do BONUS KOLA!`);
-        setGamePhase("bonus-wheel");
-        return;
-      }
+      // Cycle through custom puzzles if we have more rounds than puzzles
+      const puzzleIndex = nextIndex % customPuzzles.length;
       puzzle = {
         id: `custom-${nextIndex}`,
-        phrase: customPuzzles[nextIndex].phrase,
-        category: customPuzzles[nextIndex].category,
+        phrase: customPuzzles[puzzleIndex].phrase,
+        category: customPuzzles[puzzleIndex].category,
       };
     } else {
-      // Database mode - check if max rounds reached
-      if (maxRounds !== Infinity && nextRoundNum > maxRounds) {
-        const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
-        toast.success(`Odehráno ${maxRounds} kol! ${winner.name} jde do BONUS KOLA!`);
-        setGamePhase("bonus-wheel");
-        return;
-      }
       puzzle = getRandomPuzzle();
     }
 
     // Tokens persist! Only reset tokensPlaced for rounds 1-3 (each player adds 1 token per round)
     // Round 4+ = no new tokens
     const shouldPlaceTokens = nextRoundNum <= 3;
-
-    // Calculate rounds display text
-    const totalRoundsText = gameMode === "teacher" 
-      ? customPuzzles.length.toString()
-      : (maxRounds === Infinity ? "∞" : maxRounds.toString());
 
     setGameState((prev) => ({
       ...prev,
@@ -765,9 +755,9 @@ const Index = () => {
     setShowLetterSelector(false);
 
     if (shouldPlaceTokens) {
-      toast.success(`Kolo ${nextRoundNum}/${totalRoundsText} - Umístěte další žeton!`);
+      toast.success(`Kolo ${nextRoundNum}/${maxRounds} - Umístěte další žeton!`);
     } else {
-      toast.success(`Kolo ${nextRoundNum}/${totalRoundsText} začíná!`);
+      toast.success(`Kolo ${nextRoundNum}/${maxRounds} začíná!`);
     }
   }, [currentPuzzleIndex, gameMode, customPuzzles, gameState.players, gameState.round, getRandomPuzzle, maxRounds]);
 
@@ -1224,7 +1214,7 @@ const Index = () => {
 
   // Player setup screen
   if (gamePhase === "setup") {
-    return <PlayerSetup onComplete={handleSetupComplete} showRoundsSelect={gameMode === "random"} />;
+    return <PlayerSetup onComplete={handleSetupComplete} />;
   }
 
   // Bonus Wheel phase
@@ -1301,7 +1291,7 @@ const Index = () => {
             KOLOTOČ
           </h1>
           <p className="text-xl text-muted-foreground font-semibold">
-            Kolo {gameState.round}/{gameMode === "teacher" ? customPuzzles.length : (maxRounds === Infinity ? "∞" : maxRounds)}
+            Kolo {gameState.round}/{maxRounds}
           </p>
         </div>
 
