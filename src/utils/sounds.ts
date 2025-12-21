@@ -35,7 +35,7 @@ export const playTickSound = () => {
 export const play100PointsSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const versions = ['/sounds/100-points.ogg', '/sounds/100-points-2.ogg'];
+  const versions = ['/sounds/100-points.ogg', '/sounds/100-points-2.ogg', '/sounds/100-points-3.ogg'];
   const randomVersion = versions[Math.floor(Math.random() * versions.length)];
   
   const audio = new Audio(randomVersion);
@@ -43,20 +43,26 @@ export const play100PointsSound = () => {
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
 
-// 200 points voice line
+// 200 points voice line (multiple versions)
 export const play200PointsSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const audio = new Audio('/sounds/200-points.ogg');
+  const versions = ['/sounds/200-points.ogg', '/sounds/200-points-2.ogg'];
+  const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  
+  const audio = new Audio(randomVersion);
   audio.volume = 0.7;
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
 
-// 500 points voice line
+// 500 points voice line (multiple versions)
 export const play500PointsSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const audio = new Audio('/sounds/500-points.ogg');
+  const versions = ['/sounds/500-points.ogg', '/sounds/500-points-2.ogg'];
+  const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  
+  const audio = new Audio(randomVersion);
   audio.volume = 0.7;
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
@@ -105,34 +111,25 @@ export const playWinSound = () => {
   });
 };
 
-// Bankrupt sound - voice line
+// Bankrupt sound - voice line (multiple versions)
 export const playBankruptSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const audio = new Audio('/sounds/bankrot.ogg');
+  const versions = ['/sounds/bankrot.ogg', '/sounds/bankrot-2.ogg'];
+  const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  
+  const audio = new Audio(randomVersion);
   audio.volume = 0.7;
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
 
-// Nothing sound - single low tone
+// Nothing sound - voice line
 export const playNothingSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const ctx = getAudioContext();
-  const oscillator = ctx.createOscillator();
-  const gainNode = ctx.createGain();
-  
-  oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
-  
-  oscillator.frequency.value = 220;
-  oscillator.type = 'triangle';
-  
-  gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-  
-  oscillator.start(ctx.currentTime);
-  oscillator.stop(ctx.currentTime + 0.4);
+  const audio = new Audio('/sounds/nic.ogg');
+  audio.volume = 0.7;
+  audio.play().catch(err => console.log('Audio play failed:', err));
 };
 
 // Bonus drumroll - suspenseful rolling sound
@@ -271,11 +268,14 @@ export const playBuzzerSound = () => {
   });
 };
 
-// Not enough points for vowel - voice line
+// Not enough points for vowel - voice line (multiple versions)
 export const playNotEnoughPointsSound = () => {
   if (!getSoundsEnabled()) return;
   
-  const audio = new Audio('/sounds/not-enough-points.ogg');
+  const versions = ['/sounds/not-enough-points.ogg', '/sounds/not-enough-points-2.ogg', '/sounds/not-enough-points-3.ogg'];
+  const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  
+  const audio = new Audio(randomVersion);
   audio.volume = 0.7;
   audio.play().catch(err => console.log('Audio play failed:', err));
 };
