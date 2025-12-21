@@ -295,10 +295,16 @@ const getLetterSounds = (letter: string): string[] => {
   // For now, we define known letter sounds manually
   // As you add more sounds, add them here
   const knownLetterSounds: Record<string, string[]> = {
-    'b': ['/sounds/letters/b.ogg'],
-    // Add more letters here as you record them:
-    // 'c': ['/sounds/letters/c.ogg'],
-    // 'd': ['/sounds/letters/d.ogg', '/sounds/letters/d-2.ogg'],
+    'b': ['/sounds/letters/b.ogg', '/sounds/letters/b-2.ogg'],
+    'd': ['/sounds/letters/d.ogg'],
+    'g': ['/sounds/letters/g.ogg'],
+    'j': ['/sounds/letters/j.ogg'],
+    'l': ['/sounds/letters/l.ogg'],
+    'o': ['/sounds/letters/o.ogg'],
+    'p': ['/sounds/letters/p.ogg'],
+    's': ['/sounds/letters/s.ogg'],
+    't': ['/sounds/letters/t.ogg'],
+    'u': ['/sounds/letters/u.ogg'],
   };
   
   const sounds = knownLetterSounds[lowerLetter] || [];
