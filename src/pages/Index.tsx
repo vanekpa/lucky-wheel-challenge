@@ -15,6 +15,7 @@ import { SpinButton } from "@/components/game/SpinButton";
 import BonusWheel from "@/components/game/BonusWheel";
 import VictoryScreen from "@/components/game/VictoryScreen";
 import EndGameDialog from "@/components/game/EndGameDialog";
+import { SavedGameDialog } from "@/components/game/SavedGameDialog";
 import { GameState, WheelSegment, Player } from "@/types/game";
 import { wheelSegments } from "@/data/puzzles";
 import { usePuzzles } from "@/hooks/usePuzzles";
@@ -28,6 +29,7 @@ import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand } from "@/hooks/useGameSession";
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, playFirstRoundCompleteSound } from "@/utils/sounds";
+import { saveGameToLocal, loadGameFromLocal, clearSavedGame, SavedGameState } from "@/utils/gameStorage";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
 
@@ -125,6 +127,10 @@ const Index = () => {
   const [effectsEnabled, setEffectsEnabled] = useState(true);
   const [showGuessDialog, setShowGuessDialog] = useState(false);
   const [showEndGameDialog, setShowEndGameDialog] = useState(false);
+  
+  // Saved game state
+  const [savedGame, setSavedGame] = useState<SavedGameState | null>(null);
+  const [checkedLocalStorage, setCheckedLocalStorage] = useState(false);
   const [vowelsForceUnlocked, setVowelsForceUnlocked] = useState(false);
 
   // Create session with current game state for remote control
@@ -178,6 +184,32 @@ const Index = () => {
       setTimerActive(false);
     }
   }, [showGuessDialog]);
+
+  // Check for saved game on initial load
+  useEffect(() => {
+    if (checkedLocalStorage) return;
+    const saved = loadGameFromLocal();
+    if (saved) {
+      setSavedGame(saved);
+    }
+    setCheckedLocalStorage(true);
+  }, [checkedLocalStorage]);
+
+  // Auto-save game state during gameplay
+  useEffect(() => {
+    if (gamePhase === "playing") {
+      saveGameToLocal(
+        gameState,
+        gamePhase,
+        gameMode,
+        customPuzzles,
+        currentPuzzleIndex,
+        tokenPositions,
+        tokensPlaced,
+        vowelsForceUnlocked
+      );
+    }
+  }, [gameState, gamePhase, gameMode, customPuzzles, currentPuzzleIndex, tokenPositions, tokensPlaced, vowelsForceUnlocked]);
 
   // Heartbeat tick - triggers sync effect every 5 seconds to keep controllers updated
   const [heartbeatTick, setHeartbeatTick] = useState(0);
@@ -869,6 +901,8 @@ const Index = () => {
 
   const handleBonusWheelComplete = (finalScores: Player[]) => {
     setGameState((prev) => ({ ...prev, players: finalScores }));
+    // Clear saved game when game ends normally
+    clearSavedGame();
     setGamePhase("victory");
   };
 
@@ -877,6 +911,9 @@ const Index = () => {
     await endSession();
     setLocalSessionCode(null);
     window.history.replaceState(null, '', '/');
+    
+    // Clear saved game
+    clearSavedGame();
     
     // Reset with same puzzles
     setCurrentPuzzleIndex(0);
@@ -907,10 +944,50 @@ const Index = () => {
     setLocalSessionCode(null);
     window.history.replaceState(null, '', '/');
     
+    // Clear saved game
+    clearSavedGame();
+    
     setGamePhase("intro");
     setCustomPuzzles([]);
     setCurrentPuzzleIndex(0);
   };
+
+  // Restore game from saved state
+  const handleRestoreGame = useCallback((saved: SavedGameState) => {
+    // Restore gameState with proper Set conversions
+    setGameState({
+      currentPlayer: saved.gameState.currentPlayer,
+      players: saved.gameState.players,
+      puzzle: {
+        id: saved.gameState.puzzle.id,
+        phrase: saved.gameState.puzzle.phrase,
+        category: saved.gameState.puzzle.category,
+        revealedLetters: new Set(saved.gameState.puzzle.revealedLetters),
+      },
+      usedLetters: new Set(saved.gameState.usedLetters),
+      round: saved.gameState.round,
+      isSpinning: false,
+    });
+    
+    // Restore other state
+    setGameMode(saved.gameMode);
+    setCustomPuzzles(saved.customPuzzles);
+    setCurrentPuzzleIndex(saved.currentPuzzleIndex);
+    setTokenPositions(new Map(saved.tokenPositions));
+    setTokensPlaced(new Set(saved.tokensPlaced));
+    setVowelsForceUnlocked(saved.vowelsForceUnlocked);
+    setIsPlacingTokens(false); // Token placement was done
+    
+    // Clear saved game dialog and start playing
+    setSavedGame(null);
+    setGamePhase("playing");
+    toast.success("Hra obnovena!", { duration: 2000 });
+  }, []);
+
+  const handleDiscardSavedGame = useCallback(() => {
+    clearSavedGame();
+    setSavedGame(null);
+  }, []);
 
   const handleEndGameBonusWheel = () => {
     setShowEndGameDialog(false);
@@ -1084,9 +1161,20 @@ const Index = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gamePhase, gameState.isSpinning, showLetterSelector, isPlacingTokens, showGuessDialog, showResult, showEndGameDialog, gameHistory.length, canGuessPhrase]);
 
-  // Intro screen - mode selection
+  // Intro screen - mode selection with saved game check
   if (gamePhase === "intro") {
-    return <GameModeSelect onSelectRandom={handleSelectRandom} onSelectTeacher={handleSelectTeacher} />;
+    return (
+      <>
+        <GameModeSelect onSelectRandom={handleSelectRandom} onSelectTeacher={handleSelectTeacher} />
+        {savedGame && (
+          <SavedGameDialog
+            savedGame={savedGame}
+            onResume={() => handleRestoreGame(savedGame)}
+            onNewGame={handleDiscardSavedGame}
+          />
+        )}
+      </>
+    );
   }
 
   // Teacher puzzle input
