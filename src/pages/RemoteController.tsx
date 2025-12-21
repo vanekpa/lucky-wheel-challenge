@@ -298,6 +298,13 @@ const RemoteController = () => {
   const vowelsForceUnlocked = gameState?.vowelsForceUnlocked || false;
   const vowelsUnlocked = vowelsForceUnlocked || playerScore >= MIN_SCORE_FOR_VOWELS;
 
+  // Puzzle preview data from game state
+  const puzzlePreview = gameState?.puzzle ? {
+    phrase: gameState.puzzle.phrase || '',
+    category: gameState.puzzle.category || '',
+    revealed: new Set<string>(gameState.puzzle.revealedLetters || [])
+  } : null;
+
   const connectionIndicator = getConnectionIndicator();
   const ConnectionIcon = connectionIndicator.icon;
 
