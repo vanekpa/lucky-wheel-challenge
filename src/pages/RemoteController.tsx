@@ -4,6 +4,8 @@ import { useGameSession, type GameCommand, type ConnectionStatus, type BonusWhee
 import { Button } from '@/components/ui/button';
 import { SpinButton } from '@/components/game/SpinButton';
 import { BonusWheelRemoteUI } from '@/components/game/BonusWheelRemoteUI';
+import { ControllerTabSelector, type ControllerMode } from '@/components/game/ControllerTabSelector';
+import { PlayerWaitingScreen } from '@/components/game/PlayerWaitingScreen';
 import { ArrowLeft, Loader2, MessageSquare, SkipForward, Undo2, Target, Wifi, WifiOff, Shuffle, RefreshCw, AlertTriangle, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -25,7 +27,8 @@ const vibrate = {
   letter: () => navigator.vibrate?.([30]),
   tap: () => navigator.vibrate?.([20]),
   bankrot: () => navigator.vibrate?.([200, 100, 200, 100, 200]),
-  nic: () => navigator.vibrate?.([150, 50, 150])
+  nic: () => navigator.vibrate?.([150, 50, 150]),
+  myTurn: () => navigator.vibrate?.([100, 50, 100, 50, 200])
 };
 
 const RemoteController = () => {
@@ -37,6 +40,9 @@ const RemoteController = () => {
   const [guessInput, setGuessInput] = useState('');
   const [showGuessInput, setShowGuessInput] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Controller mode: 'current' = teacher mode, number = player index
+  const [controllerMode, setControllerMode] = useState<ControllerMode>('current');
   
   // Optimistic UI state
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
@@ -50,6 +56,9 @@ const RemoteController = () => {
   
   // Track last command result
   const lastResultTimestampRef = useRef<number>(0);
+  
+  // Track last current player to detect turn changes
+  const lastCurrentPlayerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (code && !session) {
@@ -108,6 +117,24 @@ const RemoteController = () => {
     setCommandFeedback({ type: result.type, message: result.message });
     setTimeout(() => setCommandFeedback(null), 2000);
   }, [session?.game_state?._lastCommandResult]);
+
+  // Vibrate when it becomes player's turn (only in player mode)
+  useEffect(() => {
+    const currentPlayerIndex = session?.game_state?.currentPlayer;
+    if (typeof currentPlayerIndex !== 'number') return;
+    
+    // Check if turn changed to the selected player
+    if (
+      typeof controllerMode === 'number' && 
+      currentPlayerIndex === controllerMode &&
+      lastCurrentPlayerRef.current !== currentPlayerIndex
+    ) {
+      vibrate.myTurn();
+      toast.success('🎯 Jsi na tahu!', { duration: 2000 });
+    }
+    
+    lastCurrentPlayerRef.current = currentPlayerIndex;
+  }, [session?.game_state?.currentPlayer, controllerMode]);
 
   // Polling fallback - only check heartbeat to detect stale realtime, don't rejoin aggressively
   useEffect(() => {
@@ -287,14 +314,22 @@ const RemoteController = () => {
     );
   }
   
-  const currentPlayer = gameState?.players?.[gameState?.currentPlayer];
+  const currentPlayerIndex = gameState?.currentPlayer || 0;
+  const currentPlayer = gameState?.players?.[currentPlayerIndex];
+  const players = gameState?.players || [];
+  
+  // Determine effective player based on controller mode
+  const effectivePlayerIndex = controllerMode === 'current' ? currentPlayerIndex : controllerMode;
+  const effectivePlayer = players[effectivePlayerIndex] || currentPlayer;
+  const isMyTurn = controllerMode === 'current' || currentPlayerIndex === controllerMode;
+  
   const isPlacingTokens = gameState?.isPlacingTokens;
   const isSpinning = gameState?.isSpinning || pendingCommand === 'SPIN';
   const showLetterSelector = gameState?.showLetterSelector;
   const isGuessingPhrase = gameState?.isGuessingPhrase || false;
   const canSpin = !isSpinning && !isPlacingTokens && !showLetterSelector && !isGuessingPhrase && !pendingCommand;
-  const playerColor = currentPlayer?.color || '#6366f1';
-  const playerScore = currentPlayer?.score || 0;
+  const playerColor = effectivePlayer?.color || '#6366f1';
+  const playerScore = effectivePlayer?.score || 0;
   const vowelsForceUnlocked = gameState?.vowelsForceUnlocked || false;
   const vowelsUnlocked = vowelsForceUnlocked || playerScore >= MIN_SCORE_FOR_VOWELS;
 
@@ -307,6 +342,22 @@ const RemoteController = () => {
 
   const connectionIndicator = getConnectionIndicator();
   const ConnectionIcon = connectionIndicator.icon;
+
+  // If in player mode and not on turn, show waiting screen
+  if (!isMyTurn && currentPlayer && effectivePlayer) {
+    return (
+      <PlayerWaitingScreen
+        player={effectivePlayer}
+        currentPlayer={currentPlayer}
+        players={players}
+        currentPlayerIndex={currentPlayerIndex}
+        activeMode={controllerMode}
+        onModeChange={setControllerMode}
+        puzzlePreview={puzzlePreview}
+        onBack={() => navigate('/')}
+      />
+    );
+  }
 
   // Determine current action state
   const getActionState = () => {
@@ -429,12 +480,22 @@ const RemoteController = () => {
             style={{ backgroundColor: `${playerColor}30`, border: `2px solid ${playerColor}` }}
           >
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: playerColor }} />
-            <span className="font-bold text-sm" style={{ color: playerColor }}>{currentPlayer?.name || 'Hráč'}</span>
+            <span className="font-bold text-sm" style={{ color: playerColor }}>{effectivePlayer?.name || 'Hráč'}</span>
           </div>
         </div>
 
         <div className="font-bold text-lg text-white">{playerScore}</div>
       </header>
+
+      {/* Tab Selector */}
+      {players.length > 1 && (
+        <ControllerTabSelector
+          players={players}
+          currentPlayerIndex={currentPlayerIndex}
+          activeMode={controllerMode}
+          onModeChange={setControllerMode}
+        />
+      )}
 
       {/* Session expiry warning */}
       {sessionWarning && (
