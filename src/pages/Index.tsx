@@ -156,6 +156,9 @@ const Index = () => {
   const [bonusWheelRemoteCommand, setBonusWheelRemoteCommand] = useState<GameCommand | null>(null);
   const [bonusWheelState, setBonusWheelState] = useState<BonusWheelSessionState | null>(null);
 
+  // Track round winner for correct player order after token placement
+  const [roundWinner, setRoundWinner] = useState<number | null>(null);
+
   // Create session with current game state for remote control
   const handleCreateSession = useCallback(async () => {
     setIsCreatingSession(true);
@@ -453,7 +456,12 @@ const Index = () => {
     // 4. Update isPlacingTokens and currentPlayer separately (not nested)
     if (allPlaced) {
       setIsPlacingTokens(false);
-      setGameState((prev) => ({ ...prev, currentPlayer: 0 }));
+      // Winner of previous round starts, otherwise first player who placed token
+      const startingPlayer = roundWinner ?? 0;
+      console.log(`🎯 All tokens placed. Starting player: ${startingPlayer} (roundWinner: ${roundWinner})`);
+      setGameState((prev) => ({ ...prev, currentPlayer: startingPlayer }));
+      // Reset roundWinner after using it
+      setRoundWinner(null);
     } else {
       const nextPlayer = (currentPlayerId + 1) % 3;
       setGameState((prev) => ({ ...prev, currentPlayer: nextPlayer }));
@@ -503,6 +511,7 @@ const Index = () => {
     }
 
     if (segment.type === "bankrot") {
+      console.log("🔊 Playing BANKROT sound");
       playBankruptSound();
       toast.error("BANKROT! Ztrácíte všechny body!", {
         duration: 3000,
@@ -514,6 +523,7 @@ const Index = () => {
       }));
       setShowLetterSelector(false);
     } else if (segment.type === "nic") {
+      console.log("🔊 Playing NIC sound");
       playNothingSound();
       toast.warning("NIC! Tah přechází na dalšího hráče", {
         duration: 2000,
@@ -525,17 +535,24 @@ const Index = () => {
       setShowLetterSelector(false);
     } else {
       // Special voice lines for specific point values
+      console.log(`🔊 Playing sound for segment value: ${segment.value}`);
       if (segment.value === 100) {
+        console.log("🔊 Calling play100PointsSound()");
         play100PointsSound();
       } else if (segment.value === 200) {
+        console.log("🔊 Calling play200PointsSound()");
         play200PointsSound();
       } else if (segment.value === 500) {
+        console.log("🔊 Calling play500PointsSound()");
         play500PointsSound();
       } else if (segment.value === 1000) {
+        console.log("🔊 Calling play1000PointsSound()");
         play1000PointsSound();
       } else if (segment.value === 2000) {
+        console.log("🔊 Calling play2000PointsSound()");
         play2000PointsSound();
       } else {
+        console.log("🔊 Calling playWinSound() (fallback)");
         playWinSound();
       }
       setCurrentWheelValue(segment.value as number);
@@ -704,6 +721,12 @@ const Index = () => {
   const newRound = useCallback((winnerIndex?: number) => {
     const nextIndex = currentPuzzleIndex + 1;
     setCurrentPuzzleIndex(nextIndex);
+
+    // Store the winner for use after token placement
+    if (winnerIndex !== undefined) {
+      console.log(`🏆 Round winner: Player ${winnerIndex + 1} - will start next round after tokens`);
+      setRoundWinner(winnerIndex);
+    }
 
     // Play "first round complete" sound when transitioning from round 1 to round 2
     if (gameState.round === 1) {

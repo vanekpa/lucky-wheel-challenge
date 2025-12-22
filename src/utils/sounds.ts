@@ -141,10 +141,13 @@ export const playTickSound = async () => {
 
 // 100 points voice line (multiple versions, random selection)
 export const play100PointsSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 play100PointsSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
   
   const versions = ['/sounds/100-points.ogg', '/sounds/100-points-2.ogg', '/sounds/100-points-3.ogg'];
   const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  console.log(`🔊 Playing 100 points sound: ${randomVersion}`);
   
   await playPooledSound(randomVersion);
 };
@@ -161,17 +164,23 @@ export const play200PointsSound = async () => {
 
 // 500 points voice line (multiple versions)
 export const play500PointsSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 play500PointsSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
   
   const versions = ['/sounds/500-points.ogg', '/sounds/500-points-2.ogg'];
   const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  console.log(`🔊 Playing 500 points sound: ${randomVersion}`);
   
   await playPooledSound(randomVersion);
 };
 
 // 1000 points voice line
 export const play1000PointsSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 play1000PointsSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
+  console.log(`🔊 Playing 1000 points sound`);
   await playPooledSound('/sounds/1000-points.ogg');
 };
 
