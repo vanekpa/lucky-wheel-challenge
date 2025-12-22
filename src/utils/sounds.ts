@@ -154,10 +154,13 @@ export const play100PointsSound = async () => {
 
 // 200 points voice line (multiple versions)
 export const play200PointsSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 play200PointsSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
   
   const versions = ['/sounds/200-points.ogg', '/sounds/200-points-2.ogg'];
   const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  console.log(`🔊 Playing 200 points sound: ${randomVersion}`);
   
   await playPooledSound(randomVersion);
 };
@@ -186,14 +189,20 @@ export const play1000PointsSound = async () => {
 
 // 2000 points voice line
 export const play2000PointsSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 play2000PointsSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
+  console.log(`🔊 Playing 2000 points sound`);
   await playPooledSound('/sounds/2000-points.ogg');
 };
 
 // Win fanfare - ascending tones
 export const playWinSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 playWinSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
   
+  console.log(`🔊 Playing win fanfare`);
   await ensureAudioContextResumed();
   
   const ctx = getAudioContext();
@@ -220,17 +229,23 @@ export const playWinSound = async () => {
 
 // Bankrupt sound - voice line (multiple versions)
 export const playBankruptSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 playBankruptSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
   
   const versions = ['/sounds/bankrot.ogg', '/sounds/bankrot-2.ogg'];
   const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  console.log(`🔊 Playing bankrupt sound: ${randomVersion}`);
   
   await playPooledSound(randomVersion);
 };
 
 // Nothing sound - voice line
 export const playNothingSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 playNothingSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
+  console.log(`🔊 Playing NIC sound`);
   await playPooledSound('/sounds/nic.ogg');
 };
 
@@ -382,10 +397,13 @@ export const playBuzzerSound = async () => {
 
 // Not enough points for vowel - voice line (multiple versions)
 export const playNotEnoughPointsSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 playNotEnoughPointsSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
   
   const versions = ['/sounds/not-enough-points.ogg', '/sounds/not-enough-points-2.ogg', '/sounds/not-enough-points-3.ogg'];
   const randomVersion = versions[Math.floor(Math.random() * versions.length)];
+  console.log(`🔊 Playing not enough points sound: ${randomVersion}`);
   
   await playPooledSound(randomVersion);
 };
@@ -432,7 +450,10 @@ export const playTimeWarningSound = async () => {
 
 // First round complete - plays when transitioning from round 1 to round 2
 export const playFirstRoundCompleteSound = async () => {
-  if (!getSoundsEnabled()) return;
+  const enabled = getSoundsEnabled();
+  console.log(`🔊 playFirstRoundCompleteSound() called - sounds enabled: ${enabled}`);
+  if (!enabled) return;
+  console.log(`🔊 Playing first round complete sound`);
   await playPooledSound('/sounds/first-round-complete.ogg');
 };
 
