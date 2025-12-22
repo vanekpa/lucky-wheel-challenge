@@ -424,7 +424,9 @@ const getLetterSounds = (letter: string): string[] => {
 
 // Time warning sound - plays when 5 seconds remaining on timer
 export const playTimeWarningSound = async () => {
+  console.log('🔊 playTimeWarningSound() called - sounds enabled:', getSoundsEnabled());
   if (!getSoundsEnabled()) return;
+  console.log('🔊 Playing time warning sound');
   await playPooledSound('/sounds/time-warning.ogg');
 };
 
