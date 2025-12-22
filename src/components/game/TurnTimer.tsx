@@ -24,6 +24,15 @@ export const TurnTimer = ({
     warningFiredRef.current = false;
   }, [duration, onReset]);
 
+  // Separate effect for warning - fires when timeLeft hits 5
+  useEffect(() => {
+    if (isActive && timeLeft === 5 && !warningFiredRef.current) {
+      warningFiredRef.current = true;
+      console.log('⏰ Timer warning triggered at 5 seconds');
+      onWarning?.();
+    }
+  }, [timeLeft, isActive, onWarning]);
+
   useEffect(() => {
     if (!isActive || duration === 0) return;
 
@@ -34,17 +43,12 @@ export const TurnTimer = ({
           onTimeUp();
           return 0;
         }
-        // Fire warning when hitting 5 seconds (once per timer cycle)
-        if (prev === 6 && !warningFiredRef.current) {
-          warningFiredRef.current = true;
-          onWarning?.();
-        }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, duration, onTimeUp, onWarning, onReset]);
+  }, [isActive, duration, onTimeUp, onReset]);
 
   if (!isActive || duration === 0) return null;
 
