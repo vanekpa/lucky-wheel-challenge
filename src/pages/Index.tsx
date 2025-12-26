@@ -419,7 +419,12 @@ const Index = () => {
   };
 
   const handleTokenPlace = useCallback((segmentId: number) => {
-    if (tokensPlaced.has(gameState.currentPlayer)) return;
+    console.log(`🎲 handleTokenPlace called - segmentId: ${segmentId}, currentPlayer: ${gameState.currentPlayer}, tokensPlaced:`, [...tokensPlaced], `roundWinner: ${roundWinner}`);
+    
+    if (tokensPlaced.has(gameState.currentPlayer)) {
+      console.log(`🎲 Player ${gameState.currentPlayer} already placed token, ignoring`);
+      return;
+    }
 
     // Find a free segment - if clicked segment is occupied, find nearest free one
     const findFreeSegment = (startId: number): number => {
@@ -466,7 +471,7 @@ const Index = () => {
       const nextPlayer = (currentPlayerId + 1) % 3;
       setGameState((prev) => ({ ...prev, currentPlayer: nextPlayer }));
     }
-  }, [gameState.currentPlayer, tokensPlaced, tokenPositions]);
+  }, [gameState.currentPlayer, tokensPlaced, tokenPositions, roundWinner]);
 
   const animatePointerBounce = () => {
     const startTime = Date.now();
