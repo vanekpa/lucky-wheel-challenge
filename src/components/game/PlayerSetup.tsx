@@ -10,6 +10,7 @@ import { Play, Volume2, VolumeX, Sparkles, Settings, Timer, Info, Target } from 
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { supabase } from "@/integrations/supabase/client";
+import { playIntroJingle } from "@/utils/sounds";
 
 interface PlayerSetupProps {
   onComplete: (players: Player[], maxRounds: number) => void;
@@ -92,12 +93,8 @@ export const PlayerSetup = ({ onComplete, hideRoundsSelect = false, defaultRound
   };
 
   const handleStart = () => {
-    // Play intro jingle if sounds are enabled
-    if (localSoundsEnabled) {
-      const audio = new Audio('/sounds/intro-jingle.ogg');
-      audio.volume = 0.7;
-      audio.play().catch(() => {});
-    }
+    // Play intro jingle (function checks getSoundsEnabled internally)
+    playIntroJingle();
 
     const gamePlayers: Player[] = players.map((p, i) => ({
       id: i,

@@ -23,6 +23,7 @@ export const useSounds = () => {
       
       setSoundsEnabled(enabled);
       setSoundsEnabledGlobal(enabled); // Sync global state
+      setSoundsLoadingComplete(); // Mark loading as complete
       setLoading(false);
     };
 
@@ -58,10 +59,28 @@ export const useSounds = () => {
 };
 
 // Global sound state for use in sound functions
-let globalSoundsEnabled = true;
+// Initialize from localStorage immediately to prevent race condition
+const initFromLocalStorage = (): boolean => {
+  if (typeof window === 'undefined') return true;
+  const localSetting = localStorage.getItem('sounds_enabled');
+  return localSetting !== null ? localSetting === 'true' : true;
+};
+
+let globalSoundsEnabled = initFromLocalStorage();
+let globalSoundsLoading = true;
 
 export const setSoundsEnabledGlobal = (enabled: boolean) => {
   globalSoundsEnabled = enabled;
 };
 
-export const getSoundsEnabled = () => globalSoundsEnabled;
+export const setSoundsLoadingComplete = () => {
+  globalSoundsLoading = false;
+};
+
+export const getSoundsEnabled = (): boolean => {
+  // During loading, use localStorage value to prevent race condition
+  if (globalSoundsLoading) {
+    return initFromLocalStorage();
+  }
+  return globalSoundsEnabled;
+};

@@ -499,3 +499,9 @@ export const playLetterSound = async (letter: string): Promise<boolean> => {
   
   return true;
 };
+
+// Intro jingle - plays at game start
+export const playIntroJingle = async () => {
+  if (!getSoundsEnabled()) return;
+  await playPooledSound('/sounds/intro-jingle.ogg', 0.7);
+};
