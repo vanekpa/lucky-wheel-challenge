@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Text, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
@@ -355,11 +355,13 @@ const WheelSegment3D = ({
 const PlayerToken3D = ({ 
   playerId, 
   segmentId, 
-  players 
+  players,
+  isNew = false
 }: { 
   playerId: number; 
   segmentId: number; 
   players: Player[];
+  isNew?: boolean;
 }) => {
   const player = players[playerId];
   const angleOffset = -Math.PI / 2;
@@ -368,10 +370,48 @@ const PlayerToken3D = ({
   
   const x = radius * Math.cos(angle);
   const z = radius * Math.sin(angle);
-  const y = WHEEL_DISK_HEIGHT / 2 + 0.09; // Na povrchu segmentu
+  const finalY = WHEEL_DISK_HEIGHT / 2 + 0.09;
+  
+  // Animation state for drop effect
+  const [animY, setAnimY] = useState(isNew ? 2.0 : finalY);
+  const [scale, setScale] = useState(isNew ? 0.3 : 1);
+  const animStartRef = useRef(isNew ? Date.now() : 0);
+  
+  useFrame(() => {
+    if (!isNew || animStartRef.current === 0) return;
+    
+    const elapsed = Date.now() - animStartRef.current;
+    const duration = 400; // 400ms animation
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Easing: easeOutBounce
+    const easeOutBounce = (t: number) => {
+      if (t < 1 / 2.75) {
+        return 7.5625 * t * t;
+      } else if (t < 2 / 2.75) {
+        return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
+      } else if (t < 2.5 / 2.75) {
+        return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
+      } else {
+        return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
+      }
+    };
+    
+    const easedProgress = easeOutBounce(progress);
+    
+    // Animate Y from 2.0 to finalY
+    setAnimY(2.0 + (finalY - 2.0) * easedProgress);
+    
+    // Animate scale from 0.3 to 1
+    setScale(0.3 + 0.7 * easedProgress);
+    
+    if (progress >= 1) {
+      animStartRef.current = 0; // Stop animation
+    }
+  });
   
   return (
-    <group position={[x, y, z]}>
+    <group position={[x, animY, z]} scale={[scale, scale, scale]}>
       {/* Bílý podstavec - puk se zkosenou hranou */}
       <mesh castShadow>
         <cylinderGeometry args={[0.18, 0.2, 0.06, 32]} />
@@ -429,6 +469,38 @@ export const WheelModel = ({
 }: WheelModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   
+  // Track which tokens are newly placed for animation
+  const prevTokensRef = useRef<Set<number>>(new Set());
+  const [newTokens, setNewTokens] = useState<Set<number>>(new Set());
+  
+  useEffect(() => {
+    const currentSegments = new Set(tokenPositions.keys());
+    const prevSegments = prevTokensRef.current;
+    
+    // Find newly added tokens
+    const newlyAdded = new Set<number>();
+    currentSegments.forEach(segmentId => {
+      if (!prevSegments.has(segmentId)) {
+        newlyAdded.add(segmentId);
+      }
+    });
+    
+    if (newlyAdded.size > 0) {
+      setNewTokens(prev => new Set([...prev, ...newlyAdded]));
+      
+      // Clear "new" status after animation completes
+      setTimeout(() => {
+        setNewTokens(prev => {
+          const updated = new Set(prev);
+          newlyAdded.forEach(id => updated.delete(id));
+          return updated;
+        });
+      }, 500);
+    }
+    
+    prevTokensRef.current = currentSegments;
+  }, [tokenPositions]);
+  
   useFrame(() => {
     if (groupRef.current) {
       const currentRotation = externalRotationRef?.current ?? rotation;
@@ -480,6 +552,7 @@ export const WheelModel = ({
           playerId={playerId}
           segmentId={segmentId}
           players={players}
+          isNew={newTokens.has(segmentId)}
         />
       ))}
     </group>

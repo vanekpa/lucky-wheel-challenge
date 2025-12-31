@@ -139,6 +139,41 @@ export const playTickSound = async () => {
   oscillator.stop(ctx.currentTime + 0.03);
 };
 
+// Token placement sound - satisfying "plop" when placing token on wheel
+export const playTokenPlaceSound = async () => {
+  if (!getSoundsEnabled()) return;
+  
+  await ensureAudioContextResumed();
+  
+  const ctx = getAudioContext();
+  
+  // Create a "plop" sound with two oscillators
+  // Low thump
+  const osc1 = ctx.createOscillator();
+  const gain1 = ctx.createGain();
+  osc1.connect(gain1);
+  gain1.connect(ctx.destination);
+  osc1.frequency.setValueAtTime(150, ctx.currentTime);
+  osc1.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.1);
+  osc1.type = 'sine';
+  gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+  osc1.start(ctx.currentTime);
+  osc1.stop(ctx.currentTime + 0.15);
+  
+  // High click
+  const osc2 = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+  osc2.connect(gain2);
+  gain2.connect(ctx.destination);
+  osc2.frequency.value = 800;
+  osc2.type = 'triangle';
+  gain2.gain.setValueAtTime(0.15, ctx.currentTime);
+  gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+  osc2.start(ctx.currentTime);
+  osc2.stop(ctx.currentTime + 0.05);
+};
+
 // 100 points voice line (multiple versions, random selection)
 export const play100PointsSound = async () => {
   if (!getSoundsEnabled()) return;
