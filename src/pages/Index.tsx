@@ -28,7 +28,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand, type BonusWheelSessionState } from "@/hooks/useGameSession";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, stopTimeWarningSound, playFirstRoundCompleteSound, unlockAudio, preloadAllSounds } from "@/utils/sounds";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, stopTimeWarningSound, playFirstRoundCompleteSound, playTokenPlaceSound, unlockAudio, preloadAllSounds } from "@/utils/sounds";
 import { saveGameToLocal, loadGameFromLocal, clearSavedGame, SavedGameState } from "@/utils/gameStorage";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
@@ -440,6 +440,9 @@ const Index = () => {
 
     const finalSegmentId = findFreeSegment(segmentId);
     const currentPlayerId = gameState.currentPlayer;
+
+    // Play token placement sound
+    playTokenPlaceSound();
 
     // 1. Update token positions
     setTokenPositions((prev) => {
