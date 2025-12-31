@@ -24,11 +24,10 @@ export const TurnTimer = ({
     warningFiredRef.current = false;
   }, [duration, onReset]);
 
-  // Separate effect for warning - fires when timeLeft hits 5
+  // Separate effect for warning - fires when timeLeft hits 4
   useEffect(() => {
-    if (isActive && timeLeft === 5 && !warningFiredRef.current) {
+    if (isActive && timeLeft === 4 && !warningFiredRef.current) {
       warningFiredRef.current = true;
-      console.log('⏰ Timer warning triggered at 5 seconds');
       onWarning?.();
     }
   }, [timeLeft, isActive, onWarning]);
@@ -53,7 +52,7 @@ export const TurnTimer = ({
   if (!isActive || duration === 0) return null;
 
   const percentage = (timeLeft / duration) * 100;
-  const isWarning = timeLeft <= 5;
+  const isWarning = timeLeft <= 4;
 
   return (
     <div className="flex flex-col items-center">
