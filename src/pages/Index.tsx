@@ -28,7 +28,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand, type BonusWheelSessionState } from "@/hooks/useGameSession";
-import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, playFirstRoundCompleteSound, unlockAudio, preloadAllSounds } from "@/utils/sounds";
+import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, stopTimeWarningSound, playFirstRoundCompleteSound, unlockAudio, preloadAllSounds } from "@/utils/sounds";
 import { saveGameToLocal, loadGameFromLocal, clearSavedGame, SavedGameState } from "@/utils/gameStorage";
 
 type GamePhase = "intro" | "teacher-input" | "handover" | "setup" | "playing" | "bonus-wheel" | "victory";
@@ -419,10 +419,7 @@ const Index = () => {
   };
 
   const handleTokenPlace = useCallback((segmentId: number) => {
-    console.log(`🎲 handleTokenPlace called - segmentId: ${segmentId}, currentPlayer: ${gameState.currentPlayer}, tokensPlaced:`, [...tokensPlaced], `roundWinner: ${roundWinner}`);
-    
     if (tokensPlaced.has(gameState.currentPlayer)) {
-      console.log(`🎲 Player ${gameState.currentPlayer} already placed token, ignoring`);
       return;
     }
 
@@ -540,24 +537,17 @@ const Index = () => {
       setShowLetterSelector(false);
     } else {
       // Special voice lines for specific point values
-      console.log(`🔊 Playing sound for segment value: ${segment.value}`);
       if (segment.value === 100) {
-        console.log("🔊 Calling play100PointsSound()");
         play100PointsSound();
       } else if (segment.value === 200) {
-        console.log("🔊 Calling play200PointsSound()");
         play200PointsSound();
       } else if (segment.value === 500) {
-        console.log("🔊 Calling play500PointsSound()");
         play500PointsSound();
       } else if (segment.value === 1000) {
-        console.log("🔊 Calling play1000PointsSound()");
         play1000PointsSound();
       } else if (segment.value === 2000) {
-        console.log("🔊 Calling play2000PointsSound()");
         play2000PointsSound();
       } else {
-        console.log("🔊 Calling playWinSound() (fallback)");
         playWinSound();
       }
       setCurrentWheelValue(segment.value as number);
@@ -576,8 +566,9 @@ const Index = () => {
   const handleLetterSelect = useCallback((letter: string) => {
     saveStateToHistory();
     
-    // Stop timer when letter is selected
+    // Stop timer and warning sound when letter is selected
     setTimerActive(false);
+    stopTimeWarningSound();
 
     const upperLetter = letter.toUpperCase();
     const variants = getLetterVariants(upperLetter);
@@ -1375,15 +1366,31 @@ const Index = () => {
         </div>
 
         {isPlacingTokens && (
-          <div className="absolute top-52 md:top-32 right-4 pointer-events-none z-50">
-            <div className="bg-black/70 backdrop-blur-xl px-4 py-3 md:px-5 md:py-4 rounded-xl border border-primary/40 shadow-[0_0_30px_hsl(var(--primary)/0.3)] text-center animate-in slide-in-from-right duration-300">
-              <p
-                className="text-lg md:text-xl font-bold mb-1"
-                style={{ color: gameState.players[gameState.currentPlayer]?.color }}
-              >
-                {gameState.players[gameState.currentPlayer]?.name || `HRÁČ ${gameState.currentPlayer + 1}`}
-              </p>
-              <p className="text-xs md:text-sm text-white/80 font-medium">Umístěte žeton na kolo</p>
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
+            <div 
+              className="bg-black/85 backdrop-blur-xl px-8 py-6 rounded-2xl border-4 shadow-2xl text-center animate-pulse"
+              style={{ 
+                borderColor: gameState.players[gameState.currentPlayer]?.color,
+                boxShadow: `0 0 40px ${gameState.players[gameState.currentPlayer]?.color}60, 0 0 80px ${gameState.players[gameState.currentPlayer]?.color}30`
+              }}
+            >
+              <div className="flex items-center justify-center gap-4">
+                <div 
+                  className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
+                  style={{ backgroundColor: gameState.players[gameState.currentPlayer]?.color }}
+                >
+                  {gameState.currentPlayer + 1}
+                </div>
+                <div className="text-left">
+                  <p 
+                    className="text-2xl font-bold"
+                    style={{ color: gameState.players[gameState.currentPlayer]?.color }}
+                  >
+                    {gameState.players[gameState.currentPlayer]?.name || `HRÁČ ${gameState.currentPlayer + 1}`}
+                  </p>
+                  <p className="text-lg text-white/80 font-medium">Umístěte žeton na kolo</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
