@@ -5,6 +5,7 @@
 ## Stránky
 
 - [Hra](/): Hlavní obrazovka hry s kolem štěstí, tajenkou a skóre hráčů.
+- [Kolo štěstí ve výuce](/jak-hrat): Průvodce pro učitele — jak používat hru v hodinách, režim učitele, mobilní ovládání, tipy do výuky.
 - [Nastavení hry](/host): Výběr režimu hry, zadání hráčů a tajenek pro učitele.
 - [Připojení k session](/join): Připojení k existující hře pomocí kódu KOLO-####.
 - [Vzdálené ovládání](/control/:code): Mobilní ovladač pro učitele synchronizovaný s hlavní obrazovkou.

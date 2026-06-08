@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Shuffle, BookOpen, Lock, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { Shuffle, BookOpen, Lock, Info, ChevronDown, ChevronUp, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -197,14 +197,22 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
       {/* Game info collapsible */}
       <GameInfoSection />
 
-      {/* Admin link */}
-      <Link
-        to="/auth"
-        className="relative z-10 text-white/40 hover:text-white/80 transition-all duration-300 flex items-center gap-2 text-sm animate-in fade-in duration-1000 delay-700 hover:scale-105 mt-6"
-      >
-        <Lock className="h-4 w-4" />
-        Správa tajenek
-      </Link>
+      <div className="relative z-10 flex items-center gap-6 mt-6 animate-in fade-in duration-1000 delay-700">
+        <Link
+          to="/jak-hrat"
+          className="text-white/40 hover:text-white/80 transition-all duration-300 flex items-center gap-2 text-sm hover:scale-105"
+        >
+          <GraduationCap className="h-4 w-4" />
+          Kolo štěstí ve výuce
+        </Link>
+        <Link
+          to="/auth"
+          className="text-white/40 hover:text-white/80 transition-all duration-300 flex items-center gap-2 text-sm hover:scale-105"
+        >
+          <Lock className="h-4 w-4" />
+          Správa tajenek
+        </Link>
+      </div>
 
       {/* CSS for gradient animation */}
       <style>{`

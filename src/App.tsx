@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Host from "./pages/Host";
 import JoinSession from "./pages/JoinSession";
 import RemoteController from "./pages/RemoteController";
+import Guide from "./pages/Guide";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/control/:code" element={<RemoteController />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/jak-hrat" element={<Guide />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>
