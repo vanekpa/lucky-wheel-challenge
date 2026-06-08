@@ -453,7 +453,8 @@ const RemoteController = () => {
 
       {/* Compact Header */}
       <header className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50" style={{ backgroundColor: `${playerColor}10` }}>
-        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => navigate('/')}>
+        <h1 className="sr-only">Ovladač hry</h1>
+        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => navigate('/')} aria-label="Zpět">
           <ArrowLeft className="w-4 h-4 text-slate-400" />
         </Button>
         
@@ -476,6 +477,7 @@ const RemoteController = () => {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
+            aria-label="Aktualizovat"
             className="p-1.5 rounded-md hover:bg-slate-700/50 active:scale-90 transition-all disabled:opacity-50"
           >
             <RefreshCw className={cn("w-4 h-4 text-slate-400", isRefreshing && "animate-spin")} />
