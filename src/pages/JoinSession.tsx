@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, ArrowRight, Gamepad2 } from 'lucide-react';
 import { normalizeSessionCode, isValidSessionCode } from '@/utils/sessionCode';
+import { PageMeta } from '@/components/PageMeta';
 
 const JoinSession = () => {
   const navigate = useNavigate();
@@ -33,6 +34,11 @@ const JoinSession = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-4">
+      <PageMeta
+        title="Připojit se ke hře | Kolotoč!"
+        description="Zadejte kód KOLO-XXXX a připojte se jako učitel k probíhající hře Kolotoče. Mobil se promění v dálkové ovládání."
+        path="/join"
+      />
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-primary/15 rounded-full blur-3xl animate-pulse" />
