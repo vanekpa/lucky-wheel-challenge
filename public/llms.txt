@@ -1,0 +1,12 @@
+# Kolo štěstí
+
+> Vzdělávací webová hra "Kolo štěstí" pro české základní školy. Učitel řídí hru z počítače nebo mobilu, žáci sledují tajenku na projekci a hádají písmena. Aplikace podporuje vlastní tajenky, režim učitele, vzdálené ovládání přes QR kód a real-time synchronizaci mezi zařízeními.
+
+## Stránky
+
+- [Hra](/): Hlavní obrazovka hry s kolem štěstí, tajenkou a skóre hráčů.
+- [Nastavení hry](/host): Výběr režimu hry, zadání hráčů a tajenek pro učitele.
+- [Připojení k session](/join): Připojení k existující hře pomocí kódu KOLO-####.
+- [Vzdálené ovládání](/control/:code): Mobilní ovladač pro učitele synchronizovaný s hlavní obrazovkou.
+- [Administrace](/admin): Správa databáze tajenek (pouze pro administrátora).
+- [Přihlášení](/auth): Přihlášení administrátora.
