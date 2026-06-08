@@ -28,6 +28,7 @@ import { useSeason } from "@/hooks/useSeason";
 import { useSounds, setSoundsEnabledGlobal } from "@/hooks/useSounds";
 import { useTurnTimer } from "@/hooks/useTurnTimer";
 import { useGameSession, type GameCommand, type BonusWheelSessionState } from "@/hooks/useGameSession";
+import { PageMeta } from "@/components/PageMeta";
 import { playTickSound, playWinSound, playBankruptSound, playNothingSound, playBuzzerSound, play100PointsSound, play200PointsSound, play500PointsSound, play1000PointsSound, play2000PointsSound, playNotEnoughPointsSound, playLetterSound, playTimeWarningSound, stopTimeWarningSound, playFirstRoundCompleteSound, playTokenPlaceSound, unlockAudio, preloadAllSounds } from "@/utils/sounds";
 import { saveGameToLocal, loadGameFromLocal, clearSavedGame, SavedGameState } from "@/utils/gameStorage";
 
@@ -1231,6 +1232,11 @@ const Index = () => {
   if (gamePhase === "intro") {
     return (
       <>
+        <PageMeta
+          title="Kolotoč! — Edukativní soutěžní hra pro školy"
+          description="Vyberte režim hry, zadejte hráče a roztočte kolo. Online verze Kolotoče pro české základní školy s vlastními tajenkami od učitele."
+          path="/"
+        />
         <GameModeSelect onSelectRandom={handleSelectRandom} onSelectTeacher={handleSelectTeacher} />
         {savedGame && (
           <SavedGameDialog
@@ -1290,6 +1296,11 @@ const Index = () => {
     <div
       className={`h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br ${colors.gradient} text-foreground transition-colors duration-1000`}
     >
+      <PageMeta
+        title="Kolotoč! — hra běží | Edukativní hra pro školy"
+        description="Probíhající hra Kolotoče. Hráči točí kolem štěstí, hádají písmena a snaží se uhodnout tajenku zadanou učitelem."
+        path="/"
+      />
       {/* Player Settings Popover */}
       <PlayerSettings
         effectsEnabled={effectsEnabled}
