@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSeason, Season, DayTime, seasonColors } from '@/hooks/useSeason';
 import { useGameSettings } from '@/hooks/useGameSettings';
 import { z } from 'zod';
+import { PageMeta } from '@/components/PageMeta';
 
 // Validation schema for puzzle data
 const puzzleSchema = z.object({
@@ -364,6 +365,12 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#1a1a3e] to-[#2a1a4a] p-4">
+      <PageMeta
+        title="Správa tajenek | Kolotoč!"
+        description="Administrace databáze tajenek, kategorií a herního nastavení Kolotoče. Přístup pouze pro správce aplikace."
+        path="/admin"
+        noindex
+      />
       {/* Spotlight effects */}
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
