@@ -117,7 +117,7 @@ export const useGameSession = (sessionCode?: string): UseGameSessionReturn => {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const hostIdRef = useRef<string | null>(null);
   const reconnectAttemptRef = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Generate a unique host ID for this browser session - synchronously
   const getHostId = useCallback(() => {
