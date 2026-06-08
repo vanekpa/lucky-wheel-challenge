@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { wheelSegments } from '@/data/puzzles';
 import { supabase } from '@/integrations/supabase/client';
+import { PageMeta } from '@/components/PageMeta';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
@@ -426,6 +427,11 @@ const RemoteController = () => {
       className="h-screen flex flex-col overflow-hidden"
       style={{ background: `linear-gradient(180deg, ${playerColor}15 0%, #0f172a 50%)` }}
     >
+      <PageMeta
+        title="Dálkové ovládání | Kolotoč!"
+        description="Mobilní ovladač pro učitele — točte kolem, vybírejte písmena a posouvejte hru bez přístupu k počítači u projekce."
+        noindex
+      />
       {/* Command feedback overlay */}
       {commandFeedback && (
         <div className={cn(

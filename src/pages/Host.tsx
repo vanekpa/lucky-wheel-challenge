@@ -5,6 +5,7 @@ import { SessionQRCode } from '@/components/game/SessionQRCode';
 import { useGameSession } from '@/hooks/useGameSession';
 import { Copy, Play, Loader2, ArrowLeft, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageMeta } from '@/components/PageMeta';
 
 const Host = () => {
   const navigate = useNavigate();
@@ -40,6 +41,11 @@ const Host = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-4">
+      <PageMeta
+        title="Vytvořit hru | Kolotoč!"
+        description="Vytvořte novou hru Kolotoče, sdílejte QR kód s mobilem učitele a spusťte hádání tajenky ve třídě během pár sekund."
+        path="/host"
+      />
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
