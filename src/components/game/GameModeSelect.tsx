@@ -140,6 +140,7 @@ export const GameModeSelect = ({ onSelectRandom, onSelectTeacher }: GameModeSele
             }}
           >
             KOLOTOČ
+            <span className="sr-only"> — Vzdělávací soutěž pro školy</span>
           </h1>
           {/* Glow layer behind text */}
           <h1

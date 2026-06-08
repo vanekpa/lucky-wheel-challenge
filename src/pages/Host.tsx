@@ -103,6 +103,7 @@ const Host = () => {
                     size="icon"
                     onClick={handleCopyCode}
                     className="hover:bg-primary/20"
+                    aria-label="Zkopírovat kód"
                   >
                     <Copy className="w-5 h-5" />
                   </Button>
