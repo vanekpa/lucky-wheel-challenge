@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Lock, Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { PageMeta } from '@/components/PageMeta';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -57,6 +58,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0a0a1a] via-[#1a1a3e] to-[#2a1a4a] p-8 relative overflow-hidden">
+      <PageMeta
+        title="Přihlášení správce | Kolotoč!"
+        description="Přihlášení do administrace Kolotoče. Tato sekce je určena pouze pro správce databáze tajenek."
+        path="/auth"
+        noindex
+      />
       {/* Animated spotlight effects */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
