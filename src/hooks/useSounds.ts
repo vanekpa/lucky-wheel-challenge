@@ -31,7 +31,7 @@ export const useSounds = () => {
 
     // Real-time subscription
     const channel = supabase
-      .channel('sounds-settings')
+      .channel(`sounds-settings-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
